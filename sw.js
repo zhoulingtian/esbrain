@@ -29,8 +29,21 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: serve from cache, fall back to network
+// Fetch: 页面导航 network-first（保证已安装 PWA 能拿到新版本，离线回退缓存）；
+// 其余静态资源 cache-first，回退网络并写入缓存
 self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put('./index.html', responseClone);
+        });
+        return networkResponse;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((response) => {
       if (response) return response;
@@ -44,11 +57,6 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       });
-    }).catch(() => {
-      // Fallback for offline navigation
-      if (event.request.mode === 'navigate') {
-        return caches.match('./index.html');
-      }
-    })
+    }).catch(() => caches.match('./index.html'))
   );
 });
