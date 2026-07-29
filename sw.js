@@ -35,10 +35,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).then((networkResponse) => {
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put('./index.html', responseClone);
-        });
+        if (networkResponse && networkResponse.ok) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put('./index.html', responseClone);
+          });
+        }
         return networkResponse;
       }).catch(() => caches.match('./index.html'))
     );
@@ -57,6 +59,6 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       });
-    }).catch(() => caches.match('./index.html'))
+    }).catch(() => Response.error())
   );
 });

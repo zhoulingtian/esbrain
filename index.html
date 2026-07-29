@@ -951,7 +951,7 @@ p { margin: 0 0 10px; }
               <div class="tx es" id="review-example"></div>
               <div class="tx muted" id="review-example-zh"></div>
             </div>
-            <button class="speak" aria-label="朗读" style="margin-top:8px;" id="review-speak-back" aria-label="朗读当前复习词" onclick="event.stopPropagation(); speakReviewWord();"><svg width="18" height="18" style="vertical-align:middle"><use href="#icon-volume"/></svg></button>
+            <button class="speak" style="margin-top:8px;" id="review-speak-back" aria-label="朗读当前复习词" onclick="event.stopPropagation(); speakReviewWord();"><svg width="18" height="18" style="vertical-align:middle"><use href="#icon-volume"/></svg></button>
           </div>
         </div>
         <div class="rate-btns">
@@ -1000,7 +1000,7 @@ p { margin: 0 0 10px; }
         </div>
         <div id="number-area">
           <div class="text-center" style="padding:30px 0;">
-            <button class="speak" aria-label="朗读" style="width:56px;height:56px;font-size:24px;" aria-label="朗读数字" onclick="speakNumber()"><svg width="18" height="18" style="vertical-align:middle"><use href="#icon-volume"/></svg></button>
+            <button class="speak" style="width:56px;height:56px;font-size:24px;" aria-label="朗读数字" onclick="speakNumber()"><svg width="18" height="18" style="vertical-align:middle"><use href="#icon-volume"/></svg></button>
             <p class="muted mt-12">点击喇叭听数字（0–100），然后在下方输入</p>
           </div>
           <label class="sr-only" for="number-input">输入听写数字</label><input type="number" id="number-input" class="input" placeholder="输入数字" onkeydown="if(event.key==='Enter')checkNumber()" />
@@ -2211,7 +2211,7 @@ const WORDS = [
     "word": "padres",
     "pos": "n",
     "gender": "m",
-    "article": "el",
+    "article": "los",
     "ipa": "/ˈpaðɾes/",
     "zh": "父母（常用复数 los padres）",
     "example": "Mis padres viven en China.",
@@ -12037,7 +12037,7 @@ const GRAMMARS = [
     "id": "g015",
     "title": "主语代词与 tú/vosotros/usted/ustedes 的使用",
     "lesson": "A1.1-L08",
-    "content": "<p><b>规则：</b>人称代词表：yo（我）、tú（你）、él/ella（他/她）、usted（您）、nosotros/nosotras（我们）、vosotros/vosotras（你们）、ellos/ellas（他们/她们）、ustedes（您们/你们）。“你”的礼貌程度：tú 用于熟人和日常，usted 用于正式场合（如机 Long 对乘客、对长辈）——注意 <b>usted 的动词变位用第三人称</b>（usted tiene，不是 usted tienes）。<b>西班牙本土日常“你们”用 vosotros</b>（变位 -áis/-éis/-ís）；拉美不用 vosotros，一律用 ustedes（变位同第三人称复数）。由于变位已体现人称，主语代词常省略：Hablo español.（不说 Yo hablo 也完全自然）。</p><p><b>例句：</b></p><ul><li>¿De dónde sois?<br>你们是哪国人？（西班牙对朋友们，用 vosotros）</li><li>¿Cómo está usted?<br>您好吗？（usted 用第三人称变位 está）</li><li>Ellos son pilotos.<br>他们是飞行员。</li></ul><p>常见错误：在西班牙对朋友说 ×ustedes（那是拉美用法，西班牙日常说 vosotros）；usted 配错变位，如 ×¿Usted tienes pasaporte?（应为 ¿Usted tiene pasaporte?）。</p>"
+    "content": "<p><b>规则：</b>人称代词表：yo（我）、tú（你）、él/ella（他/她）、usted（您）、nosotros/nosotras（我们）、vosotros/vosotras（你们）、ellos/ellas（他们/她们）、ustedes（您们/你们）。“你”的礼貌程度：tú 用于熟人和日常，usted 用于正式场合（如机长对乘客、对长辈）——注意 <b>usted 的动词变位用第三人称</b>（usted tiene，不是 usted tienes）。<b>西班牙本土日常“你们”用 vosotros</b>（变位 -áis/-éis/-ís）；拉美不用 vosotros，一律用 ustedes（变位同第三人称复数）。由于变位已体现人称，主语代词常省略：Hablo español.（不说 Yo hablo 也完全自然）。</p><p><b>例句：</b></p><ul><li>¿De dónde sois?<br>你们是哪国人？（西班牙对朋友们，用 vosotros）</li><li>¿Cómo está usted?<br>您好吗？（usted 用第三人称变位 está）</li><li>Ellos son pilotos.<br>他们是飞行员。</li></ul><p>常见错误：在西班牙对朋友说 ×ustedes（那是拉美用法，西班牙日常说 vosotros）；usted 配错变位，如 ×¿Usted tienes pasaporte?（应为 ¿Usted tiene pasaporte?）。</p>"
   },
   {
     "id": "g016",
@@ -12091,7 +12091,7 @@ const GRAMMARS = [
     "id": "g024",
     "title": "简单过去时 pretérito indefinido 入门（规则动词 + ir/ser 不规则 fui）",
     "lesson": "A1.2-L09",
-    "content": "<p><b>规则：</b>indefinido 表示在<b>已完结的过去时间</b>发生的动作（ayer 昨天、el año pasado 去年）。规则词尾：-ar 动词 -é, -aste, -ó, -amos, -asteis, -aron；-er/-ir 动词 -í, -iste, -ió, -imos, -isteis, -ieron。最常用的不规则：ir（去）和 ser（是）过去时<b>同形</b>：fui, fuiste, fue, fuimos, fuisteis, fueron，靠上下文区分。与 g023 的分工一句话：今天/这周等没过完的时间用 he comido；去年、昨天等已结束的时间用 comí / fui。</p><table><tr><th>人称</th><th>hablar（-ar）</th><th>comer（-er）</th><th>ir / ser</th></tr><tr><td>yo</td><td>hablé</td><td>comí</td><td>fui</td></tr><tr><td>tú</td><td>hablaste</td><td>comiste</td><td>fuiste</td></tr><tr><td>él / usted</td><td>habló</td><td>comió</td><td>fue</td></tr><tr><td>nosotros</td><td>hablamos</td><td>comimos</td><td>fuimos</td></tr><tr><td>vosotros</td><td>hablasteis</td><td>comisteis</td><td>fuisteis</td></tr><tr><td>ellos / ustedes</td><td>hablaron</td><td>comieron</td><td>fueron</td></tr></table><p><b>例句：</b></p><ul><li>El año pasado fui a Sevilla.<br>去年我去了塞维利亚。</li><li>Ayer hablé con el capitán.<br>昨天我和机 Long 谈了话。</li><li>Comimos en un restaurante el sábado.<br>我们周六在一家餐馆吃了饭。</li></ul><p>常见错误：人称词尾重音错位，如 ×yo hablo 当过去时（habló 是“他说了”，重音在尾；yo 的过去时是 hablé）；不知道 ir 和 ser 过去时同为 fui，看到 Fue piloto 误译为“他去了飞行员”（此处 fue 是 ser：他当过飞行员）。</p>"
+    "content": "<p><b>规则：</b>indefinido 表示在<b>已完结的过去时间</b>发生的动作（ayer 昨天、el año pasado 去年）。规则词尾：-ar 动词 -é, -aste, -ó, -amos, -asteis, -aron；-er/-ir 动词 -í, -iste, -ió, -imos, -isteis, -ieron。最常用的不规则：ir（去）和 ser（是）过去时<b>同形</b>：fui, fuiste, fue, fuimos, fuisteis, fueron，靠上下文区分。与 g023 的分工一句话：今天/这周等没过完的时间用 he comido；去年、昨天等已结束的时间用 comí / fui。</p><table><tr><th>人称</th><th>hablar（-ar）</th><th>comer（-er）</th><th>ir / ser</th></tr><tr><td>yo</td><td>hablé</td><td>comí</td><td>fui</td></tr><tr><td>tú</td><td>hablaste</td><td>comiste</td><td>fuiste</td></tr><tr><td>él / usted</td><td>habló</td><td>comió</td><td>fue</td></tr><tr><td>nosotros</td><td>hablamos</td><td>comimos</td><td>fuimos</td></tr><tr><td>vosotros</td><td>hablasteis</td><td>comisteis</td><td>fuisteis</td></tr><tr><td>ellos / ustedes</td><td>hablaron</td><td>comieron</td><td>fueron</td></tr></table><p><b>例句：</b></p><ul><li>El año pasado fui a Sevilla.<br>去年我去了塞维利亚。</li><li>Ayer hablé con el capitán.<br>昨天我和机长谈了话。</li><li>Comimos en un restaurante el sábado.<br>我们周六在一家餐馆吃了饭。</li></ul><p>常见错误：人称词尾重音错位，如 ×yo hablo 当过去时（habló 是“他说了”，重音在尾；yo 的过去时是 hablé）；不知道 ir 和 ser 过去时同为 fui，看到 Fue piloto 误译为“他去了飞行员”（此处 fue 是 ser：他当过飞行员）。</p>"
   },
   {
     "id": "g025",
@@ -13024,6 +13024,12 @@ const VERBS = [
     const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
     const WORD_ID_RE = /^w\d{4}$/;
     const REVIEW_LEVELS = ['new', 'hard', 'mid', 'easy'];
+    function isValidDate(value) {
+      if (typeof value !== 'string' || !DATE_RE.test(value)) return false;
+      const [year, month, day] = value.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+    }
     // 逐字段白名单合并 + 严格类型校验：导入残缺/脏数据时不报错，恶意内容无法进入渲染层。
     // 基底永远是 defaultState()（而非当前 state）：导入文件缺失的字段回到默认值，不残留旧数据。
     function normalizeState(input) {
@@ -13039,23 +13045,23 @@ const VERBS = [
         .filter(r => r && typeof r.wordId === 'string' && WORD_ID_RE.test(r.wordId))
         .map(r => ({
           wordId: r.wordId,
-          due: typeof r.due === 'string' && DATE_RE.test(r.due) ? r.due : fmtDate(),
+          due: isValidDate(r.due) ? r.due : fmtDate(),
           interval: normalizeReviewInterval(r.interval),
           reps: Number.isFinite(r.reps) && r.reps > 0 ? Math.floor(r.reps) : 0,
-          lastReview: typeof r.lastReview === 'string' && DATE_RE.test(r.lastReview) ? r.lastReview : ''
+          lastReview: isValidDate(r.lastReview) ? r.lastReview : ''
         }));
       if (Array.isArray(input.reviewLog)) out.reviewLog = input.reviewLog
-        .filter(e => e && typeof e.date === 'string' && DATE_RE.test(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId) && REVIEW_LEVELS.includes(e.level))
+        .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId) && REVIEW_LEVELS.includes(e.level))
         .map(e => ({ date: e.date, wordId: e.wordId, level: e.level }));
       if (Array.isArray(input.mistakes)) out.mistakes = input.mistakes
         .filter(m => m && typeof m.wordId === 'string' && WORD_ID_RE.test(m.wordId))
         .map(m => ({
           wordId: m.wordId,
           count: Number.isFinite(m.count) && m.count > 0 ? Math.floor(m.count) : 1,
-          lastAt: typeof m.lastAt === 'string' && DATE_RE.test(m.lastAt) ? m.lastAt : ''
+          lastAt: isValidDate(m.lastAt) ? m.lastAt : ''
         }));
       if (Array.isArray(input.mistakeLog)) out.mistakeLog = input.mistakeLog
-        .filter(e => e && typeof e.date === 'string' && DATE_RE.test(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId))
+        .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId))
         .map(e => ({ date: e.date, wordId: e.wordId }));
       if (input.settings && typeof input.settings === 'object' && !Array.isArray(input.settings)) {
         const s = input.settings;
@@ -13065,15 +13071,15 @@ const VERBS = [
       }
       if (input.checkins && typeof input.checkins === 'object' && !Array.isArray(input.checkins)) {
         for (const [k, v] of Object.entries(input.checkins)) {
-          if (DATE_RE.test(k) && Number.isFinite(v) && v > 0) out.checkins[k] = Math.min(1440, Math.floor(v));
+          if (isValidDate(k) && Number.isFinite(v) && v > 0) out.checkins[k] = Math.min(1440, Math.floor(v));
         }
       }
       if (input.streak && typeof input.streak === 'object' && !Array.isArray(input.streak)) {
         const st = input.streak;
         if (Number.isFinite(st.current) && st.current >= 0) out.streak.current = Math.floor(st.current);
-        if (typeof st.lastDate === 'string' && (DATE_RE.test(st.lastDate) || st.lastDate === '')) out.streak.lastDate = st.lastDate;
+        if (typeof st.lastDate === 'string' && (isValidDate(st.lastDate) || st.lastDate === '')) out.streak.lastDate = st.lastDate;
         if (typeof st.makeupUsed === 'boolean') out.streak.makeupUsed = st.makeupUsed;
-        if (Array.isArray(st.makeupDates)) out.streak.makeupDates = [...new Set(st.makeupDates.filter(d => typeof d === 'string' && DATE_RE.test(d)))];
+        if (Array.isArray(st.makeupDates)) out.streak.makeupDates = [...new Set(st.makeupDates.filter(isValidDate))];
       }
       return out;
     }
