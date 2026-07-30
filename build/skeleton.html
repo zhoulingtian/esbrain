@@ -60,7 +60,10 @@
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --glow-accent: 0 0 24px rgba(200, 67, 60, 0.12);
   --glow-sm: 0 0 12px rgba(200, 67, 60, 0.08);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
   --easing: cubic-bezier(0.32, 0.72, 0, 1);
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -101,7 +104,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { color-scheme: auto; }
 body {
-  margin: 0; padding: 0; height: 100%;
+  margin: 0; padding: 0; min-height: 100dvh;
   font-family: var(--sans); background: var(--bg); color: var(--text);
   line-height: 1.6; font-size: 15px;
   position: relative; overflow-x: hidden;
@@ -155,11 +158,11 @@ body::after {
 
 /* ===== 布局 ===== */
 #app {
-  max-width: 680px; margin: 0 auto; min-height: 100%;
-  position: relative; padding: 0 16px 100px; z-index: 1;
+  max-width: 680px; margin: 0 auto; min-height: 100dvh;
+  position: relative; padding: 0 max(16px, var(--safe-right)) 100px max(16px, var(--safe-left)); z-index: 1;
 }
 @media (min-width: 720px) {
-  #app { display: grid; grid-template-columns: 72px minmax(0, 1fr); max-width: none; padding: 0 24px 32px; gap: 0 20px; }
+  #app { display: grid; grid-template-columns: 72px minmax(0, 1fr); max-width: none; padding: 0 max(24px, var(--safe-right)) 32px max(24px, var(--safe-left)); gap: 0 20px; }
 }
 @media (min-width: 1024px) {
   #app { max-width: 960px; }
@@ -168,7 +171,7 @@ body::after {
 /* ===== 顶栏 ===== */
 .topbar {
   position: sticky; top: 0; z-index: 10;
-  padding: 12px 0;
+  padding: max(12px, var(--safe-top)) 0 12px;
   display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid var(--glass-border);
   background: rgba(14, 14, 18, 0.75);
@@ -316,7 +319,7 @@ p { margin: 0 0 10px; }
   -webkit-backdrop-filter: blur(28px) saturate(1.8);
   border-top: 1px solid var(--glass-border);
   display: flex; justify-content: space-around;
-  padding: 8px 0 calc(8px + var(--safe-bottom)); z-index: 20;
+  padding: 8px max(0px, var(--safe-right)) calc(8px + var(--safe-bottom)) max(0px, var(--safe-left)); z-index: 20;
 }
 [data-theme="light"] .nav { background: rgba(251, 248, 244, 0.55); }
 .nav-item {
@@ -342,7 +345,7 @@ p { margin: 0 0 10px; }
   .nav-sidebar {
     display: flex; flex-direction: column; align-items: center;
     position: sticky; top: 0; align-self: start; height: 100vh; width: 72px;
-    padding: 16px 0;
+    padding: max(16px, var(--safe-top)) 0 16px;
     background: rgba(14, 14, 18, 0.55);
     backdrop-filter: blur(28px) saturate(1.8);
     -webkit-backdrop-filter: blur(28px) saturate(1.8);
@@ -521,6 +524,7 @@ p { margin: 0 0 10px; }
 /* ===== 发音模块 ===== */
 .phoneme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .phoneme-card {
+  display: flex; flex-direction: column; align-items: center;
   background: var(--glass);
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
@@ -535,6 +539,8 @@ p { margin: 0 0 10px; }
 .phoneme-sym { font-size: 28px; font-weight: 700; color: var(--text); font-family: var(--serif); line-height: 1; }
 .phoneme-card .ipa { font-size: 12px; margin-top: 4px; }
 .phoneme-card .muted { font-size: 12px; margin-top: 2px; }
+/* 说明行数不同，喇叭仍固定在卡片底部。 */
+.phoneme-card .speak { margin: auto auto 0 !important; }
 .rule-card {
   background: var(--glass);
   backdrop-filter: blur(16px) saturate(1.1);
@@ -669,6 +675,25 @@ p { margin: 0 0 10px; }
 .quiz-opt:hover { background: var(--card); border-color: var(--accent-tint); }
 .quiz-opt.correct { border-color: var(--masc); background: var(--masc-soft); color: var(--text); }
 .quiz-opt.wrong { border-color: var(--fem); background: var(--fem-soft); color: var(--text); }
+/* 重音训练音节按钮 */
+.syl-btn {
+  padding: 12px 20px; border-radius: var(--radius-md); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 20px; cursor: pointer;
+  font-family: var(--serif); transition: all 200ms var(--easing);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.syl-btn:hover { background: var(--card); border-color: var(--accent-tint); }
+.syl-btn:active { transform: scale(0.97); }
+.syl-btn.correct { border-color: var(--masc); background: var(--masc-soft); }
+.syl-btn.wrong { border-color: var(--fem); background: var(--fem-soft); }
+.syl-btn:disabled { cursor: default; opacity: 0.9; }
+/* 发音页「更多细节」折叠区 */
+.rule-details { margin-top: 12px; }
+.rule-details summary {
+  cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted);
+  padding: 10px 4px; user-select: none;
+}
+.rule-details summary:hover { color: var(--text); }
 #quiz-question { font-family: var(--serif); font-size: 24px; font-weight: 700; margin-bottom: 12px; }
 #quiz-prompt-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
 .soft-keys { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -831,6 +856,29 @@ p { margin: 0 0 10px; }
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* ===== Find N6 折叠屏：外屏、内屏与横屏 ===== */
+@media (min-width: 720px) {
+  /* 侧栏占用宽度后，卡片仍以可读的最小宽度决定列数。 */
+  .phoneme-grid { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
+  .choice-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .lesson-list, .words-list, .mistakes-list { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  /* 展开内屏避免工具箱成为过长的单列列表。 */
+  #screen-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  #screen-tools > h2 { grid-column: 1 / -1; }
+  #screen-tools .tool-card { margin-bottom: 0; min-width: 0; }
+}
+
+@media (min-width: 720px) and (max-height: 560px) {
+  /* 外屏横置或分屏时，给主要内容保留更多竖向空间。 */
+  .nav-sidebar { padding: max(8px, var(--safe-top)) 0 8px; }
+  .nav-sidebar .nav-item { margin-bottom: 5px; height: 40px; }
+  .topbar { padding-top: max(8px, var(--safe-top)); padding-bottom: 8px; }
+  .screen { padding-top: 14px; padding-bottom: 16px; }
+}
+
 /* ===== 减少动效 ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -905,13 +953,15 @@ p { margin: 0 0 10px; }
         <p class="muted" style="margin-top:4px;">点击字母卡听字母名称。</p>
         <div class="phoneme-grid mt-12" id="alphabet-list"></div>
       </div>
+      <div class="section-title">二合字母 <span class="muted" style="font-weight:400;">（不是 27 个独立字母）</span></div>
+      <div class="phoneme-grid" id="digraph-list"></div>
       <div class="section-title">核心音素 <span class="muted" style="font-weight:400;">（点击听例词）</span></div>
       <div class="phoneme-grid" id="phoneme-list"></div>
       <div class="section-title">拼读规则</div>
       <div id="rule-list"></div>
       <div class="card" style="margin-top:16px;">
-        <h3>发音解锁测验</h3>
-        <p class="muted">10 题答对 80% 以上即可通过 P0 能力检查。</p>
+          <h3>发音自检</h3>
+          <p class="muted">10 题三选，检查字母、音素与拼读规则；课程始终全部开放。</p>
         <button class="btn w-full mt-12" id="btn-unlock-quiz" onclick="startUnlockQuiz()">开始测验</button>
       </div>
     </div>
@@ -930,6 +980,7 @@ p { margin: 0 0 10px; }
     <!-- 复习 -->
     <div id="screen-review" class="screen hidden">
       <h2 class="mb-12">词卡复习</h2>
+      <div class="card mb-12"><p class="muted" style="margin:0;" id="review-forecast-text"></p></div>
       <div id="review-empty" class="empty-state hidden"><h3>今日复习队列已清空</h3><p class="muted">所有到期的词都已经复习完毕，去学习新课或稍后再来吧。</p><button class="btn mt-12" onclick="go('lessons')">去学新课</button></div>
       <div id="review-card-area">
         <div class="word-card" id="flip-card" role="button" tabindex="0" aria-label="翻转复习词卡" onclick="flipCard()" onkeydown="activateOnKey(event)">
@@ -967,8 +1018,8 @@ p { margin: 0 0 10px; }
       <h2 class="mb-12">测验中心</h2>
       <div id="quiz-menu">
         <div class="card" role="button" tabindex="0" onclick="startUnlockQuiz()" onkeydown="activateOnKey(event)">
-          <h3>发音解锁测验 <span class="badge badge-accent">P0</span></h3>
-          <p class="muted">10 题三选，检验字母、音素与拼读规则，80% 通过。</p>
+          <h3>发音自检 <span class="badge badge-accent">P0</span></h3>
+          <p class="muted">10 题三选，检验字母、音素与拼读规则；可随时重做。</p>
         </div>
         <div class="card" role="button" tabindex="0" onclick="startQuiz('es2zh')" onkeydown="activateOnKey(event)">
           <h3>西译中</h3>
@@ -983,8 +1034,12 @@ p { margin: 0 0 10px; }
           <p class="muted">听发音，选择听到的单词。</p>
         </div>
         <div class="card" role="button" tabindex="0" onclick="startQuiz('article')" onkeydown="activateOnKey(event)">
-          <h3>选冠词 <span class="badge badge-fem">el / la</span></h3>
-          <p class="muted">为名词选择正确的定冠词。</p>
+          <h3>选冠词 · 例外专项 <span class="badge badge-fem">el / la</span></h3>
+          <p class="muted">阴阳性例外专项：el problema、la mano、el agua、-ista 通性词等。</p>
+        </div>
+        <div class="card" role="button" tabindex="0" onclick="startQuiz('conj')" onkeydown="activateOnKey(event)">
+          <h3>变位填空 <span class="badge badge-masc">拼写</span></h3>
+          <p class="muted">给不定式 + 人称 + 时态，键盘输入变位，严格判分（含重音符号）。</p>
         </div>
       </div>
       <div id="quiz-area" class="hidden"></div>
@@ -1012,6 +1067,7 @@ p { margin: 0 0 10px; }
             <p class="muted">用西语说出这个数字</p>
           </div>
           <div class="text-center hidden" style="font-size:20px;font-weight:600;" id="speed-answer"></div>
+          <div class="choice-grid mt-12 hidden" id="speed-rate"><button class="btn btn-secondary" onclick="rateSpeed(false)">还不熟</button><button class="btn" onclick="rateSpeed(true)">说对了</button></div>
           <div class="choice-grid mt-12">
             <button class="btn btn-secondary" onclick="showSpeedAnswer()">显示答案</button>
             <button class="btn" onclick="nextSpeed()">下一题</button>
@@ -1037,25 +1093,83 @@ p { margin: 0 0 10px; }
     <!-- 工具箱 -->
     <div id="screen-tools" class="screen hidden">
       <h2 class="mb-12">工具箱</h2>
+      <div class="tool-card" style="cursor:default;">
+        <h3>按阶段选择</h3>
+        <p class="muted">A0：发音、数字、重音、跟读。A1：现在时、词干变化、ser / estar。A2：过去时、por / para、地区朗读。B1：虚拟式。所有工具均可自由进入。</p>
+      </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('verbs')" onkeydown="activateOnKey(event)">
-        <h3>动词变位</h3>
-        <p class="muted">常用动词 5 个时态 × 6 人称速查。</p>
+        <h3>动词变位 <span class="badge badge-accent">A1 起</span></h3>
+        <p class="muted">60 个常用动词速查，默认从现在时开始；其余时态按需要展开。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('preterite')" onkeydown="activateOnKey(event)">
+        <h3>不规则过去时 <span class="badge badge-accent">A2 起</span></h3>
+        <p class="muted">fui / tuve / hice / dije… 不规则简单过去时逐人称听写。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('stemchange')" onkeydown="activateOnKey(event)">
+        <h3>词干变化动词 <span class="badge badge-accent">A1 后段</span></h3>
+        <p class="muted">e→ie / o→ue / e→i 三组清单 + 变位填空，重点练变化格。</p>
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('words')" onkeydown="activateOnKey(event)">
         <h3>词库检索</h3>
         <p class="muted">全部词条，带阴阳性颜色标记与已学状态。</p>
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('numbers')" onkeydown="activateOnKey(event)">
-        <h3>数字专项</h3>
+        <h3>数字专项 <span class="badge badge-masc">A0 起</span></h3>
         <p class="muted">0–100 听写与快速反应。</p>
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('mistakes')" onkeydown="activateOnKey(event)">
         <h3>错题本</h3>
         <p class="muted">答错的题集中回顾，一键加入复习。</p>
       </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="startStress()" onkeydown="activateOnKey(event)">
+        <h3>重音训练 <span class="badge badge-masc">A0 起</span></h3>
+        <p class="muted">听单词，点击重音所在的音节，附规则提示。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('quiz');startQuiz('serestar')" onkeydown="activateOnKey(event)">
+        <h3>ser / estar 快答 <span class="badge badge-accent">A1 后段</span></h3>
+        <p class="muted">二选一快答，含改义形容词（ser listo / estar listo 等）。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('quiz');startQuiz('porpara')" onkeydown="activateOnKey(event)">
+        <h3>por / para 场景 <span class="badge badge-accent">A2 起</span></h3>
+        <p class="muted">完整句子二选一：原因 / 目的 / 时长 / 期限 / 固定搭配。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('cloze')" onkeydown="activateOnKey(event)">
+        <h3>时态选择 · 段落填空 <span class="badge badge-accent">A2 起</span></h3>
+        <p class="muted">叙事短文逐空二选一：indefinido（单次动作）/ imperfecto（背景习惯），附判断依据。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('subjunctive')" onkeydown="activateOnKey(event)">
+        <h3>虚拟式现在时 · WEIRDO <span class="badge badge-accent">B1 起</span></h3><p class="muted">愿望、情感、怀疑与评价：90 题混合练习。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('shadowing')" onkeydown="activateOnKey(event)">
+        <h3>发音跟读 <span class="badge badge-masc">A0 起</span></h3><p class="muted">40 句难点跟读；识别不可用时录音回放。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('listening-la')" onkeydown="activateOnKey(event)">
+        <h3>拉美朗读对照 <span class="badge badge-accent">A2 起</span></h3><p class="muted">先听后看，比较系统提供的 es-MX / es-AR 朗读与文本理解。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('falsefriends')" onkeydown="activateOnKey(event)">
+        <h3>假朋友 <span class="badge badge-accent">A2 起</span></h3>
+        <p class="muted">形似义异词（embarazada、éxito、actualmente 等）+ 四选一小测。</p>
+      </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('quiz')" onkeydown="activateOnKey(event)">
         <h3>测验中心</h3>
-        <p class="muted">西译中、中译西、听力、冠词与发音解锁测验。</p>
+        <p class="muted">西译中、中译西、听力、冠词例外专项与发音自检。</p>
+      </div>
+    </div>
+
+    <!-- 重音训练 -->
+    <div id="screen-stress" class="screen hidden">
+      <h2 class="mb-12">重音训练</h2>
+      <div id="stress-area"></div>
+    </div>
+
+    <!-- 假朋友 -->
+    <div id="screen-falsefriends" class="screen hidden">
+      <h2 class="mb-12">假朋友 · 形似义异</h2>
+      <div id="ff-list"></div>
+      <div class="card text-center">
+        <h3>假朋友小测</h3>
+        <p class="muted">四选一：这个词的真正意思是什么？</p>
+        <button class="btn w-full mt-12" onclick="go('quiz');startQuiz('ff')">开始小测</button>
       </div>
     </div>
 
@@ -1065,6 +1179,28 @@ p { margin: 0 0 10px; }
       <div id="verb-list"></div>
       <div id="verb-detail" class="hidden"></div>
     </div>
+
+    <!-- 不规则过去时 -->
+    <div id="screen-preterite" class="screen hidden">
+      <h2 class="mb-12">不规则过去时</h2>
+      <div id="pret-area"></div>
+    </div>
+
+    <!-- 词干变化动词 -->
+    <div id="screen-stemchange" class="screen hidden">
+      <h2 class="mb-12">词干变化动词</h2>
+      <div id="sc-area"></div>
+    </div>
+
+    <!-- 时态选择段落填空 -->
+    <div id="screen-cloze" class="screen hidden">
+      <h2 class="mb-12">时态选择 · 段落填空</h2>
+      <div id="cloze-area"></div>
+    </div>
+
+    <div id="screen-subjunctive" class="screen hidden"><h2 class="mb-12">虚拟式现在时 · WEIRDO</h2><div id="subjunctive-area"></div></div>
+    <div id="screen-shadowing" class="screen hidden"><h2 class="mb-12">发音跟读</h2><div id="shadowing-area"></div></div>
+    <div id="screen-listening-la" class="screen hidden"><h2 class="mb-12">拉美朗读对照</h2><div id="listening-la-area"></div></div>
 
     <!-- 词库 -->
     <div id="screen-words" class="screen hidden">
@@ -1135,8 +1271,16 @@ p { margin: 0 0 10px; }
         </div>
       </div>
       <div class="card">
+        <h3>地区变体</h3>
+        <p class="muted">选择朗读口音：西班牙本土（es-ES）或拉丁美洲（es-LA）。</p>
+        <div class="theme-opts mt-12">
+          <button class="theme-opt variant-opt" id="variant-es-ES" onclick="setVariant('es-ES')">西班牙本土</button>
+          <button class="theme-opt variant-opt" id="variant-es-LA" onclick="setVariant('es-LA')">拉丁美洲</button>
+        </div>
+      </div>
+      <div class="card">
         <h3>语音自检</h3>
-        <p class="muted">本工具使用西班牙本土口音（es-ES）朗读。</p>
+        <p class="muted" id="voice-check-intro">本工具使用西班牙本土口音（es-ES）朗读。</p>
         <div id="voice-check" class="mt-12"></div>
         <button class="btn btn-secondary w-full mt-12" onclick="speakText('Hola, ¿qué tal? Me llamo ESbrain.')">播放测试句子</button>
       </div>
@@ -1148,6 +1292,11 @@ p { margin: 0 0 10px; }
           <button class="btn btn-secondary" onclick="importData()">导入 JSON</button>
         </div>
         <input type="file" id="import-file" class="hidden" accept="application/json" onchange="handleImport(event)" />
+      </div>
+      <div class="card">
+        <h3>本地快照</h3>
+        <p class="muted">每周首次打开时自动把学习数据备份到浏览器本地数据库（最多保留 8 份），可恢复或导出。</p>
+        <div id="snapshot-list" class="mt-12"></div>
       </div>
       <div class="card">
         <h3>危险操作</h3>
@@ -1280,11 +1429,12 @@ const VERBS = [
       return {
         onboarding: false,
         progress: { completed: [], p0Passed: false },
-        reviews: [],      // { wordId, due, interval, reps, lastReview }
+        reviews: [],      // { wordId, due, interval, reps, lastReview, ease, suspended }
         reviewLog: [],    // { date, wordId, level: 'new'|'hard'|'mid'|'easy' }，只保留 90 天且最多 2000 条
         mistakes: [],     // { wordId, count, lastAt }
+        skillMistakes: [], // { key, label, screen, quizType, count, lastAt }
         mistakeLog: [],   // { date, wordId } 真实答错事件，供周报使用
-        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto' },
+        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES' },
         checkins: {},     // { 'YYYY-MM-DD': minutes }
         streak: { current: 0, lastDate: '', makeupUsed: false, makeupDates: [] },
         sessionStart: Date.now()
@@ -1320,7 +1470,10 @@ const VERBS = [
           due: isValidDate(r.due) ? r.due : fmtDate(),
           interval: normalizeReviewInterval(r.interval),
           reps: Number.isFinite(r.reps) && r.reps > 0 ? Math.floor(r.reps) : 0,
-          lastReview: isValidDate(r.lastReview) ? r.lastReview : ''
+          lastReview: isValidDate(r.lastReview) ? r.lastReview : '',
+          // 旧数据无 ease/suspended 字段时自动补默认值，保证无感迁移
+          ease: Number.isFinite(r.ease) && r.ease >= 1.3 ? r.ease : 2.5,
+          suspended: r.suspended === true
         }));
       if (Array.isArray(input.reviewLog)) out.reviewLog = input.reviewLog
         .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId) && REVIEW_LEVELS.includes(e.level))
@@ -1332,6 +1485,16 @@ const VERBS = [
           count: Number.isFinite(m.count) && m.count > 0 ? Math.floor(m.count) : 1,
           lastAt: isValidDate(m.lastAt) ? m.lastAt : ''
         }));
+      if (Array.isArray(input.skillMistakes)) out.skillMistakes = input.skillMistakes
+        .filter(m => m && typeof m.key === 'string' && /^[a-z-]{2,32}$/.test(m.key) && typeof m.label === 'string' && m.label.length <= 40 && typeof m.screen === 'string' && typeof m.quizType === 'string')
+        .map(m => ({
+          key: m.key,
+          label: m.label,
+          screen: m.screen,
+          quizType: m.quizType,
+          count: Number.isFinite(m.count) && m.count > 0 ? Math.floor(m.count) : 1,
+          lastAt: isValidDate(m.lastAt) ? m.lastAt : ''
+        }));
       if (Array.isArray(input.mistakeLog)) out.mistakeLog = input.mistakeLog
         .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId))
         .map(e => ({ date: e.date, wordId: e.wordId }));
@@ -1340,6 +1503,7 @@ const VERBS = [
         if (Number.isFinite(s.dailyGoal) && s.dailyGoal > 0) out.settings.dailyGoal = Math.min(100, Math.floor(s.dailyGoal));
         if (Number.isFinite(s.voiceRate) && s.voiceRate > 0) out.settings.voiceRate = Math.min(3, Math.max(0.25, s.voiceRate));
         if (['light', 'dark', 'auto'].includes(s.theme)) out.settings.theme = s.theme;
+        if (['es-ES', 'es-LA'].includes(s.variant)) out.settings.variant = s.variant;
       }
       if (input.checkins && typeof input.checkins === 'object' && !Array.isArray(input.checkins)) {
         for (const [k, v] of Object.entries(input.checkins)) {
@@ -1378,10 +1542,11 @@ const VERBS = [
       state.reviewLog = state.reviewLog.filter(e => e && typeof e.date === 'string' && e.date >= cutoff);
       if (state.reviewLog.length > 2000) state.reviewLog = state.reviewLog.slice(-2000);
     }
-    const REVIEW_INTERVALS = [1, 3, 7, 15, 30];
+    // SRS（类 SM-2 简化版）：间隔单位为天，合法值 clamp 到 [1, 365] 整数
     function normalizeReviewInterval(value) {
-      const interval = Number(value) || 1;
-      return REVIEW_INTERVALS.filter(candidate => candidate <= interval).pop() || 1;
+      const interval = Number(value);
+      if (!Number.isFinite(interval) || interval < 1) return 1;
+      return Math.min(365, Math.ceil(interval));
     }
     function logMistake(wordId) {
       const cutoff = fmtDate(addDays(new Date(), -90));
@@ -1390,7 +1555,7 @@ const VERBS = [
       if (state.mistakeLog.length > 2000) state.mistakeLog = state.mistakeLog.slice(-2000);
     }
 
-    // ====================== 语音（西班牙本土口音 es-ES） ======================
+    // ====================== 语音（按地区变体选口音：es-ES 西班牙本土 / es-LA 拉美） ======================
     let cachedVoice = null;
     function normalizeLangTag(tag) { return String(tag || '').replace('_', '-').toLowerCase(); }
     function pickSpanishVoice() {
@@ -1399,7 +1564,12 @@ const VERBS = [
       const spanish = voices.filter(v => normalizeLangTag(v.lang).indexOf('es') === 0);
       if (!spanish.length) { cachedVoice = null; return; }
       const byLang = tag => spanish.find(v => normalizeLangTag(v.lang) === tag);
-      cachedVoice = byLang('es-es') || byLang('es-mx') || byLang('es-us') || spanish[0];
+      if (state.settings.variant === 'es-LA') {
+        // 拉美：优先墨西哥，其次美国西语及其他非 es-es 的拉美语音，最后退回任意西语
+        cachedVoice = byLang('es-mx') || byLang('es-us') || spanish.find(v => normalizeLangTag(v.lang) !== 'es-es') || spanish[0];
+      } else {
+        cachedVoice = byLang('es-es') || byLang('es-mx') || byLang('es-us') || spanish[0];
+      }
     }
     function getSpanishVoices() {
       if (!window.speechSynthesis) return [];
@@ -1412,7 +1582,7 @@ const VERBS = [
       // 去掉括号注释再读（如词义里的补充说明）
       const u = new SpeechSynthesisUtterance(String(text).replace(/\s*[（(][^）)]*[）)]/g, '').trim());
       if (cachedVoice) { u.voice = cachedVoice; u.lang = cachedVoice.lang; }
-      else u.lang = 'es-ES';
+      else u.lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
       u.rate = state.settings.voiceRate;
       u.onstart = () => { if (btn) btn.classList.add('playing'); };
       u.onend = () => { if (btn) btn.classList.remove('playing'); };
@@ -1426,7 +1596,7 @@ const VERBS = [
       ALPHABET.forEach(a => {
         const u = new SpeechSynthesisUtterance(a.name);
         if (cachedVoice) { u.voice = cachedVoice; u.lang = cachedVoice.lang; }
-        else u.lang = 'es-ES';
+        else u.lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
         u.rate = state.settings.voiceRate;
         window.speechSynthesis.speak(u);
       });
@@ -1461,17 +1631,18 @@ const VERBS = [
     function speakIcon(size) { return `<svg width="${size || 16}" height="${size || 16}" style="vertical-align:middle"><use href="#icon-volume"/></svg>`; }
 
     // ====================== 路由 ======================
-    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'verbs', 'words', 'stats', 'weekly', 'settings'];
+    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'listening-la'];
     const NAV_MAP = {
       home: 'home', stats: 'home', weekly: 'home', settings: 'home',
       phonetics: 'phonetics', lessons: 'lessons', learn: 'lessons',
       review: 'review', tools: 'tools', quiz: 'tools', numbers: 'tools',
-      mistakes: 'tools', verbs: 'tools', words: 'tools'
+      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', 'listening-la': 'tools'
     };
     const SCREEN_TITLES = {
       phonetics: '发音入门', lessons: '课程', learn: '学习', review: '复习',
       quiz: '测验中心', numbers: '数字专项', mistakes: '错题本', tools: '工具箱',
-      verbs: '动词变位', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
+      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', 'listening-la': '拉美朗读对照',
+      verbs: '动词变位', preterite: '不规则过去时', stemchange: '词干变化动词', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
     };
     function go(screen) {
       SCREENS.forEach(s => { const el = $('screen-' + s); if (el) el.classList.add('hidden'); });
@@ -1492,10 +1663,18 @@ const VERBS = [
       if (screen === 'numbers') renderNumbers();
       if (screen === 'mistakes') renderMistakes();
       if (screen === 'verbs') renderVerbs();
+      if (screen === 'preterite') renderPreterite();
+      if (screen === 'stemchange') renderStemChange();
       if (screen === 'words') renderWords();
+      if (screen === 'stress') renderStress();
+      if (screen === 'falsefriends') renderFalseFriends();
+      if (screen === 'cloze') renderCloze();
+      if (screen === 'subjunctive') renderSubjunctive();
+      if (screen === 'shadowing') renderShadowing();
+      if (screen === 'listening-la') renderListeningLA();
       if (screen === 'stats') renderStats();
       if (screen === 'weekly') renderWeekly();
-      if (screen === 'settings') renderVoiceCheck();
+      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); }
     }
 
     // ====================== 新手引导 ======================
@@ -1546,17 +1725,20 @@ const VERBS = [
           : `欢迎回来。今天目标 ${goal} 个新词——还剩 ${undone} 个小步骤，慢慢来。`;
 
       let ctaAction = "go('quiz')", ctaText = '进入测验中心';
-      if (due > 0) { ctaAction = "go('review')"; ctaText = '去复习'; }
+      if (!state.progress.p0Passed) { ctaAction = "go('phonetics')"; ctaText = '从发音入门开始'; }
+      else if (due > 0) { ctaAction = "go('review')"; ctaText = '去复习'; }
       else if (nextLesson) { ctaAction = `openLesson('${nextLesson.id}')`; ctaText = `学习 ${nextLesson.title}`; }
 
-      const activeTask = due > 0 ? 'review' : (nextLesson ? 'learn' : (!checked ? 'checkin' : ''));
+      const activeTask = due > 0 ? 'review' : (!state.progress.p0Passed ? 'learn' : (nextLesson ? 'learn' : (!checked ? 'checkin' : '')));
       const taskRow = (key, title, sub, done, onclick) => {
         const isActive = activeTask === key;
         const cls = 'task-row' + (done ? ' done' : '') + (isActive ? ' active' : '');
         return `<div class="${cls}" role="button" tabindex="0" onclick="${onclick}" onkeydown="activateOnKey(event)"><div class="task-radio"></div><div class="task-main"><div class="task-title">${title}</div><div class="task-sub">${sub}</div></div><div class="task-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></div></div>`;
       };
       const reviewRow = taskRow('review', '复习旧词', due > 0 ? `${due} 个待复习` : '今日复习已完成', due === 0, "go('review')");
-      const learnRow = taskRow('learn', '学习新课', nextLesson ? nextLesson.title : '课程全部完成', !nextLesson, nextLesson ? `openLesson('${nextLesson.id}')` : "go('lessons')");
+      const learnRow = !state.progress.p0Passed
+        ? taskRow('learn', '发音入门', '推荐起点：字母、音素与拼读规则', false, "go('phonetics')")
+        : taskRow('learn', '学习新课', nextLesson ? nextLesson.title : '课程全部完成', !nextLesson, nextLesson ? `openLesson('${nextLesson.id}')` : "go('lessons')");
       const checkinRow = taskRow('checkin', '自动打卡', checked ? '今日已打卡' : '学习满 1 分钟自动打卡', checked, "go('stats')");
 
       $('home-container').innerHTML = `
@@ -1591,20 +1773,16 @@ const VERBS = [
         </div>
       `;
     }
-    // 下一课：按 LESSONS 顺序第一个未完成且已解锁的课
+    // 下一课：按 LESSONS 顺序推荐第一个未完成的课，课程本身不设进度锁。
     function getNextLesson() {
       for (const l of LESSONS) {
         if (state.progress.completed.includes(l.id)) continue;
-        if (isLessonUnlocked(l)) return l;
-        return null; // 顺序解锁：遇到第一个未解锁的未完成课即停
+        return l;
       }
       return null;
     }
-    function isLessonUnlocked(lesson) {
-      // 全局顺序解锁：跨阶段也要求上一课完成，不能跳过整个 A1.1 直接学 A1.2
-      const idx = LESSONS.findIndex(l => l.id === lesson.id);
-      if (idx <= 0) return true;
-      return state.progress.completed.includes(LESSONS[idx - 1].id);
+    function isLessonUnlocked() {
+      return true;
     }
 
     // ====================== 活跃计时与打卡 ======================
@@ -1649,19 +1827,31 @@ const VERBS = [
     function renderPhonetics() {
       const al = $('alphabet-list');
       if (al) {
-        al.innerHTML = ALPHABET.map(a => `<div class="phoneme-card" role="button" tabindex="0" onclick="speakText('${escAttr(a.name)}')" onkeydown="activateOnKey(event)"><div class="phoneme-sym es">${a.letter}</div><div class="muted es" style="font-size:12px;">${a.name}</div><div class="ipa" style="font-size:11px;margin-top:2px;">${a.ipa}</div><div class="speak" style="margin:6px auto 0;">${speakIcon()}</div></div>`).join('');
+        const useLA = state.settings.variant === 'es-LA';
+        al.innerHTML = ALPHABET.map(a => `<div class="phoneme-card" role="button" tabindex="0" onclick="speakText('${escAttr(a.name)}')" onkeydown="activateOnKey(event)"><div class="phoneme-sym es">${a.letter}</div><div class="muted es" style="font-size:12px;">${a.name}</div><div class="ipa" style="font-size:11px;margin-top:2px;">${useLA && a.ipa_la ? a.ipa_la : a.ipa}</div><div class="speak" style="margin:6px auto 0;">${speakIcon()}</div></div>`).join('');
+      }
+      const dl = $('digraph-list');
+      if (dl) {
+        dl.innerHTML = DIGRAPHS.map(d => `<div class="phoneme-card" role="button" tabindex="0" onclick="speakText('${escAttr(d.ex)}')" onkeydown="activateOnKey(event)"><div class="phoneme-sym es">${d.letters}</div><div class="ipa" style="font-size:12px;margin-top:4px;">${d.ipa}</div><div class="muted es" style="font-size:12px;">${d.ex}</div><div class="muted" style="font-size:11px;">${d.note}</div><div class="speak" style="margin:6px auto 0;">${speakIcon()}</div></div>`).join('');
       }
       const pl = $('phoneme-list');
-      pl.innerHTML = PHONEMES.map(p => `<div class="phoneme-card" role="button" tabindex="0" onclick="speakText('${escAttr(p.ex)}')" onkeydown="activateOnKey(event)"><div class="phoneme-sym es">/${p.sym}/</div><div class="muted es" style="font-size:12px;">${p.ex}</div><div class="muted" style="font-size:11px;">${p.note}</div><div class="speak" style="margin:6px auto 0;">${speakIcon()}</div></div>`).join('');
+      pl.innerHTML = PHONEMES.map(p => {
+        const notation = p.kind === 'glide' ? `[${p.sym}]` : `/${p.sym}/`;
+        return `<div class="phoneme-card" role="button" tabindex="0" onclick="speakText('${escAttr(p.ex)}')" onkeydown="activateOnKey(event)"><div class="phoneme-sym es">${notation}</div><div class="muted es" style="font-size:12px;">${p.ex}</div><div class="muted" style="font-size:11px;">${p.note}</div><div class="speak" style="margin:6px auto 0;">${speakIcon()}</div></div>`;
+      }).join('');
       const rl = $('rule-list');
-      rl.innerHTML = RULES.map(r => `<div class="rule-card"><h4>${r.title}</h4><div class="muted es" style="margin-bottom:6px;">例：${r.ex}</div><div style="font-size:13px;">${r.note}</div></div>`).join('');
-      const passed = state.progress.p0Passed;
+      const ruleCard = r => `<div class="rule-card"><h4>${r.title}</h4><div class="muted es" style="margin-bottom:6px;">例：${r.ex}</div><div style="font-size:13px;">${r.note}</div></div>`;
+      // 核心规则直接展示，其余收进默认折叠的「更多细节」区
+      const coreRules = RULES.filter(r => r.core);
+      const moreRules = RULES.filter(r => !r.core);
+      rl.innerHTML = coreRules.map(ruleCard).join('')
+        + `<details class="rule-details"><summary>更多细节（${moreRules.length} 条）</summary>${moreRules.map(ruleCard).join('')}</details>`;
       const btn = $('btn-unlock-quiz');
-      btn.textContent = passed ? '✓ 已通过发音测验' : '开始测验';
-      btn.disabled = passed;
+      btn.textContent = state.progress.p0Passed ? '再次自检' : '开始自检';
+      btn.disabled = false;
     }
 
-    // ====================== 课程列表（按 STAGES 分组 + 顺序解锁） ======================
+    // ====================== 课程列表（按 STAGES 分组，全部开放） ======================
     function renderLessons() {
       const wrap = $('lesson-groups');
       let html = '';
@@ -1670,7 +1860,7 @@ const VERBS = [
         html += `<div class="stage-title">${stage.title}</div><div class="lesson-list">`;
         if (stageKey === 'P0') {
           const passed = state.progress.p0Passed;
-          html += `<div class="lesson-item${passed ? ' completed' : ''}" role="button" tabindex="0" onclick="go('phonetics')" onkeydown="activateOnKey(event)"><div style="flex:1;min-width:0;"><div class="lesson-id">P0</div><div class="lesson-title">发音入门</div><div class="lesson-meta">字母 · 音素 · 拼读规则</div></div><div style="flex-shrink:0;margin-left:12px;">${passed ? '<span class="badge badge-masc">已完成</span>' : '<span class="badge badge-accent">前往发音模块</span>'}</div></div>`;
+          html += `<div class="lesson-item${passed ? ' completed' : ''}" role="button" tabindex="0" onclick="go('phonetics')" onkeydown="activateOnKey(event)"><div style="flex:1;min-width:0;"><div class="lesson-id">P0</div><div class="lesson-title">发音入门</div><div class="lesson-meta">推荐起点 · 字母 · 音素 · 拼读规则</div></div><div style="flex-shrink:0;margin-left:12px;">${passed ? '<span class="badge badge-masc">已自检</span>' : '<span class="badge badge-accent">推荐先学</span>'}</div></div>`;
         } else {
           const stageLessons = LESSONS.filter(l => l.stage === stageKey);
           if (stageLessons.length === 0) {
@@ -1678,16 +1868,11 @@ const VERBS = [
           } else {
             stageLessons.forEach((l, idx) => {
               const completed = state.progress.completed.includes(l.id);
-              const unlocked = isLessonUnlocked(l);
               const learnedCount = l.words.filter(id => state.reviews.some(r => r.wordId === id)).length;
-              let status;
-              if (completed) status = '<span class="badge badge-masc">✓ 已完成</span>';
-              else if (unlocked) status = '<span class="badge badge-accent">可学习</span>';
-              else status = '<span class="badge badge-locked"><svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><rect x="6" y="11" width="12" height="10" rx="2"/><path d="M9 11V7a3 3 0 0 1 6 0v4"/></svg> 未解锁</span>';
-              const clickAttrs = unlocked
-                ? `role="button" tabindex="0" onclick="openLesson('${l.id}')" onkeydown="activateOnKey(event)"`
-                : 'aria-disabled="true"';
-              html += `<div class="lesson-item${completed ? ' completed' : ''}${unlocked ? '' : ' locked'}" ${clickAttrs}><div style="flex:1;min-width:0;"><div class="lesson-id">${l.id}</div><div class="lesson-title">${l.title}</div><div class="lesson-meta">${l.words.length} 核心词 · 已学 ${learnedCount}/${l.words.length}</div></div><div style="flex-shrink:0;margin-left:12px;">${status}</div></div>`;
+              const recommended = !getNextLesson() || getNextLesson().id === l.id;
+              const status = completed ? '<span class="badge badge-masc">✓ 已完成</span>' : (recommended ? '<span class="badge badge-accent">推荐下一课</span>' : '<span class="badge badge-accent">可学习</span>');
+              const clickAttrs = `role="button" tabindex="0" onclick="openLesson('${l.id}')" onkeydown="activateOnKey(event)"`;
+              html += `<div class="lesson-item${completed ? ' completed' : ''}" ${clickAttrs}><div style="flex:1;min-width:0;"><div class="lesson-id">${l.id}</div><div class="lesson-title">${l.title}</div><div class="lesson-meta">${l.words.length} 核心词 · 已学 ${learnedCount}/${l.words.length}</div></div><div style="flex-shrink:0;margin-left:12px;">${status}</div></div>`;
             });
           }
         }
@@ -1702,16 +1887,20 @@ const VERBS = [
       learnWordIndex = 0;
       extraWordIndex = 0;
       learnMode = 'core';
+      lessonListeningRevealed = false;
+      lessonListeningAnswers = [];
       go('learn');
       renderLearn();
     }
 
-    // ====================== 学习流程（词卡 → 语法 → 对话 → 小测） ======================
+    // ====================== 学习流程（词卡 → 语法 → 对话 → 听力 → 小测） ======================
     let currentLesson = null;
-    let learnStep = 0; // 0=核心词 1=语法 2=对话 3=小测
+    let learnStep = 0; // 0=核心词 1=语法 2=对话 3=听力 4=小测
     let learnWordIndex = 0;
     let extraWordIndex = 0;
     let learnMode = 'core'; // core | choice | extra
+    let lessonListeningRevealed = false;
+    let lessonListeningAnswers = [];
     function wordCardHtml(w, label, nextFn, extraBtn) {
       const disp = displayWord(w);
       return `<div class="card"><div class="muted">${label}</div><div style="text-align:center;padding:30px 0;"><div class="word-display ${genderClass(w)}" style="font-size:32px;">${disp}</div><div class="ipa">${w.ipa || ''}</div><button class="speak" aria-label="朗读" style="width:48px;height:48px;font-size:20px;margin-top:12px;" onclick="speakText('${escAttr(disp)}')">${speakIcon(18)}</button><div class="zh" style="font-size:20px;font-weight:600;margin-top:16px;">${w.zh}</div><div class="muted mt-12 es">${w.example || ''}</div><div class="muted">${w.example_zh || ''}</div></div><button class="btn w-full" onclick="${nextFn}">下一个</button>${extraBtn || ''}</div>`;
@@ -1742,10 +1931,46 @@ const VERBS = [
         c.innerHTML = `<div class="card"><div class="muted">语法点</div>${body}<button class="btn w-full mt-12" onclick="learnStep=2;renderLearn()">进入对话</button></div>`;
       } else if (learnStep === 2) {
         const lines = (currentLesson.dialog || []).map(d => `<div class="dialog-line ${d.speaker.toLowerCase()}"><div class="speaker" style="font-weight:700;margin-bottom:4px;">${d.speaker}</div><div class="es">${d.es} <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(d.es)}')">${speakIcon()}</button></div><div class="muted" style="font-size:13px;margin-top:4px;">${d.zh}</div></div>`).join('');
-        c.innerHTML = `<div class="card"><div class="muted">迷你对话</div>${lines || '<p class="muted">本课无对话。</p>'}<button class="btn w-full mt-12" onclick="learnStep=3;renderLearn()">进入小测</button></div>`;
+        const nextStep = currentLesson.listening ? 3 : 4;
+        c.innerHTML = `<div class="card"><div class="muted">迷你对话</div>${lines || '<p class="muted">本课无对话。</p>'}<button class="btn w-full mt-12" onclick="learnStep=${nextStep};renderLearn()">${currentLesson.listening ? '进入听力' : '进入小测'}</button></div>`;
       } else if (learnStep === 3) {
+        renderLessonListening();
+      } else if (learnStep === 4) {
         startLessonQuiz();
       }
+    }
+    function renderLessonListening() {
+      const c = $('learn-container');
+      const listening = currentLesson && currentLesson.listening;
+      if (!listening) { learnStep = 4; renderLearn(); return; }
+      const lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
+      const allAnswered = listening.questions.every((_, i) => lessonListeningAnswers[i] !== undefined);
+      const questions = lessonListeningRevealed
+        ? listening.questions.map((q, qi) => {
+            const picked = lessonListeningAnswers[qi];
+            const options = shuffle(q.options.map((opt, oi) => ({ opt, oi }))).map(({ opt, oi }) => {
+              let cls = 'quiz-opt';
+              if (picked !== undefined) {
+                if (oi === q.answer) cls += ' correct';
+                else if (oi === picked) cls += ' wrong';
+              }
+              return `<button class="${cls}" ${picked !== undefined ? 'disabled' : ''} onclick="answerLessonListening(${qi},${oi})">${opt}</button>`;
+            }).join('');
+            const feedback = picked === undefined ? '' : `<p class="muted" style="font-size:13px;margin:6px 0 14px;">${q.tip}</p>`;
+            return `<div style="margin-top:18px;"><h4 class="es">${q.q}</h4>${options}${feedback}</div>`;
+          }).join('')
+        : '';
+      c.innerHTML = `<div class="card"><div class="muted">听力理解 · 先听后看</div><p class="muted">先播放短文，凭听到的信息答题；原文会在你主动查看后显示。</p><button class="btn w-full" onclick="speakTextWithLang('${escAttr(listening.text)}','${lang}')">播放短文</button><button class="btn btn-secondary w-full mt-12" onclick="revealLessonListening()">${lessonListeningRevealed ? '隐藏原文与题目' : '查看原文并答题'}</button>${lessonListeningRevealed ? `<div class="word-section example-section" style="margin-top:16px;"><div class="lab">原文</div><div class="tx es" style="line-height:1.7;">${listening.text}</div></div>${questions}${allAnswered ? '<button class="btn w-full mt-12" onclick="learnStep=4;renderLearn()">进入小测</button>' : ''}` : ''}</div>`;
+    }
+    function revealLessonListening() {
+      lessonListeningRevealed = !lessonListeningRevealed;
+      renderLessonListening();
+    }
+    function answerLessonListening(questionIndex, optionIndex) {
+      const listening = currentLesson && currentLesson.listening;
+      if (!listening || lessonListeningAnswers[questionIndex] !== undefined) return;
+      lessonListeningAnswers[questionIndex] = optionIndex;
+      renderLessonListening();
     }
     function nextLearnWord() {
       const w = getWord(currentLesson.words[learnWordIndex]);
@@ -1761,7 +1986,7 @@ const VERBS = [
     }
     function addToReview(wordId) {
       if (!state.reviews.find(r => r.wordId === wordId)) {
-        state.reviews.push({ wordId, due: fmtDate(), interval: 1, reps: 0, lastReview: '' });
+        state.reviews.push({ wordId, due: fmtDate(), interval: 1, reps: 0, lastReview: '', ease: 2.5, suspended: false });
         logReview(wordId, 'new');
         saveState();
       }
@@ -1794,10 +2019,19 @@ const VERBS = [
     let reviewQueue = [];
     function renderReview() {
       const today = fmtDate();
-      reviewQueue = state.reviews.filter(r => r.due <= today).map(r => r.wordId);
+      // 暂缓（suspended）的词不进复习队列
+      reviewQueue = state.reviews.filter(r => !r.suspended && r.due <= today).map(r => r.wordId);
+      renderReviewForecast(today);
       if (reviewQueue.length === 0) { hide('review-card-area'); show('review-empty'); return; }
       show('review-card-area'); hide('review-empty');
       renderReviewCard();
+    }
+    // 未来 7/30 天复习负载（按 suspended=false 且 due 统计，含今日到期）
+    function renderReviewForecast(today) {
+      const active = state.reviews.filter(r => !r.suspended);
+      const in7 = active.filter(r => r.due >= today && r.due <= fmtDate(addDays(new Date(), 7))).length;
+      const in30 = active.filter(r => r.due >= today && r.due <= fmtDate(addDays(new Date(), 30))).length;
+      setText('review-forecast-text', `未来 7 天 ${in7} 个 · 未来 30 天 ${in30} 个待复习`);
     }
     function renderReviewCard() {
       const id = reviewQueue[0];
@@ -1837,14 +2071,24 @@ const VERBS = [
       logReview(id, level);
       const rec = state.reviews.find(r => r.wordId === id);
       if (rec) {
-        const currentIndex = REVIEW_INTERVALS.indexOf(normalizeReviewInterval(rec.interval));
-        const nextIndex = level === 'hard' ? 0 : Math.min(REVIEW_INTERVALS.length - 1, currentIndex + (level === 'mid' ? 1 : 2));
-        const interval = REVIEW_INTERVALS[nextIndex];
-        rec.interval = interval;
-        rec.due = fmtDate(addDays(new Date(), interval));
+        // 类 SM-2：easy 提 ease，mid 不动，hard 降 ease（下限 1.3）且间隔只 ×1.2
+        let ease = Number.isFinite(rec.ease) && rec.ease >= 1.3 ? rec.ease : 2.5;
+        let interval;
+        if (level === 'hard') {
+          ease = Math.max(1.3, ease - 0.2);
+          interval = rec.interval * 1.2;
+        } else {
+          if (level === 'easy') ease += 0.15;
+          interval = rec.interval * ease;
+        }
+        rec.ease = Math.round(ease * 100) / 100; // 避免浮点累积误差
+        rec.interval = normalizeReviewInterval(interval);
+        rec.due = fmtDate(addDays(new Date(), rec.interval));
         rec.reps = (rec.reps || 0) + 1;
         rec.lastReview = fmtDate();
         saveState();
+        // hard 的卡片重新插回队尾，当天再见一次
+        if (level === 'hard') reviewQueue.push(id);
       }
       if (reviewQueue.length === 0) renderReview();
       else renderReviewCard();
@@ -1860,9 +2104,12 @@ const VERBS = [
       show('quiz-menu'); hide('quiz-area');
       currentQuiz = null;
     }
+    // 数据驱动的专项测验（题在数据里，不依赖已学词池）
+    const DATA_QUIZ_TYPES = ['article', 'serestar', 'porpara', 'ff', 'conj', 'subjunctive'];
     function startQuiz(type) {
-      const pool = [...new Set(state.reviews.map(r => r.wordId).filter(id => getWord(id)))];
-      if (pool.length < 4 && type !== 'article') { toast('请先学习至少 4 个词再来测验'); return; }
+      // 暂缓（suspended）的词不进测验池
+      const pool = [...new Set(state.reviews.filter(r => !r.suspended).map(r => r.wordId).filter(id => getWord(id)))];
+      if (pool.length < 4 && !DATA_QUIZ_TYPES.includes(type)) { toast('请先学习至少 4 个词再来测验'); return; }
       const questions = buildQuestions(type, pool);
       if (questions.length === 0) {
         show('quiz-area'); hide('quiz-menu');
@@ -1877,11 +2124,57 @@ const VERBS = [
       if (type === 'es2zh') return shuffle(pool).slice(0, Math.min(10, pool.length)).map(id => makeEs2zh(id));
       if (type === 'zh2es') return shuffle(pool).slice(0, Math.min(10, pool.length)).map(id => makeZh2es(id));
       if (type === 'listen') return shuffle(pool).slice(0, Math.min(10, pool.length)).map(id => makeListen(id));
-      if (type === 'article') {
-        const nouns = pool.map(id => getWord(id)).filter(w => w && w.pos === 'n' && ['m', 'f'].includes(w.gender) && w.article === (w.gender === 'm' ? 'el' : 'la')).map(w => w.id);
-        return shuffle(nouns).slice(0, 10).map(id => makeArticle(id));
-      }
+      if (type === 'article') return shuffle(ARTICLE_EXCEPTIONS).slice(0, 10).map(makeArticleEx);
+      if (type === 'serestar') return shuffle(SER_ESTAR_QUIZ).slice(0, 15).map(q => makePairQuiz('serestar', q));
+      if (type === 'porpara') return shuffle(POR_PARA_QUIZ).slice(0, 15).map(q => makePairQuiz('porpara', q));
+      if (type === 'ff') return shuffle(FALSE_FRIENDS).slice(0, 12).map(makeFalseFriendQuiz);
+      if (type === 'conj') return makeConjQuestions();
+      if (type === 'subjunctive') return shuffle(SUBJUNCTIVE_QUIZ).map(q => ({ type: q.kind === 'fill' ? 'subj_fill' : 'subjunctive', id: q.id || null, q: q.q, options: q.options, answer: q.kind === 'connector' ? q.answer : (q.kind === 'choice' ? q.options[q.answer] : q.answer), tip: q.tip }));
       return [];
+    }
+    // 变位填空：给不定式 + 人称 + 时态（中文标注），键盘输入，严格判重音
+    // 词池 = 引擎全量 60 词 × 全部 14 时态语式；es-LA 时不出 vosotros 格
+    function makeConjQuestions() {
+      const persons = personsForTable();
+      return shuffle([...VERBS]).slice(0, 10).map(v => {
+        const t = TENSES[Math.floor(Math.random() * TENSES.length)];
+        if (t.single) { // 动名词 / 过去分词：单形式，无人称
+          return { type: 'conj', id: null, q: `${v.inf}（${v.zh}）· ${t.label}`, answer: v[t.key], tip: conjTip(v, t.key) };
+        }
+        let ps = persons;
+        if (t.key === 'imp_af' || t.key === 'imp_neg') ps = persons.filter(p => p !== 'yo'); // 命令式无 yo 格
+        const p = ps[Math.floor(Math.random() * ps.length)];
+        const answer = v[t.key][p];
+        return {
+          type: 'conj', id: null,
+          q: `${v.inf}（${v.zh}）· ${p} · ${t.label}`,
+          answer,
+          alt: v.refl ? answer.split(' ').slice(1).join(' ') : null, // 自反动词允许省略代词
+          tip: conjTip(v, t.key),
+        };
+      });
+    }
+    // 答错时的规律提示：规则动词给词尾表，不规则给「需单记」
+    const CONJ_END_HINT = {
+      presente:   { '-ar': 'o/as/a/amos/áis/an', '-er': 'o/es/e/emos/éis/en', '-ir': 'o/es/e/imos/ís/en' },
+      indefinido: { '-ar': 'é/aste/ó/amos/asteis/aron', '-er': 'í/iste/ió/imos/isteis/ieron', '-ir': 'í/iste/ió/imos/isteis/ieron' },
+      imperfecto: { '-ar': 'aba/abas/aba/ábamos/abais/aban', '-er': 'ía/ías/ía/íamos/íais/ían', '-ir': 'ía/ías/ía/íamos/íais/ían' },
+      futuro:     { '-ar': '不定式 + é/ás/á/emos/éis/án', '-er': '不定式 + é/ás/á/emos/éis/án', '-ir': '不定式 + é/ás/á/emos/éis/án' },
+      condicional:{ '-ar': '不定式 + ía/ías/ía/íamos/íais/ían', '-er': '不定式 + ía/ías/ía/íamos/íais/ían', '-ir': '不定式 + ía/ías/ía/íamos/íais/ían' },
+      subj_pres:  { '-ar': 'e/es/e/emos/éis/en（换类词尾）', '-er': 'a/as/a/amos/áis/an（换类词尾）', '-ir': 'a/as/a/amos/áis/an（换类词尾）' },
+    };
+    function conjTip(v, tenseKey) {
+      if (tenseKey === 'gerundio') return `动名词规则：-ar → -ando，-er/-ir → -iendo；本词：${v.gerundio}`;
+      if (tenseKey === 'participio') return `过去分词规则：-ar → -ado，-er/-ir → -ido；本词：${v.participio}`;
+      if (tenseKey === 'perfecto') return '复合过去时 = haber 现在时 + 过去分词。';
+      if (tenseKey === 'pluscuamperfecto') return '过去完成时 = haber 未完成过去时（había…）+ 过去分词。';
+      if (tenseKey === 'subj_imp') return '虚拟式未完成过去时：indefinido 第三人称复数去 -ron + ra/ras/ra/ramos/rais/ran。';
+      if (tenseKey === 'imp_neg') return '命令式否定 = no + 虚拟式现在时。';
+      if (v.group === 'irregular') return '不规则动词，这个形式需单独记忆。';
+      if (v.stemChange && (tenseKey === 'presente' || tenseKey === 'imp_af')) return `词干变化 ${v.stemChange.replace('_', '→')}：yo/tú/él/ellos 变，nosotros/vosotros 不变。`;
+      const hint = CONJ_END_HINT[tenseKey] && CONJ_END_HINT[tenseKey][v.group];
+      const label = (TENSES.find(t => t.key === tenseKey) || {}).label || tenseKey;
+      return hint ? `${v.group} 动词${label}词尾：${hint}` : `${v.group} 规则动词，按规则词尾变化。`;
     }
     function makeEs2zh(id) {
       const w = getWord(id);
@@ -1907,14 +2200,24 @@ const VERBS = [
       }
       return { type: 'listen', id, q: answer, options: shuffle([...opts, answer]), answer };
     }
-    function makeArticle(id) {
-      const w = getWord(id);
-      const answer = w.gender === 'm' ? 'el' : 'la';
-      return { type: 'article', id, q: `${w.word}（选择定冠词）`, options: shuffle(['el', 'la']), answer };
+    // 冠词例外专项：通性名词考「通性」说明，其余考 el/la 二选一
+    function makeArticleEx(item) {
+      if (item.article === 'both') {
+        return { type: 'article', id: null, q: `${item.word}（选择冠词）`, options: shuffle(['el / la 都可以', '只能用 el', '只能用 la']), answer: 'el / la 都可以', tip: item.note };
+      }
+      return { type: 'article', id: null, q: `${item.word}（选择定冠词）`, options: shuffle(['el', 'la']), answer: item.article, tip: item.note };
     }
-    // 发音解锁测验：10 题三选，题目与选项均 shuffle，≥80% 通过
+    // 二选一专项（ser/estar、por/para）：选项打乱，答案按值跟踪
+    function makePairQuiz(type, q) {
+      return { type, id: null, q: q.sentence, options: shuffle([...q.options]), answer: q.options[q.answer], tip: q.tip };
+    }
+    // 假朋友小测：正解 + 假朋友误解 + 另外两条的正解做干扰项
+    function makeFalseFriendQuiz(f) {
+      const others = shuffle(FALSE_FRIENDS.filter(x => x.word !== f.word && x.correct !== f.correct)).slice(0, 2).map(x => x.correct);
+      return { type: 'ff', id: null, q: `${f.word} 的真正意思是什么？`, options: shuffle([f.correct, f.wrong, ...others]), answer: f.correct, tip: `「${f.wrong}」的西语：${f.decoy}` };
+    }
+    // 发音自检：10 题三选，题目与选项均 shuffle，≥80% 记录为 P0 已完成，但不影响课程访问。
     function startUnlockQuiz() {
-      if (state.progress.p0Passed) { toast('发音测验已通过'); return; }
       const qs = shuffle([...UNLOCK_QUIZ]).slice(0, 10).map(q => {
         const paired = q.options.map((opt, i) => ({ opt, correct: i === q.a }));
         const mixed = shuffle(paired);
@@ -1941,11 +2244,12 @@ const VERBS = [
       const spellDiv = $('quiz-spell');
       const speakDiv = $('quiz-speak');
       speakDiv.innerHTML = '';
-      if (q.type === 'zh2es') {
+      if (q.type === 'zh2es' || q.type === 'conj' || q.type === 'subj_fill') {
         optsDiv.innerHTML = '';
         spellDiv.classList.remove('hidden');
         $('spell-input').value = '';
         $('spell-input').disabled = false;
+        $('spell-input').placeholder = (q.type === 'conj' || q.type === 'subj_fill') ? '输入变位，重音符号用下方软键盘' : '输入西语';
         $('spell-submit').disabled = false;
         $('soft-keys').innerHTML = SOFT_CHARS.map(ch => `<button class="soft-key" onclick="insertChar('${ch}')">${ch}</button>`).join('');
         setTimeout(() => $('spell-input').focus(), 50);
@@ -1958,9 +2262,9 @@ const VERBS = [
         }
       }
     }
-    // 软键盘：在光标处插入字符并保持焦点
-    function insertChar(ch) {
-      const inp = $('spell-input');
+    // 软键盘：在光标处插入字符并保持焦点（id 参数供练习模块复用）
+    function insertChar(ch, id) {
+      const inp = $(id || 'spell-input');
       const start = inp.selectionStart;
       inp.value = inp.value.slice(0, start) + ch + inp.value.slice(start);
       inp.selectionStart = inp.selectionEnd = start + 1;
@@ -1984,9 +2288,16 @@ const VERBS = [
       const q = currentQuiz.questions[currentQuiz.index];
       const val = $('spell-input').value.trim().toLowerCase();
       const ans = q.answer.toLowerCase();
-      // 名词允许「冠词+空格+词」或仅词
-      const withArticle = q.article ? (q.article + ' ' + ans).toLowerCase() : null;
-      const correct = val === ans || (withArticle && val === withArticle);
+      let correct;
+      if (q.type === 'conj' || q.type === 'subj_fill') {
+        // 变位填空：严格匹配（含重音）；自反动词可省略代词，命令式否定可省略 no
+        const accepted = [ans, q.alt && q.alt.toLowerCase(), ans.startsWith('no ') ? ans.slice(3) : null].filter(Boolean);
+        correct = accepted.includes(val);
+      } else {
+        // 名词允许「冠词+空格+词」或仅词
+        const withArticle = q.article ? (q.article + ' ' + ans).toLowerCase() : null;
+        correct = val === ans || (withArticle && val === withArticle);
+      }
       $('spell-input').disabled = true;
       $('spell-submit').disabled = true;
       document.querySelectorAll('#soft-keys .soft-key').forEach(b => b.disabled = true);
@@ -1998,6 +2309,7 @@ const VERBS = [
       else {
         currentQuiz.wrong.push(q);
         if (wordId) addMistake(wordId);
+        else addSkillMistakeForQuiz(currentQuiz.type);
       }
       const fb = $('quiz-feedback');
       fb.classList.remove('hidden');
@@ -2009,6 +2321,12 @@ const VERBS = [
         if (w) ansText = displayWord(w);
       }
       fb.innerHTML = correct ? '<span class="zh">✓ 正确</span>' : `<span class="zh">正确答案是：</span><span class="es">${ansText}</span>`;
+      // 专项题（冠词例外 / ser/estar / por/para / 假朋友）带解析
+      if (q.tip) fb.innerHTML += `<div class="zh" style="margin-top:6px;font-size:13px;">${q.tip}</div>`;
+      else if (!correct && wordId) {
+        const w = getWord(wordId);
+        if (w && w.example) fb.innerHTML += `<div class="zh" style="margin-top:6px;font-size:13px;">例句：<span class="es">${w.example}</span>${w.example_zh ? ' · ' + w.example_zh : ''}</div>`;
+      }
       $('quiz-next').classList.remove('hidden');
       saveState();
     }
@@ -2026,9 +2344,11 @@ const VERBS = [
         if (pass && !state.progress.p0Passed) {
           state.progress.p0Passed = true;
           saveState();
-          extra = '<div class="badge badge-masc" style="margin:10px 0;">✓ 发音测验已通过</div>';
+          extra = '<div class="badge badge-masc" style="margin:10px 0;">✓ 发音自检已通过</div>';
+        } else if (pass) {
+          extra = '<div class="badge badge-masc" style="margin:10px 0;">✓ 本次自检通过</div>';
         } else if (!pass) {
-          extra = '<p class="muted">建议再复习发音模块后重试。</p>';
+          extra = '<p class="muted">建议回到发音模块复习后再做一次自检。</p>';
         }
       }
       const wrongReview = currentQuiz.wrong && currentQuiz.wrong.length
@@ -2042,6 +2362,225 @@ const VERBS = [
       else state.mistakes.push({ wordId, count: 1, lastAt: fmtDate() });
       logMistake(wordId);
       saveState();
+    }
+    const SKILL_MISTAKE_META = {
+      article: { label: '冠词例外', screen: 'quiz', quizType: 'article' },
+      serestar: { label: 'ser / estar', screen: 'quiz', quizType: 'serestar' },
+      porpara: { label: 'por / para', screen: 'quiz', quizType: 'porpara' },
+      ff: { label: '假朋友', screen: 'quiz', quizType: 'ff' },
+      conj: { label: '动词变位', screen: 'quiz', quizType: 'conj' },
+      subjunctive: { label: '虚拟式现在时', screen: 'quiz', quizType: 'subjunctive' },
+      stress: { label: '重音位置', screen: 'stress', quizType: '' },
+      cloze: { label: '两种过去时', screen: 'cloze', quizType: '' },
+      listeningla: { label: '拉美朗读理解', screen: 'listening-la', quizType: '' }
+    };
+    function addSkillMistakeForQuiz(type) {
+      if (!SKILL_MISTAKE_META[type]) return;
+      addSkillMistake(type);
+    }
+    function addSkillMistake(key) {
+      const meta = SKILL_MISTAKE_META[key];
+      if (!meta) return;
+      const list = state.skillMistakes || (state.skillMistakes = []);
+      const existing = list.find(m => m.key === key);
+      if (existing) { existing.count++; existing.lastAt = fmtDate(); }
+      else list.push({ key, ...meta, count: 1, lastAt: fmtDate() });
+      saveState();
+    }
+
+    // ====================== 重音训练（专项练习，只统计当场成绩） ======================
+    let stressSession = null;
+    function startStress() {
+      stressSession = { questions: shuffle(STRESS_QUIZ).slice(0, 12), index: 0, score: 0, answered: false };
+      go('stress');
+    }
+    function renderStress() {
+      // 进行中的训练直接续上；否则显示说明页
+      if (stressSession && stressSession.index < stressSession.questions.length) { renderStressQuestion(); return; }
+      setHtml('stress-area', `<div class="card text-center"><h3>听音标重音位置</h3><p class="muted">听单词发音，点击重音所在的音节。答错会给出规则提示，只统计当场成绩。</p><p class="muted">每组 12 题，题库 ${STRESS_QUIZ.length} 词，音节均为人工标注。</p><button class="btn w-full mt-12" onclick="startStress()">开始训练</button></div>`);
+    }
+    function renderStressQuestion() {
+      const s = stressSession;
+      if (!s) { renderStress(); return; }
+      if (s.index >= s.questions.length) { renderStressEnd(); return; }
+      const q = s.questions[s.index];
+      s.answered = false;
+      setHtml('stress-area', `<div class="card"><div class="muted">第 ${s.index + 1}/${s.questions.length} 题 · 已答对 ${s.score}</div><h3 style="margin-top:6px;">听单词，点击重音所在的音节</h3><div class="text-center" style="margin:12px 0;"><button class="speak" aria-label="朗读单词" style="width:48px;height:48px;font-size:20px;" onclick="speakText('${escAttr(q.word)}')">${speakIcon(20)}</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">${q.syllables.map((syl, i) => `<button class="syl-btn es" onclick="answerStress(${i})">${syl}</button>`).join('')}</div><div id="stress-feedback" class="hidden mt-12" style="padding:12px;border-radius:10px;"></div><button class="btn w-full mt-12 hidden" id="stress-next" onclick="nextStress()">下一题</button></div>`);
+      setTimeout(() => speakText(q.word), 300);
+    }
+    function answerStress(i) {
+      const s = stressSession;
+      if (!s || s.answered) return;
+      s.answered = true;
+      const q = s.questions[s.index];
+      const correct = i + 1 === q.stress;
+      if (correct) s.score++;
+      else addSkillMistake('stress');
+      const btns = document.querySelectorAll('.syl-btn');
+      btns.forEach((b, j) => {
+        b.disabled = true;
+        if (j + 1 === q.stress) b.classList.add('correct');
+        else if (j === i) b.classList.add('wrong');
+      });
+      const fb = $('stress-feedback');
+      fb.classList.remove('hidden');
+      fb.style.background = correct ? 'var(--masc-soft)' : 'var(--fem-soft)';
+      fb.style.color = correct ? 'var(--masc)' : 'var(--fem)';
+      fb.innerHTML = (correct ? '<span class="zh">✓ 正确</span>' : `<span class="zh">重音在第 ${q.stress} 音节「<span class="es">${q.syllables[q.stress - 1]}</span>」</span>`)
+        + `<div class="zh" style="margin-top:6px;font-size:13px;">${q.tip}</div>`;
+      $('stress-next').classList.remove('hidden');
+    }
+    function nextStress() {
+      stressSession.index++;
+      renderStressQuestion();
+    }
+    function renderStressEnd() {
+      const s = stressSession;
+      setHtml('stress-area', `<div class="card text-center"><h3>训练完成</h3><div class="stat-hero" style="margin:14px 0;">${s.score}<span class="unit">/${s.questions.length}</span></div><button class="btn w-full mt-12" onclick="startStress()">再来一组</button><button class="btn btn-secondary w-full mt-12" onclick="go('tools')">返回工具箱</button></div>`);
+      stressSession = null;
+    }
+
+    // ====================== 假朋友（词条列表 + 小测，小测走测验中心 ff 类型） ======================
+    function renderFalseFriends() {
+      setHtml('ff-list', FALSE_FRIENDS.map(f => `<div class="card"><div class="flex items-center justify-between"><h3 class="es" style="margin:0;">${f.word}</h3><button class="play-mini" aria-label="朗读 ${escAttr(f.word)}" onclick="speakText('${escAttr(f.example)}')">▶</button></div><div style="margin-top:8px;font-size:14px;"><span class="zh" style="color:var(--fem);">✗ 不是「${f.wrong}」</span><br><span class="zh" style="color:var(--masc);">✓ 真正意思：${f.correct}</span><br><span class="muted" style="font-size:13px;">${f.decoy}</span></div><div class="word-section example-section" style="margin-top:8px;"><div class="lab">例句</div><div class="tx es">${f.example}</div><div class="tx muted">${f.exampleZh}</div></div></div>`).join(''));
+    }
+
+    // ====================== 时态选择段落填空（第四轮）：indefinido / imperfecto 二选一，答过即锁定 ======================
+    let clozeSession = null; // { passage, picked: 每空已选下标(-1 未答), score, done }
+    function startCloze(id) {
+      const p = TENSE_CLOZE.find(x => x.id === id) || TENSE_CLOZE[0];
+      clozeSession = { passage: p, picked: p.blanks.map(() => -1), score: 0, done: 0 };
+      go('cloze');
+    }
+    function renderCloze() {
+      if (!clozeSession) { renderClozeList(); return; }
+      renderClozePassage();
+    }
+    function renderClozeList() {
+      setHtml('cloze-area', `<div class="card"><h3>选一篇短文开始</h3><p class="muted">每个空二选一：简单过去时（indefinido，单次已完成的动作）还是过去未完成时（imperfecto，背景 / 习惯 / 进行中的状态）。点选即判对错并显示判断依据，答过即锁定。</p><p class="muted">共 ${TENSE_CLOZE.length} 篇，建议先学完 A2.1 的「两过去时对立」课程。</p></div>`
+        + TENSE_CLOZE.map(p => `<div class="tool-card" role="button" tabindex="0" onclick="startCloze('${p.id}')" onkeydown="activateOnKey(event)"><h3 class="es" style="margin:0;">${p.title}</h3><p class="muted">${p.zh} · ${p.blanks.length} 空</p></div>`).join(''));
+    }
+    function renderClozePassage() {
+      const s = clozeSession;
+      const p = s.passage;
+      // 正文渲染：[[n]] 替换为该空的二选一按钮组（已答则锁定并附 tip）
+      const body = p.text.replace(/\[\[(\d+)\]\]/g, (m, n) => {
+        const i = Number(n);
+        const b = p.blanks[i];
+        const picked = s.picked[i];
+        const opts = b.options.map((o, j) => {
+          let cls = 'syl-btn es';
+          if (picked >= 0) {
+            if (j === b.answer) cls += ' correct';
+            else if (j === picked) cls += ' wrong';
+          }
+          return `<button class="${cls}"${picked >= 0 ? ' disabled' : ''} onclick="answerCloze(${i},${j})">${o}</button>`;
+        }).join('');
+        const tip = picked >= 0
+          ? `<span class="zh" style="display:inline-block;width:100%;font-size:13px;color:${picked === b.answer ? 'var(--masc)' : 'var(--fem)'};">${picked === b.answer ? '✓ ' : '✗ 应为 ' + b.options[b.answer] + ' —— '}${b.tip}</span>`
+          : '';
+        return `<span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;vertical-align:middle;">${opts}${tip}</span>`;
+      });
+      const finished = s.done === p.blanks.length;
+      setHtml('cloze-area', `<div class="card"><div class="muted">已答 ${s.done}/${p.blanks.length} 空 · 答对 ${s.score}</div><h3 class="es" style="margin:6px 0 2px;">${p.title}</h3><div class="muted" style="font-size:13px;margin-bottom:10px;">${p.zh}</div><div class="es" style="line-height:2.2;">${body}</div></div>`
+        + (finished
+          ? `<div class="card text-center"><h3>本篇完成</h3><div class="stat-hero" style="margin:14px 0;">${s.score}<span class="unit">/${p.blanks.length}</span></div><button class="btn w-full mt-12" onclick="startCloze('${p.id}')">重做本篇</button><button class="btn btn-secondary w-full mt-12" onclick="clozeBack()">返回选篇</button></div>`
+          : `<div class="card text-center"><button class="btn btn-secondary w-full" onclick="clozeBack()">返回选篇</button></div>`));
+    }
+    function answerCloze(i, j) {
+      const s = clozeSession;
+      if (!s || s.picked[i] >= 0) return; // 答过即锁定
+      s.picked[i] = j;
+      s.done++;
+      if (j === s.passage.blanks[i].answer) s.score++;
+      else addSkillMistake('cloze');
+      renderClozePassage();
+    }
+    function clozeBack() { clozeSession = null; renderClozeList(); }
+
+    // ====================== 第五轮：虚拟式、跟读与拉美听力 ======================
+    function renderSubjunctive() {
+      setHtml('subjunctive-area', `<div class="card"><h3>WEIRDO 触发器</h3><p class="muted"><b>W</b>ish 愿望、<b>E</b>motion 情感、<b>I</b>mpersonal 非人称评价、<b>R</b>ecommendation 建议命令、<b>D</b>oubt 怀疑否定、<b>O</b>jalá。共同信号通常是 <span class="es">que + 另一主语</span>。</p><p class="es">Espero que llegues. / No creo que sea verdad. / Es importante que practiques.</p><button class="btn w-full mt-12" onclick="go('quiz');startQuiz('subjunctive')">开始 90 题练习</button></div><div class="card"><h3>未来时间与连词</h3><p class="muted">指向尚未发生的未来时，<span class="es">cuando, hasta que, en cuanto, antes de que</span> 后用虚拟式；<span class="es">para que</span> 表目的，<span class="es">aunque</span> 表未确定让步。</p></div>`);
+    }
+    let shadowIndex = 0, shadowRecognition = null, shadowRecorder = null, shadowChunks = [];
+    function renderShadowing() {
+      const item = SHADOWING_SENTENCES[shadowIndex] || SHADOWING_SENTENCES[0];
+      const lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
+      const supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      setHtml('shadowing-area', `<div class="card"><div class="muted">${shadowIndex + 1}/${SHADOWING_SENTENCES.length} · ${item[2]}</div><h3 class="es" style="line-height:1.55;margin-top:10px;">${item[0]}</h3><p class="muted">${item[1]}</p><div class="flex gap-8 mt-12"><button class="btn btn-secondary" onclick="speakTextWithLang('${escAttr(item[0])}','${lang}')">朗读</button><button class="btn" onclick="startShadowing()">${supported ? '开始识别' : '开始录音'}</button></div><div id="shadow-result" class="mt-12 muted"></div></div><div class="flex gap-8"><button class="btn btn-secondary" onclick="shadowMove(-1)">上一句</button><button class="btn btn-secondary" onclick="shadowMove(1)">下一句</button></div><p class="muted mt-12" style="font-size:12px;">${supported ? '识别结果用于自我对照，不作发音评分。' : '当前浏览器未提供 SpeechRecognition，已切换为本地录音回放。'}</p>`);
+    }
+    function shadowMove(delta) { shadowIndex = (shadowIndex + delta + SHADOWING_SENTENCES.length) % SHADOWING_SENTENCES.length; renderShadowing(); }
+    function voiceForLang(lang) {
+      const wanted = normalizeLangTag(lang);
+      const voices = getSpanishVoices();
+      return voices.find(v => normalizeLangTag(v.lang) === wanted)
+        || (wanted === 'es-ar' ? voices.find(v => normalizeLangTag(v.lang) === 'es-mx' || normalizeLangTag(v.lang) === 'es-us') : null)
+        || cachedVoice
+        || null;
+    }
+    function speakTextWithLang(text, lang) {
+      if (!window.speechSynthesis) { toast('您的浏览器不支持语音朗读'); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      const voice = voiceForLang(lang);
+      u.lang = voice ? voice.lang : lang;
+      if (voice) u.voice = voice;
+      u.rate = state.settings.voiceRate;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    }
+    function startShadowing() {
+      const target = SHADOWING_SENTENCES[shadowIndex][0], lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (Rec) {
+        shadowRecognition = new Rec(); shadowRecognition.lang = lang; shadowRecognition.interimResults = false; shadowRecognition.maxAlternatives = 1;
+        shadowRecognition.onresult = e => { const heard = e.results[0][0].transcript; setHtml('shadow-result', `<b>识别结果：</b><span class="es">${heard}</span><br><span class="muted">对照：${target}</span>`); };
+        shadowRecognition.onerror = () => { setHtml('shadow-result', '<p>识别未完成。你可以重试，或改用本地录音回放。</p><button class="btn btn-secondary" onclick="startShadowRecorder()">改用录音回放</button>'); };
+        shadowRecognition.start(); setHtml('shadow-result', '正在听，请朗读这句话……'); return;
+      }
+      startShadowRecorder();
+    }
+    function startShadowRecorder() {
+      if (!navigator.mediaDevices || !window.MediaRecorder) { setHtml('shadow-result', '此浏览器不支持识别或录音。'); return; }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        shadowChunks = []; shadowRecorder = new MediaRecorder(stream);
+        shadowRecorder.ondataavailable = e => shadowChunks.push(e.data);
+        shadowRecorder.onstop = () => { const url = URL.createObjectURL(new Blob(shadowChunks, { type: shadowRecorder.mimeType })); setHtml('shadow-result', `<audio controls src="${url}"></audio><p class="muted">已录制，可与原句反复对照。</p>`); stream.getTracks().forEach(t => t.stop()); };
+        shadowRecorder.start(); setHtml('shadow-result', '<button class="btn" onclick="stopShadowing()">停止并回放</button>');
+      }).catch(() => setHtml('shadow-result', '无法取得麦克风权限。'));
+    }
+    function stopShadowing() { if (shadowRecorder && shadowRecorder.state !== 'inactive') shadowRecorder.stop(); }
+    let laListeningId = null, laListeningRevealed = false, laListeningAnswers = [];
+    function renderListeningLA() {
+      const active = LISTENING_LA.find(x => x.id === laListeningId);
+      if (!active) {
+        setHtml('listening-la-area', `<div class="card"><h3>地区朗读对照</h3><p class="muted">先听短文，再主动查看原文并完成理解题。语音由设备提供：若没有目标地区语音，会明确显示实际使用的替代语音。</p></div>${LISTENING_LA.map(x => `<div class="tool-card" role="button" tabindex="0" onclick="openListeningLA('${x.id}')" onkeydown="activateOnKey(event)"><h3>${x.label}</h3><p class="muted">${x.zh} · ${x.questions.length} 道理解题</p></div>`).join('')}`);
+        return;
+      }
+      const voice = voiceForLang(active.lang);
+      const voiceNote = voice ? `设备将使用 ${voice.name}（${voice.lang}）朗读。` : `设备未提供可确认的 ${active.lang} 西语语音；将由浏览器决定回退语音。`;
+      const allAnswered = active.questions.every((_, i) => laListeningAnswers[i] !== undefined);
+      const questions = laListeningRevealed ? active.questions.map((q, qi) => {
+        const picked = laListeningAnswers[qi];
+        const options = shuffle(q.options.map((opt, oi) => ({ opt, oi }))).map(({ opt, oi }) => {
+          let cls = 'quiz-opt';
+          if (picked !== undefined) {
+            if (oi === q.answer) cls += ' correct';
+            else if (oi === picked) cls += ' wrong';
+          }
+          return `<button class="${cls}" ${picked !== undefined ? 'disabled' : ''} onclick="answerListeningLA(${qi},${oi})">${opt}</button>`;
+        }).join('');
+        return `<div style="margin-top:18px;"><h4 class="es">${q.q}</h4>${options}${picked !== undefined ? `<p class="muted" style="font-size:13px;margin-top:6px;">${q.tip}</p>` : ''}</div>`;
+      }).join('') : '';
+      setHtml('listening-la-area', `<div class="card"><button class="btn btn-sm btn-secondary" onclick="closeListeningLA()">← 选择材料</button><div class="muted mt-12">听力理解 · 先听后看</div><h3>${active.label}</h3><p class="muted">${active.zh}</p><button class="btn w-full" onclick="speakTextWithLang('${escAttr(active.text)}','${active.lang}')">播放短文</button><p class="muted" style="font-size:12px;margin:10px 0 0;">${voiceNote}</p><button class="btn btn-secondary w-full mt-12" onclick="revealListeningLA()">${laListeningRevealed ? '隐藏原文与题目' : '查看原文并答题'}</button>${laListeningRevealed ? `<div class="word-section example-section" style="margin-top:16px;"><div class="lab">原文</div><div class="tx es" style="line-height:1.7;">${active.text}</div></div>${questions}${allAnswered ? '<p class="muted mt-12">本篇已完成，可重听或选择另一篇。</p>' : ''}` : ''}</div>`);
+    }
+    function openListeningLA(id) { laListeningId = id; laListeningRevealed = false; laListeningAnswers = []; renderListeningLA(); }
+    function closeListeningLA() { laListeningId = null; laListeningRevealed = false; laListeningAnswers = []; renderListeningLA(); }
+    function revealListeningLA() { laListeningRevealed = !laListeningRevealed; renderListeningLA(); }
+    function answerListeningLA(questionIndex, optionIndex) {
+      const active = LISTENING_LA.find(x => x.id === laListeningId);
+      if (!active || laListeningAnswers[questionIndex] !== undefined) return;
+      laListeningAnswers[questionIndex] = optionIndex;
+      if (optionIndex !== active.questions[questionIndex].answer) addSkillMistake('listeningla');
+      renderListeningLA();
     }
 
     // ====================== 数字专项（0–100） ======================
@@ -2084,31 +2623,42 @@ const VERBS = [
       currentNumber = Math.floor(Math.random() * 101);
       setText('speed-num', currentNumber);
       hide('speed-answer');
+      hide('speed-rate');
     }
     function showSpeedAnswer() {
       setText('speed-answer', numberToSpanish(currentNumber));
       show('speed-answer');
+      show('speed-rate');
       speakText(numberToSpanish(currentNumber));
+    }
+    function rateSpeed(correct) {
+      numScore.total++;
+      if (correct) numScore.right++;
+      setText('number-score', `得分：${numScore.right} / ${numScore.total}`);
+      nextSpeed();
     }
 
     // ====================== 错题本 ======================
     function renderMistakes() {
       const list = $('mistakes-list');
-      if (state.mistakes.length === 0) {
+      const skillList = state.skillMistakes || [];
+      if (state.mistakes.length === 0 && skillList.length === 0) {
         list.innerHTML = '<div class="empty-state"><h3>错题本空空如也</h3><p class="muted">答错的题目会在这里集合，定期复习是进步最快的方式。</p></div>';
         return;
       }
-      list.innerHTML = state.mistakes.map(m => {
+      const wordHtml = state.mistakes.map(m => {
         const w = getWord(m.wordId);
         if (!w) return '';
         const disp = displayWord(w);
         return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:18px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="muted">${w.zh}</div><div class="muted" style="font-size:11px;">最近：${m.lastAt || '—'}</div></div><div style="text-align:right;flex-shrink:0;"><div class="badge badge-fem">${m.count} 次</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"><button class="btn btn-sm btn-secondary" onclick="reviewMistake('${m.wordId}')">加入复习</button><button class="btn btn-sm btn-danger" onclick="removeMistake('${m.wordId}')">移除</button></div></div></div></div>`;
       }).join('');
+      const skillHtml = skillList.map(m => `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><span style="font-weight:700;">${m.label}</span><div class="muted" style="font-size:11px;">专项错题 · 最近：${m.lastAt || '—'}</div></div><div style="text-align:right;flex-shrink:0;"><div class="badge badge-fem">${m.count} 次</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"><button class="btn btn-sm btn-secondary" onclick="reviewSkillMistake('${m.key}')">定向复习</button><button class="btn btn-sm btn-danger" onclick="removeSkillMistake('${m.key}')">移除</button></div></div></div></div>`).join('');
+      list.innerHTML = skillHtml + wordHtml;
     }
     function reviewMistake(id) {
       const rec = state.reviews.find(r => r.wordId === id);
       if (!rec) {
-        state.reviews.push({ wordId: id, due: fmtDate(), interval: 1, reps: 0, lastReview: '' });
+        state.reviews.push({ wordId: id, due: fmtDate(), interval: 1, reps: 0, lastReview: '', ease: 2.5, suspended: false });
         logReview(id, 'new');
       } else {
         rec.due = fmtDate();
@@ -2123,21 +2673,66 @@ const VERBS = [
       renderMistakes();
       toast('已从错题本移除');
     }
+    function reviewSkillMistake(key) {
+      const item = (state.skillMistakes || []).find(m => m.key === key);
+      if (!item) return;
+      if (item.quizType) { go('quiz'); startQuiz(item.quizType); }
+      else go(item.screen);
+    }
+    function removeSkillMistake(key) {
+      state.skillMistakes = (state.skillMistakes || []).filter(m => m.key !== key);
+      saveState();
+      renderMistakes();
+      toast('已从错题本移除');
+    }
 
     // ====================== 动词变位 ======================
+    // 14 个时态语式分四组展示；gerundio/participio 为单形式（无人称表）
     const TENSES = [
-      { key: 'presente', label: '现在时' },
-      { key: 'perfecto', label: '复合过去时' },
-      { key: 'indefinido', label: '简单过去时' },
-      { key: 'futuro', label: '将来时' },
-      { key: 'condicional', label: '条件式' }
+      { key: 'presente', label: '现在时', group: 'simple' },
+      { key: 'indefinido', label: '简单过去时', group: 'simple' },
+      { key: 'imperfecto', label: '未完成过去时', group: 'simple' },
+      { key: 'futuro', label: '将来时', group: 'simple' },
+      { key: 'condicional', label: '条件式', group: 'simple' },
+      { key: 'perfecto', label: '复合过去时', group: 'comp' },
+      { key: 'pluscuamperfecto', label: '过去完成时', group: 'comp' },
+      { key: 'subj_pres', label: '虚拟式现在时', group: 'subj' },
+      { key: 'subj_imp', label: '虚拟式未完成过去时', group: 'subj' },
+      { key: 'imp_af', label: '命令式·肯定', group: 'imp' },
+      { key: 'imp_neg', label: '命令式·否定', group: 'imp' },
+      { key: 'gerundio', label: '动名词', group: 'imp', single: true },
+      { key: 'participio', label: '过去分词', group: 'imp', single: true },
+    ];
+    const TENSE_GROUPS = [
+      { key: 'simple', label: '简单时态' },
+      { key: 'comp', label: '复合时态' },
+      { key: 'subj', label: '虚拟式' },
+      { key: 'imp', label: '命令式·非人称' },
     ];
     const PERSONS = ['yo', 'tú', 'él/ella/usted', 'nosotros', 'vosotros', 'ellos/ellas/ustedes'];
+    // 拉美变体（es-LA）：隐藏 vosotros 格（拉美用 ustedes，变位同第三人称复数）
+    function isLA() { return state.settings.variant === 'es-LA'; }
+    function personsForTable() {
+      return isLA() ? PERSONS.filter(p => p !== 'vosotros') : PERSONS;
+    }
+    function laNoteHtml() {
+      return isLA() ? '<p class="muted" style="font-size:12px;margin:8px 0 0;">拉美模式：已隐藏 vosotros（拉美用 ustedes）</p>' : '';
+    }
+    function variantToggleHtml() {
+      return `<div class="card" style="padding:10px 14px;"><div class="flex items-center justify-between"><span class="muted" style="font-size:13px;">人称表变体（与设置页同步）</span><span><button class="btn btn-sm ${isLA() ? 'btn-secondary' : 'btn-masc'}" onclick="setVerbVariant('es-ES')">西班牙</button> <button class="btn btn-sm ${isLA() ? 'btn-masc' : 'btn-secondary'}" onclick="setVerbVariant('es-LA')">拉美</button></span></div>${laNoteHtml()}</div>`;
+    }
+    function setVerbVariant(v) {
+      setVariant(v); // 与设置页同一状态
+      if (currentVerb && !$('verb-detail').classList.contains('hidden')) renderVerbDetail();
+      else renderVerbs();
+    }
+    // 徽标：词干变化优先展示（e→ie 等），否则规则组 / 不规则
+    function verbBadge(v) { return v.stemChange ? v.stemChange.replace('_', '→') : groupBadge(v.group); }
     let currentVerb = null;
     let currentTense = 'presente';
     function renderVerbs() {
       show('verb-list'); hide('verb-detail');
-      $('verb-list').innerHTML = VERBS.map((v, i) => `<div class="verb-item" role="button" tabindex="0" onclick="openVerb(${i})" onkeydown="activateOnKey(event)"><div><span class="es" style="font-size:18px;font-weight:700;">${v.inf}</span> <button class="speak" aria-label="朗读" onclick="event.stopPropagation(); speakText('${escAttr(v.inf)}')">${speakIcon()}</button></div><span class="badge ${v.group === 'irregular' ? 'badge-fem' : 'badge-masc'}">${groupBadge(v.group)}</span></div>`).join('');
+      $('verb-list').innerHTML = variantToggleHtml() + VERBS.map((v, i) => `<div class="verb-item" role="button" tabindex="0" onclick="openVerb(${i})" onkeydown="activateOnKey(event)"><div><span class="es" style="font-size:18px;font-weight:700;">${v.inf}</span> <button class="speak" aria-label="朗读" onclick="event.stopPropagation(); speakText('${escAttr(v.inf)}')">${speakIcon()}</button> <span class="zh muted" style="font-size:13px;">${v.zh || ''}</span></div><span class="badge ${v.group === 'irregular' ? 'badge-fem' : 'badge-masc'}">${verbBadge(v)}</span></div>`).join('');
     }
     function openVerb(i) {
       currentVerb = VERBS[i];
@@ -2151,19 +2746,139 @@ const VERBS = [
     function renderVerbDetail() {
       if (!currentVerb) return;
       hide('verb-list'); show('verb-detail');
-      const tabs = TENSES.map(t => `<button class="btn btn-sm ${currentTense === t.key ? 'btn-masc' : 'btn-secondary'}" onclick="setTense('${t.key}')">${t.label}</button>`).join('');
-      const conj = currentVerb[currentTense] || {};
-      const rows = PERSONS.map(p => `<tr><th>${p}</th><td class="es" style="font-weight:700;">${conj[p] || '—'}</td></tr>`).join('');
-      const tenseLabel = (TENSES.find(t => t.key === currentTense) || {}).label || '';
+      const tObj = TENSES.find(t => t.key === currentTense) || TENSES[0];
+      // 两级标签：先按时态组，再按组内时态
+      const groupTabs = TENSE_GROUPS.map(g => `<button class="btn btn-sm ${tObj.group === g.key ? 'btn-masc' : 'btn-secondary'}" onclick="setTense('${TENSES.find(t => t.group === g.key).key}')">${g.label}</button>`).join('');
+      const tenseTabs = TENSES.filter(t => t.group === tObj.group).map(t => `<button class="btn btn-sm ${currentTense === t.key ? 'btn-masc' : 'btn-secondary'}" onclick="setTense('${t.key}')">${t.label}</button>`).join('');
+      let body;
+      if (tObj.single) {
+        body = `<div class="text-center" style="padding:16px 0;"><span class="es" style="font-size:26px;font-weight:700;">${currentVerb[tObj.key]}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(currentVerb[tObj.key])}')">${speakIcon()}</button></div>`;
+      } else {
+        const conj = currentVerb[currentTense] || {};
+        const rows = personsForTable().map(p => `<tr><th>${p}</th><td class="es" style="font-weight:700;">${conj[p] || '—'}</td></tr>`).join('');
+        body = `<table class="verb-table">${rows}</table>`;
+      }
       $('verb-detail').innerHTML = `<div class="card">
         <button class="btn btn-sm btn-secondary mb-12" onclick="renderVerbs()">← 返回列表</button>
-        <h3><span class="es">${currentVerb.inf}</span> <span class="badge ${currentVerb.group === 'irregular' ? 'badge-fem' : 'badge-masc'}">${groupBadge(currentVerb.group)}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(currentVerb.inf)}')">${speakIcon()}</button></h3>
+        <h3><span class="es">${currentVerb.inf}</span> <span class="badge ${currentVerb.group === 'irregular' ? 'badge-fem' : 'badge-masc'}">${verbBadge(currentVerb)}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(currentVerb.inf)}')">${speakIcon()}</button></h3>
+        ${currentVerb.zh ? `<p class="zh" style="margin:2px 0;">${currentVerb.zh}</p>` : ''}
         ${currentVerb.note ? `<p class="muted">${currentVerb.note}</p>` : ''}
-        <div class="tense-tabs">${tabs}</div>
-        <h4 class="muted" style="margin-bottom:8px;">${tenseLabel}</h4>
-        <table class="verb-table">${rows}</table>
-        <p class="muted mt-12" style="font-size:12px;">注：vosotros 用于西班牙日常「你们」；拉美用 ustedes 代替，变位同第三人称复数。</p>
+        <div class="tense-tabs" style="margin-top:10px;">${groupTabs}</div>
+        <div class="tense-tabs">${tenseTabs}</div>
+        <h4 class="muted" style="margin-bottom:8px;">${tObj.label}</h4>
+        ${body}
+        ${laNoteHtml()}
+        ${isLA() ? '' : '<p class="muted mt-12" style="font-size:12px;">注：vosotros 用于西班牙日常「你们」；拉美用 ustedes 代替，变位同第三人称复数。</p>'}
       </div>`;
+    }
+
+    // ====================== 变位听写（通用练习框架，复用软键盘） ======================
+    let drill = null; // { screen, title, items, index, right, answered, backFn }
+    function startDrill(screen, title, items, backFn) {
+      drill = { screen, title, items: shuffle([...items]), index: 0, right: 0, answered: false, backFn };
+      renderDrill();
+    }
+    function drillAreaId() { return drill.screen === 'preterite' ? 'pret-area' : 'sc-area'; }
+    function renderDrill() {
+      const areaId = drillAreaId();
+      if (drill.index >= drill.items.length) {
+        const total = drill.items.length;
+        const pct = Math.round(drill.right / total * 100);
+        setHtml(areaId, `<div class="card text-center"><h3>${drill.title}</h3><div class="stat-hero" style="margin:14px 0;">${drill.right}<span class="unit">/${total}</span></div><p class="muted">本组正确率 ${pct}%</p><button class="btn w-full mt-12" onclick="drillAgain()">再刷一遍</button><button class="btn btn-secondary w-full mt-12" onclick="drillBack()">返回</button></div>`);
+        return;
+      }
+      const it = drill.items[drill.index];
+      drill.answered = false;
+      setHtml(areaId, `<div class="card"><div class="muted">${drill.title} · 第 ${drill.index + 1}/${drill.items.length} 题 · 已答对 ${drill.right}</div><h3 class="es" style="margin-top:6px;">${it.q}</h3><label class="sr-only" for="drill-input">输入变位</label><input type="text" id="drill-input" class="input mt-12" placeholder="输入变位，重音符号用下方软键盘" autocomplete="off" onkeydown="if(event.key==='Enter')submitDrill()" /><div class="soft-keys">${SOFT_CHARS.map(ch => `<button class="soft-key" onclick="insertChar('${ch}','drill-input')">${ch}</button>`).join('')}</div><button class="btn w-full mt-12" id="drill-submit" onclick="submitDrill()">提交</button><div id="drill-feedback" class="hidden mt-12" style="padding:12px;border-radius:10px;"></div><button class="btn w-full mt-12 hidden" id="drill-next" onclick="nextDrill()">下一题</button></div>`);
+      setTimeout(() => $('drill-input').focus(), 50);
+    }
+    function submitDrill() {
+      if (!drill || drill.answered) return;
+      drill.answered = true;
+      const it = drill.items[drill.index];
+      const val = $('drill-input').value.trim().toLowerCase();
+      const accepted = [it.answer.toLowerCase(), it.alt && it.alt.toLowerCase()].filter(Boolean);
+      const correct = accepted.includes(val);
+      if (correct) drill.right++;
+      $('drill-input').disabled = true;
+      $('drill-submit').disabled = true;
+      const fb = $('drill-feedback');
+      fb.classList.remove('hidden');
+      fb.style.background = correct ? 'var(--masc-soft)' : 'var(--fem-soft)';
+      fb.style.color = correct ? 'var(--masc)' : 'var(--fem)';
+      fb.innerHTML = (correct ? '<span class="zh">✓ 正确</span>' : `<span class="zh">正确答案是：</span><span class="es">${it.answer}</span>`)
+        + (it.hint ? `<div class="zh" style="margin-top:6px;font-size:13px;">${it.hint}</div>` : '');
+      $('drill-next').classList.remove('hidden');
+    }
+    function nextDrill() { drill.index++; renderDrill(); }
+    function drillAgain() { const d = drill; drill = null; startDrill(d.screen, d.title, d.items, d.backFn); }
+    function drillBack() { const fn = drill.backFn; drill = null; if (fn) fn(); else go('tools'); }
+
+    // ====================== 不规则过去时（专项听写，按动词分组） ======================
+    const PRETERITE_VERBS = ['ser', 'ir', 'tener', 'estar', 'hacer', 'decir', 'poder', 'poner', 'saber', 'querer', 'venir', 'traer', 'dar', 'ver'];
+    function renderPreterite() {
+      // 进行中的练习直接续上
+      if (drill && drill.screen === 'preterite' && drill.index < drill.items.length) { renderDrill(); return; }
+      const list = PRETERITE_VERBS.map(inf => {
+        const v = VERBS.find(x => x.inf === inf);
+        return `<div class="verb-item" role="button" tabindex="0" onclick="startPreteriteDrill('${inf}')" onkeydown="activateOnKey(event)"><div><span class="es" style="font-size:18px;font-weight:700;">${v.inf}</span> <span class="zh muted" style="font-size:13px;">${v.zh}</span></div><span class="es muted" style="font-size:13px;">→ ${v.indefinido['yo']}</span></div>`;
+      }).join('');
+      setHtml('pret-area', `<div class="card"><p class="muted">14 个动词（ser/ir 同形 fui）的不规则简单过去时（indefinido），按动词分组刷，每组刷完显示正确率。点击动词开始，重音符号用软键盘。</p>${laNoteHtml()}</div>${list}`);
+    }
+    function startPreteriteDrill(inf) {
+      const v = VERBS.find(x => x.inf === inf);
+      const items = personsForTable().map(p => ({
+        q: `${v.inf}（${v.zh}）· ${p} · 简单过去时`,
+        answer: v.indefinido[p],
+        alt: null,
+        hint: v.indefinido['yo'] === 'fui' ? 'ser/ir 的 indefinido 同形：fui/fuiste/fue/fuimos/fuisteis/fueron' : `不规则词干，需单记（yo 格：${v.indefinido['yo']}）。`,
+      }));
+      startDrill('preterite', `${v.inf} · 简单过去时`, items, renderPreterite);
+    }
+
+    // ====================== 词干变化动词（三组清单 + 变化格练习） ======================
+    const STEM_GROUPS = [
+      { key: 'e_ie', label: 'e → ie', desc: 'querer、pensar、cerrar… nosotros/vosotros 不变。' },
+      { key: 'o_ue', label: 'o → ue', desc: 'poder、dormir、volver…（jugar 是唯一的 u→ue）。' },
+      { key: 'e_i', label: 'e → i', desc: 'pedir、servir、seguir… 只存在于 -ir 动词。' },
+    ];
+    function stemGroupVerbs(key) {
+      return VERBS.filter(v => v.stemChange === key || (key === 'o_ue' && v.stemChange === 'u_ue'));
+    }
+    function renderStemChange() {
+      if (drill && drill.screen === 'stemchange' && drill.index < drill.items.length) { renderDrill(); return; }
+      setHtml('sc-area', STEM_GROUPS.map(g => {
+        const verbs = stemGroupVerbs(g.key);
+        return `<div class="card"><h3>${g.label} <span class="badge badge-masc">${verbs.length} 词</span></h3><p class="muted" style="font-size:13px;">${g.desc}</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;">${verbs.map(v => `<button class="btn btn-sm btn-secondary es" onclick="openStemVerb('${v.inf}')">${v.inf}</button>`).join('')}</div><button class="btn w-full" onclick="startStemDrill('${g.key}')">练习本组（现在时变化格）</button></div>`;
+      }).join('') + `<div class="card"><p class="muted" style="font-size:13px;">练习中 nosotros/vosotros 格只占约 15%，重点练 yo/tú/él/ellos 变化格；点动词可查看完整变位表。</p>${laNoteHtml()}</div>`);
+    }
+    function openStemVerb(inf) {
+      const i = VERBS.findIndex(v => v.inf === inf);
+      if (i < 0) return;
+      go('verbs');
+      openVerb(i);
+    }
+    function startStemDrill(key) {
+      const g = STEM_GROUPS.find(x => x.key === key);
+      const verbs = stemGroupVerbs(key);
+      const changePersons = ['yo', 'tú', 'él/ella/usted', 'ellos/ellas/ustedes'];
+      const plainPersons = isLA() ? ['nosotros'] : ['nosotros', 'vosotros'];
+      const items = [];
+      for (let i = 0; i < 10; i++) {
+        const v = verbs[Math.floor(Math.random() * verbs.length)];
+        // 变化格约 85%，nosotros/vosotros 约 15%
+        const p = Math.random() < 0.85
+          ? changePersons[Math.floor(Math.random() * changePersons.length)]
+          : plainPersons[Math.floor(Math.random() * plainPersons.length)];
+        const answer = v.presente[p];
+        items.push({
+          q: `${v.inf}（${v.zh}）· ${p} · 现在时`,
+          answer,
+          alt: v.refl ? answer.split(' ').slice(1).join(' ') : null, // 自反动词允许省略代词
+          hint: `${g.label} 词干变化：yo/tú/él/ellos 变，nosotros/vosotros 不变。`,
+        });
+      }
+      startDrill('stemchange', `${g.label} 词干变化 · 现在时`, items, renderStemChange);
     }
 
     // ====================== 词库 ======================
@@ -2178,9 +2893,19 @@ const VERBS = [
       }
       $('words-list').innerHTML = list.map(w => {
         const isLearned = learned.has(w.id);
+        const rec = isLearned ? state.reviews.find(r => r.wordId === w.id) : null;
         const disp = displayWord(w);
-        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div><div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}</div></div></div>`;
+        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div><div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}${rec ? `<div style="margin-top:6px;"><button class="btn btn-sm btn-secondary" onclick="toggleSuspend('${w.id}')">${rec.suspended ? '恢复' : '暂缓'}</button></div>` : ''}</div></div></div>`;
       }).join('');
+    }
+    // 暂缓/恢复：suspended 的词不进复习队列和测验池
+    function toggleSuspend(wordId) {
+      const rec = state.reviews.find(r => r.wordId === wordId);
+      if (!rec) return;
+      rec.suspended = !rec.suspended;
+      saveState();
+      renderWords();
+      toast(rec.suspended ? '已暂缓复习' : '已恢复复习');
     }
 
     // ====================== 统计与打卡 ======================
@@ -2329,7 +3054,7 @@ const VERBS = [
       const t = THEME_OPTIONS.includes(state.settings.theme) ? state.settings.theme : 'auto';
       const effective = t === 'auto' ? getSystemTheme() : t;
       document.documentElement.setAttribute('data-theme', effective);
-      document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.theme-opt[id^="theme-"]').forEach(b => b.classList.remove('active'));
       const active = $('theme-' + t);
       if (active) active.classList.add('active');
     }
@@ -2339,12 +3064,31 @@ const VERBS = [
       applyTheme();
       saveState();
     }
+    // 地区变体：es-ES 西班牙本土 / es-LA 拉美，影响 TTS 语音选择
+    const VARIANT_OPTIONS = ['es-ES', 'es-LA'];
+    function applyVariant() {
+      const v = VARIANT_OPTIONS.includes(state.settings.variant) ? state.settings.variant : 'es-ES';
+      document.querySelectorAll('.variant-opt').forEach(b => b.classList.remove('active'));
+      const active = $('variant-' + v);
+      if (active) active.classList.add('active');
+      renderVoiceCheck(); // 语音自检文案随变体刷新
+    }
+    function setVariant(v) {
+      if (!VARIANT_OPTIONS.includes(v)) return;
+      state.settings.variant = v;
+      pickSpanishVoice(); // 切换变体后立即重选语音
+      applyVariant();
+      if (!$('screen-phonetics').classList.contains('hidden')) renderPhonetics();
+      saveState();
+    }
     function saveDailyGoal() { state.settings.dailyGoal = parseInt($('daily-goal').value, 10); saveState(); }
     function saveVoiceRate() { state.settings.voiceRate = parseFloat($('voice-rate').value); saveState(); }
-    // 语音自检：展示检测到的西语语音与口音提示
+    // 语音自检：展示检测到的西语语音，提示文案随地区变体调整
     function renderVoiceCheck() {
       const box = $('voice-check');
       if (!box) return;
+      const isLA = state.settings.variant === 'es-LA';
+      setText('voice-check-intro', isLA ? '本工具使用拉美口音（优先 es-MX）朗读。' : '本工具使用西班牙本土口音（es-ES）朗读。');
       if (!window.speechSynthesis) {
         box.innerHTML = '<p class="muted" style="margin:0;">当前浏览器不支持语音合成（SpeechSynthesis）。</p>';
         return;
@@ -2353,12 +3097,20 @@ const VERBS = [
       const spanish = getSpanishVoices();
       let html;
       if (!spanish.length) {
-        html = '<p class="muted" style="margin:0;color:var(--fem);">未找到西语语音，请在系统 TTS 设置中安装西班牙语（西班牙）语音包。</p>';
+        html = isLA
+          ? '<p class="muted" style="margin:0;color:var(--fem);">未找到西语语音，请在系统 TTS 设置中安装西班牙语（墨西哥）语音包。</p>'
+          : '<p class="muted" style="margin:0;color:var(--fem);">未找到西语语音，请在系统 TTS 设置中安装西班牙语（西班牙）语音包。</p>';
       } else {
         const name = cachedVoice ? `${cachedVoice.name} (${cachedVoice.lang})` : '未加载';
-        const hasEsES = spanish.some(v => normalizeLangTag(v.lang) === 'es-es');
         html = `<p class="muted" style="margin:0;">当前语音：<b style="color:var(--text);">${name}</b></p>`;
-        if (!hasEsES) html += '<p class="muted" style="margin:6px 0 0;color:var(--fem);">当前为拉美口音，与工具的西班牙口音教学略有差异。</p>';
+        if (isLA) {
+          const hasLA = spanish.some(v => normalizeLangTag(v.lang) !== 'es-es');
+          if (!hasLA) html += '<p class="muted" style="margin:6px 0 0;color:var(--fem);">未找到拉美西语语音，请在系统 TTS 设置中安装西班牙语（墨西哥）语音包。</p>';
+          else if (cachedVoice && normalizeLangTag(cachedVoice.lang) === 'es-es') html += '<p class="muted" style="margin:6px 0 0;color:var(--fem);">当前使用西班牙口音朗读，与所选的拉美变体存在口音差异。</p>';
+        } else {
+          const hasEsES = spanish.some(v => normalizeLangTag(v.lang) === 'es-es');
+          if (!hasEsES) html += '<p class="muted" style="margin:6px 0 0;color:var(--fem);">未找到西班牙本土语音，请安装西班牙语（西班牙）语音包；当前为拉美口音，与工具的西班牙口音教学略有差异。</p>';
+        }
       }
       box.innerHTML = html;
     }
@@ -2372,23 +3124,27 @@ const VERBS = [
       toast('已导出');
     }
     function importData() { $('import-file').click(); }
+    // 导入/恢复快照共用的收尾流程：normalizeState → saveState → 刷新界面
+    function applyImportedState(data, msg) {
+      if (!data || typeof data !== 'object' || !data.settings) throw new Error('格式错误');
+      state = normalizeState(data);
+      state.sessionStart = Date.now();
+      state.streak = { ...state.streak, ...recalcStreak() };
+      saveState();
+      $('daily-goal').value = state.settings.dailyGoal;
+      $('voice-rate').value = state.settings.voiceRate;
+      applyTheme();
+      applyVariant();
+      toast(msg || '导入成功');
+      go('home');
+    }
     function handleImport(e) {
       const f = e.target.files[0];
       if (!f) return;
       const r = new FileReader();
       r.onload = ev => {
         try {
-          const data = JSON.parse(ev.target.result);
-          if (!data || typeof data !== 'object' || !data.settings) throw new Error('格式错误');
-          state = normalizeState(data);
-          state.sessionStart = Date.now();
-          state.streak = { ...state.streak, ...recalcStreak() };
-          saveState();
-          $('daily-goal').value = state.settings.dailyGoal;
-          $('voice-rate').value = state.settings.voiceRate;
-          applyTheme();
-          toast('导入成功');
-          go('home');
+          applyImportedState(JSON.parse(ev.target.result));
         } catch (err) { toast('导入失败：' + err.message); }
       };
       r.readAsText(f);
@@ -2402,6 +3158,103 @@ const VERBS = [
     function resetData() {
       if (!confirm('确定要清空所有学习数据吗？此操作不可恢复。')) return;
       clearLearningData();
+    }
+
+    // ====================== 本地快照（IndexedDB：每周自动一份，最多 8 份） ======================
+    // file:// 等环境下 IndexedDB 可能不可用：所有操作 try/catch + Promise catch，失败仅提示，不影响主流程
+    const SNAPSHOT_DB = 'esbrain_snapshots';
+    const SNAPSHOT_STORE = 'snapshots';
+    const SNAPSHOT_LAST_KEY = 'esbrain_last_snapshot'; // localStorage 记录上次自动快照时间戳
+    const SNAPSHOT_MAX = 8;
+    function openSnapshotDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) { reject(new Error('IndexedDB 不可用')); return; }
+        const req = indexedDB.open(SNAPSHOT_DB, 1);
+        req.onupgradeneeded = () => { req.result.createObjectStore(SNAPSHOT_STORE, { keyPath: 'ts' }); };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('IndexedDB 打开失败'));
+      });
+    }
+    // 快照记录结构：{ ts: 毫秒时间戳, state: 完整 state 深拷贝 }
+    function listSnapshots() {
+      return openSnapshotDB().then(db => new Promise((resolve, reject) => {
+        const req = db.transaction(SNAPSHOT_STORE, 'readonly').objectStore(SNAPSHOT_STORE).getAll();
+        req.onsuccess = () => { db.close(); resolve((req.result || []).sort((a, b) => b.ts - a.ts)); };
+        req.onerror = () => { db.close(); reject(req.error); };
+      }));
+    }
+    function getSnapshot(ts) {
+      return openSnapshotDB().then(db => new Promise((resolve, reject) => {
+        const req = db.transaction(SNAPSHOT_STORE, 'readonly').objectStore(SNAPSHOT_STORE).get(ts);
+        req.onsuccess = () => { db.close(); resolve(req.result || null); };
+        req.onerror = () => { db.close(); reject(req.error); };
+      }));
+    }
+    function putSnapshot(snap) {
+      return openSnapshotDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(SNAPSHOT_STORE, 'readwrite');
+        tx.objectStore(SNAPSHOT_STORE).put(snap);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      }));
+    }
+    function deleteSnapshot(ts) {
+      return openSnapshotDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(SNAPSHOT_STORE, 'readwrite');
+        tx.objectStore(SNAPSHOT_STORE).delete(ts);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      }));
+    }
+    // 每周首次打开时（距上次 ≥7 天）自动存一份完整 state，超出 8 份删最旧
+    function maybeAutoSnapshot() {
+      try {
+        const last = Number(localStorage.getItem(SNAPSHOT_LAST_KEY)) || 0;
+        if (Date.now() - last < 7 * 24 * 3600 * 1000) return;
+        putSnapshot({ ts: Date.now(), state: deepClone(state) })
+          .then(() => listSnapshots())
+          .then(snaps => Promise.all(snaps.slice(SNAPSHOT_MAX).map(s => deleteSnapshot(s.ts))))
+          .then(() => localStorage.setItem(SNAPSHOT_LAST_KEY, String(Date.now())))
+          .catch(err => console.warn('自动快照失败', err)); // 自动快照失败静默降级，不打扰用户
+      } catch (err) { console.warn('自动快照失败', err); }
+    }
+    function snapshotTimeLabel(ts) {
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function renderSnapshotList() {
+      const box = $('snapshot-list');
+      if (!box) return;
+      listSnapshots().then(snaps => {
+        if (!snaps.length) { box.innerHTML = '<p class="muted" style="margin:0;">暂无快照，首次自动备份将在使用满一周后生成。</p>'; return; }
+        box.innerHTML = snaps.map(s => {
+          const words = s.state && Array.isArray(s.state.reviews) ? s.state.reviews.length : 0;
+          const reviewCount = s.state && Array.isArray(s.state.reviewLog) ? s.state.reviewLog.length : 0;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);"><div><b style="font-size:14px;">${snapshotTimeLabel(s.ts)}</b><div class="muted" style="font-size:12px;">词数 ${words} · 复习 ${reviewCount}</div></div><div style="flex-shrink:0;display:flex;gap:6px;"><button class="btn btn-sm btn-secondary" onclick="restoreSnapshot(${s.ts})">恢复</button><button class="btn btn-sm btn-secondary" onclick="exportSnapshot(${s.ts})">导出 JSON</button></div></div>`;
+        }).join('');
+      }).catch(() => {
+        box.innerHTML = '<p class="muted" style="margin:0;">当前环境不支持本地快照（IndexedDB 不可用）。</p>';
+      });
+    }
+    function restoreSnapshot(ts) {
+      if (!confirm('恢复此快照将覆盖当前学习数据，确定继续吗？')) return;
+      getSnapshot(ts).then(snap => {
+        if (!snap || !snap.state) throw new Error('快照不存在');
+        applyImportedState(snap.state, '快照已恢复');
+      }).catch(err => toast('恢复快照失败：' + err.message));
+    }
+    function exportSnapshot(ts) {
+      getSnapshot(ts).then(snap => {
+        if (!snap || !snap.state) throw new Error('快照不存在');
+        const blob = new Blob([JSON.stringify(snap.state, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'esbrain-snapshot-' + fmtDate(new Date(ts)) + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('已导出');
+      }).catch(err => toast('导出快照失败：' + err.message));
     }
 
     // ====================== 初始化 ======================
@@ -2426,6 +3279,8 @@ const VERBS = [
         $('daily-goal').value = state.settings.dailyGoal;
         $('voice-rate').value = state.settings.voiceRate;
         applyTheme();
+        applyVariant();
+        maybeAutoSnapshot(); // 每周首次打开时自动快照（内部自行容错）
         if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         if (!state.onboarding) { showOnboarding(); hide('nav'); hide('topbar'); }
         else { hide('onboarding'); show('nav'); go('home'); }

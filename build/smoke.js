@@ -89,6 +89,21 @@ const api = `
   get learnCtx() { return { learnStep, learnWordIndex, learnMode, extraWordIndex }; },
   setLearn(o) { if ('learnStep' in o) learnStep = o.learnStep; if ('learnMode' in o) learnMode = o.learnMode; if ('learnWordIndex' in o) learnWordIndex = o.learnWordIndex; if ('extraWordIndex' in o) extraWordIndex = o.extraWordIndex; },
   html(id) { return document.getElementById(id).innerHTML; },
+  get stress() { return stressSession; },
+  get STRESS_QUIZ() { return STRESS_QUIZ; },
+  get SER_ESTAR_QUIZ() { return SER_ESTAR_QUIZ; },
+  get POR_PARA_QUIZ() { return POR_PARA_QUIZ; },
+  get ARTICLE_EXCEPTIONS() { return ARTICLE_EXCEPTIONS; },
+  get FALSE_FRIENDS() { return FALSE_FRIENDS; },
+  get TENSE_CLOZE() { return TENSE_CLOZE; },
+  get cloze() { return clozeSession; },
+  get VERBS() { return VERBS; },
+  get PHONEMES() { return PHONEMES; },
+  get DIGRAPHS() { return DIGRAPHS; },
+  get WORDS() { return WORDS; },
+  get LESSONS() { return LESSONS; },
+  get GRAMMARS() { return GRAMMARS; },
+  get drill() { return drill; },
 };`;
 (0, eval)(main + api);
 const A = globalThis.__api;
@@ -103,19 +118,95 @@ const eq = (a, b) => a === b;
 // 1. 顶层执行 + init 已完成
 t('脚本执行+init 无异常', () => !!A.state && !!A.state.settings);
 
-// 2. 14 屏 go() 不报错
-for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'verbs', 'words', 'stats', 'weekly', 'settings', 'learn']) {
+t('发音数据区分二合字母与滑音', () => {
+  renderPhonetics();
+  const digraphs = A.DIGRAPHS;
+  const glideW = A.PHONEMES.find(p => p.sym === 'w');
+  const glideJ = A.PHONEMES.find(p => p.sym === 'j');
+  const h = A.html('digraph-list') + A.html('phoneme-list');
+  return digraphs.length === 2
+    && digraphs.some(d => d.letters === 'ch' && d.ipa === '/tʃ/')
+    && digraphs.some(d => d.letters === 'll' && d.ipa.includes('/ʝ/'))
+    && glideW && glideW.kind === 'glide' && glideJ && glideJ.kind === 'glide'
+    && h.includes('ch') && h.includes('ll') && h.includes('[w]') && h.includes('[j]');
+});
+t('拉美变体在字母表显示 c/z 的地区 IPA', () => {
+  A.state.settings.variant = 'es-LA';
+  renderPhonetics();
+  const latin = A.html('alphabet-list');
+  A.state.settings.variant = 'es-ES';
+  renderPhonetics();
+  return latin.includes('/se/') && latin.includes('/ˈseta/');
+});
+
+// 2. 19 屏 go() 不报错
+for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'learn', 'cloze', 'subjunctive', 'shadowing', 'listening-la']) {
   t('go(' + s + ')', () => { go(s); return true; });
 }
 
-// 3. lessons：P3/P4 敬请期待、24 课、P0 条目
-t('lessons 含 24 课与敬请期待', () => {
+// 3. lessons：P4 敬请期待、36 课、P0 条目
+t('lessons 含 60 课与 B1 分段', () => {
   renderLessons();
   const h = A.html('lesson-groups');
   const items = (h.match(/lesson-item/g) || []).length;
-  if (items < 25) throw new Error('课程条目仅 ' + items);
-  if ((h.match(/敬请期待/g) || []).length !== 2) throw new Error('敬请期待数量异常');
-  return h.includes('发音入门') && h.includes('问候与自我介绍') && h.includes('A1 总复习') && h.includes('A1.2-L12');
+  if (items < 61) throw new Error('课程条目仅 ' + items);
+  return h.includes('发音入门') && h.includes('问候与自我介绍') && h.includes('B1.1-L01') && h.includes('B1.2-L12');
+});
+
+// 3b. 第四轮：A2.1 十二课挂载、词库总量、语法 37 条
+t('词库总数 ≥2400 且 B1 二十四课齐全', () => {
+  if (A.WORDS.length < 2400) throw new Error('词库仅 ' + A.WORDS.length);
+  const a21 = A.LESSONS.filter(l => l.stage === 'P3');
+  if (a21.length !== 12) throw new Error('A2.1 课数 ' + a21.length);
+  if (A.GRAMMARS.length !== 61) throw new Error('语法条数 ' + A.GRAMMARS.length);
+  for (const l of a21) {
+    if (!l.grammar_id) throw new Error(l.id + ' 缺语法点');
+    if (l.words.length + l.extra_words.length < 30) throw new Error(l.id + ' 词数不足 30');
+    if (!l.dialog || l.dialog.length < 6) throw new Error(l.id + ' 对话不足 6 句');
+  }
+  return true;
+});
+t('B1 课程、听力字段与虚拟式专项可用', () => {
+  const b1 = A.LESSONS.filter(l => l.stage === 'P4' || l.stage === 'P5');
+  if (b1.length !== 24) throw new Error('B1 课数 ' + b1.length);
+  for (const l of b1) {
+    if (l.words.length < 12 || l.words.length > 14 || l.extra_words.length < 18 || l.extra_words.length > 26) throw new Error(l.id + ' 词数异常');
+    if (!l.listening || l.dialog.length !== 8) throw new Error(l.id + ' 缺听力或对话');
+  }
+  renderSubjunctive(); renderShadowing(); renderListeningLA();
+  startQuiz('subjunctive');
+  return A.quiz && A.quiz.questions.length >= 80 && A.html('subjunctive-area').includes('WEIRDO');
+});
+t('B1 课程把听力接入学习流程并提供理解题', () => {
+  openLesson('B1.1-L01');
+  A.setLearn({ learnStep: 3, learnMode: 'core' }); renderLearn();
+  if (!A.html('learn-container').includes('先听后看') || A.html('learn-container').includes('<div class="lab">原文</div>')) throw new Error('听力未默认隐藏原文');
+  revealLessonListening();
+  if (!A.html('learn-container').includes(A.lesson.listening.text) || !A.html('learn-container').includes('¿Qué hace la segunda persona?')) throw new Error('听力原文或理解题未渲染');
+  A.lesson.listening.questions.forEach((q, i) => answerLessonListening(i, q.answer));
+  A.setLearn({ learnStep: 4 }); renderLearn();
+  return A.quiz && A.quiz.questions.length === 5;
+});
+t('lesson 筛选渲染含 A2.1 分组与课程', () => {
+  renderLessons();
+  const h = A.html('lesson-groups');
+  return h.includes('A2.1 进阶西语') && h.includes('A2.1-L01') && h.includes('A2.1-L12') && h.includes('将来时');
+});
+t('A2.1 新课学习流可渲染（词卡→语法→对话→小测）', () => {
+  openLesson('A2.1-L01');
+  let guard = 0;
+  while (A.learnCtx.learnMode === 'core' && A.learnCtx.learnStep === 0 && guard++ < 50) nextLearnWord();
+  if (A.learnCtx.learnMode !== 'choice') throw new Error('核心词流程未走完');
+  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  const hg = A.html('learn-container');
+  if (!hg.includes('语法点') || !hg.includes('hablaba')) throw new Error('g026 imperfecto 内容未渲染');
+  A.setLearn({ learnStep: 2 }); renderLearn();
+  if (!A.html('learn-container').includes('迷你对话')) throw new Error('对话步未渲染');
+  A.setLearn({ learnStep: 3 }); renderLearn();
+  const q = A.quiz;
+  if (!q || q.questions.length !== 5) throw new Error('小测题数异常');
+  for (const qu of q.questions) if (!qu.options.includes(qu.answer)) throw new Error('答案不在选项中');
+  return true;
 });
 
 // 4. 学习流 L01 端到端
@@ -165,8 +256,8 @@ t('L01(P2) 无语法提示', () => {
   return A.html('learn-container').includes('本课无新增语法点');
 });
 
-// 6. 解锁测验 80% 通过
-t('解锁测验 10 题 80% 通过', () => {
+// 6. 发音自检可重复，80% 记录完成
+t('发音自检 10 题 80% 通过且可重做', () => {
   startUnlockQuiz();
   const q = A.quiz;
   if (!q || q.questions.length !== 10) throw new Error('题数≠10');
@@ -181,7 +272,16 @@ t('解锁测验 10 题 80% 通过', () => {
     const idx = correct ? qu.options.indexOf(qu.answer) : (qu.options.indexOf(qu.answer) + 1) % 3;
     answerQuiz(idx); nextQuestion();
   }
-  return A.state.progress.p0Passed === true;
+  if (A.state.progress.p0Passed !== true) return false;
+  startUnlockQuiz();
+  return A.quiz && A.quiz.questions.length === 10;
+});
+t('专项错题进入知识点复习区', () => {
+  startQuiz('serestar');
+  const q = A.quiz.questions[0];
+  answerQuiz(q.options.findIndex(x => x !== q.answer));
+  const item = A.state.skillMistakes.find(x => x.key === 'serestar');
+  return !!item && item.count >= 1;
 });
 
 // 7. 四种自由测验
@@ -205,16 +305,464 @@ t('空词池优雅拒绝', () => {
   return true;
 });
 
-// 8. SRS 三档
+// 7b. 第二轮专项：冠词例外、ser/estar、por/para、假朋友
+t('冠词测验只出例外词（空词池也可用）', () => {
+  const bak = A.state.reviews;
+  A.state = { ...A.state, reviews: [] };
+  startQuiz('article');
+  const q = A.quiz;
+  A.state = { ...A.state, reviews: bak };
+  if (!q || q.questions.length !== 10) throw new Error('题数≠10');
+  for (const qu of q.questions) {
+    if (!qu.options.includes(qu.answer)) throw new Error('答案不在选项');
+    if (!qu.tip) throw new Error('缺解析');
+    if (!A.ARTICLE_EXCEPTIONS.some(w => qu.q.startsWith(w.word + '（'))) throw new Error('非例外词出题: ' + qu.q);
+  }
+  restoreQuizMenu();
+  return true;
+});
+t('冠词专项覆盖通性名词', () => {
+  const bothQ = [];
+  for (let i = 0; i < 10; i++) { // 抽多轮，通性题应出现且答案为「都可以」
+    startQuiz('article');
+    A.quiz.questions.forEach(qu => { if (qu.options.includes('el / la 都可以')) bothQ.push(qu); });
+    restoreQuizMenu();
+  }
+  if (!bothQ.length) throw new Error('10 轮未抽到通性题');
+  return bothQ.every(qu => qu.answer === 'el / la 都可以');
+});
+for (const type of ['serestar', 'porpara', 'ff']) {
+  t('专项测验 ' + type, () => {
+    startQuiz(type);
+    const q = A.quiz;
+    if (!q || !q.questions.length) throw new Error('未生成题目');
+    for (const qu of q.questions) {
+      if (!qu.options.includes(qu.answer)) throw new Error('答案不在选项');
+      if (new Set(qu.options).size !== qu.options.length) throw new Error('选项重复');
+      if (!qu.tip) throw new Error('缺解析');
+    }
+    restoreQuizMenu();
+    return true;
+  });
+}
+t('假朋友小测含误解干扰项', () => {
+  startQuiz('ff');
+  const hit = A.quiz.questions.some(qu => A.FALSE_FRIENDS.some(f => qu.q.startsWith(f.word + ' ') && qu.options.includes(f.wrong) && qu.answer === f.correct));
+  restoreQuizMenu();
+  return hit;
+});
+t('重音训练完整流程', () => {
+  startStress();
+  if (!A.html('stress-area').includes('重音')) throw new Error('题目页未渲染');
+  let guard = 0;
+  while (A.stress && A.stress.index < A.stress.questions.length && guard++ < 20) {
+    const q = A.stress.questions[A.stress.index];
+    answerStress(q.stress - 1); // 全答对
+    nextStress();
+  }
+  if (A.stress !== null) throw new Error('结束后 session 未清空');
+  return A.html('stress-area').includes('训练完成');
+});
+t('重音题数据自洽', () => A.STRESS_QUIZ.length >= 60 && A.STRESS_QUIZ.length <= 80
+  && A.STRESS_QUIZ.every(q => q.syllables.join('') === q.word && q.stress >= 1 && q.stress <= q.syllables.length));
+t('专项题量达标', () => A.SER_ESTAR_QUIZ.length >= 60 && A.POR_PARA_QUIZ.length >= 50
+  && A.ARTICLE_EXCEPTIONS.length >= 38 && A.FALSE_FRIENDS.length >= 24);
+t('假朋友词条列表渲染', () => {
+  renderFalseFriends();
+  const h = A.html('ff-list');
+  return h.includes('embarazada') && h.includes('怀孕') && h.includes('avergonzada');
+});
+t('发音规则核心+更多细节折叠', () => {
+  renderPhonetics();
+  const h = A.html('rule-list');
+  return h.includes('<details') && h.includes('更多细节') && h.includes('seseo') && h.includes('重音规则');
+});
+
+// 7d. 第四轮：时态选择段落填空
+t('时态填空数据自洽（≥15 段、占位与空一一对应）', () => {
+  if (A.TENSE_CLOZE.length < 15) throw new Error('段数 ' + A.TENSE_CLOZE.length);
+  const ids = new Set();
+  for (const p of A.TENSE_CLOZE) {
+    if (!p.id || ids.has(p.id)) throw new Error('id 缺失或重复: ' + p.id);
+    ids.add(p.id);
+    if (!p.title || !p.zh || !p.text) throw new Error(p.id + ' 字段不全');
+    if (p.blanks.length < 5 || p.blanks.length > 8) throw new Error(p.id + ' 空数 ' + p.blanks.length);
+    const marks = [...p.text.matchAll(/\[\[(\d+)\]\]/g)].map(m => Number(m[1]));
+    if (marks.length !== p.blanks.length || !marks.every((n, i) => n === i)) throw new Error(p.id + ' 占位标记与空不对应');
+    p.blanks.forEach((b, i) => {
+      if (b.options.length !== 2 || b.options[0] === b.options[1]) throw new Error(p.id + ' 空 ' + i + ' 选项异常');
+      if (b.answer !== 0 && b.answer !== 1) throw new Error(p.id + ' 空 ' + i + ' answer 越界');
+      if (!b.tip) throw new Error(p.id + ' 空 ' + i + ' 缺 tip');
+    });
+  }
+  return true;
+});
+t('时态填空选篇列表渲染', () => {
+  clozeBack();
+  const h = A.html('cloze-area');
+  const p0 = A.TENSE_CLOZE[0];
+  return h.includes('选一篇短文开始') && h.includes(p0.title) && h.includes(p0.zh);
+});
+t('时态填空判分（选对 / 选错 / 锁定）', () => {
+  startCloze(A.TENSE_CLOZE[0].id);
+  const s = A.cloze;
+  const p = s.passage;
+  answerCloze(0, p.blanks[0].answer); // 选对
+  if (s.score !== 1 || s.done !== 1) throw new Error('选对未加分');
+  answerCloze(0, (p.blanks[0].answer + 1) % 2); // 已锁定，应无效
+  if (s.score !== 1 || s.done !== 1 || s.picked[0] !== p.blanks[0].answer) throw new Error('锁定失效');
+  answerCloze(1, (p.blanks[1].answer + 1) % 2); // 选错
+  if (s.score !== 1 || s.done !== 2) throw new Error('选错误判分');
+  const h = A.html('cloze-area');
+  if (!h.includes(p.blanks[0].tip) || !h.includes(p.blanks[1].tip)) throw new Error('tip 未显示');
+  if (!h.includes('✗ 应为 ' + p.blanks[1].options[p.blanks[1].answer])) throw new Error('错答未给正确答案');
+  return h.includes('已答 2/' + p.blanks.length) && h.includes('disabled');
+});
+t('时态填空端到端（走完一段 + 重做 + 返回）', () => {
+  startCloze(A.TENSE_CLOZE[1].id);
+  const s = A.cloze;
+  const p = s.passage;
+  p.blanks.forEach((b, i) => answerCloze(i, b.answer)); // 全答对
+  if (s.done !== p.blanks.length || s.score !== p.blanks.length) throw new Error('未完成或判分异常');
+  const h = A.html('cloze-area');
+  if (!h.includes('本篇完成') || !h.includes('重做本篇')) throw new Error('结算页未渲染');
+  startCloze(p.id); // 重做
+  if (A.cloze.done !== 0 || A.cloze.score !== 0) throw new Error('重做未重置');
+  clozeBack();
+  if (A.cloze !== null) throw new Error('返回后 session 未清空');
+  return A.html('cloze-area').includes('选一篇短文开始');
+});
+
+// 7c. 第三轮：变位基准表（手工核对的硬门槛，覆盖 ser/ir 全 14 时态、hablar/comer/vivir 规则全量、
+// 不规则 indefinido、futuro 不规则词干、词干变化代表格、命令式肯定/否定）
+const VP = ['yo', 'tú', 'él/ella/usted', 'nosotros', 'vosotros', 'ellos/ellas/ustedes'];
+const vByInf = Object.fromEntries(A.VERBS.map(v => [v.inf, v]));
+// 形式：['inf', 'tense', 'f1/f2/...'(按 6 人称顺序)] 或 ['inf', 'tense', {person: form}] 或 ['inf', 'tense', '单形式']
+const CONJ_BENCH = [
+  // --- ser 全部 14 时态语式 ---
+  ['ser', 'presente', 'soy/eres/es/somos/sois/son'],
+  ['ser', 'indefinido', 'fui/fuiste/fue/fuimos/fuisteis/fueron'],
+  ['ser', 'imperfecto', 'era/eras/era/éramos/erais/eran'],
+  ['ser', 'futuro', 'seré/serás/será/seremos/seréis/serán'],
+  ['ser', 'condicional', 'sería/serías/sería/seríamos/seríais/serían'],
+  ['ser', 'perfecto', 'he sido/has sido/ha sido/hemos sido/habéis sido/han sido'],
+  ['ser', 'pluscuamperfecto', 'había sido/habías sido/había sido/habíamos sido/habíais sido/habían sido'],
+  ['ser', 'subj_pres', 'sea/seas/sea/seamos/seáis/sean'],
+  ['ser', 'subj_imp', 'fuera/fueras/fuera/fuéramos/fuerais/fueran'],
+  ['ser', 'imp_af', '—/sé/sea/seamos/sed/sean'],
+  ['ser', 'imp_neg', '—/no seas/no sea/no seamos/no seáis/no sean'],
+  ['ser', 'gerundio', 'siendo'],
+  ['ser', 'participio', 'sido'],
+  // --- ir 全部 14 时态语式 ---
+  ['ir', 'presente', 'voy/vas/va/vamos/vais/van'],
+  ['ir', 'indefinido', 'fui/fuiste/fue/fuimos/fuisteis/fueron'],
+  ['ir', 'imperfecto', 'iba/ibas/iba/íbamos/ibais/iban'],
+  ['ir', 'futuro', 'iré/irás/irá/iremos/iréis/irán'],
+  ['ir', 'condicional', 'iría/irías/iría/iríamos/iríais/irían'],
+  ['ir', 'perfecto', 'he ido/has ido/ha ido/hemos ido/habéis ido/han ido'],
+  ['ir', 'pluscuamperfecto', 'había ido/habías ido/había ido/habíamos ido/habíais ido/habían ido'],
+  ['ir', 'subj_pres', 'vaya/vayas/vaya/vayamos/vayáis/vayan'],
+  ['ir', 'subj_imp', 'fuera/fueras/fuera/fuéramos/fuerais/fueran'],
+  ['ir', 'imp_af', '—/ve/vaya/vayamos/id/vayan'],
+  ['ir', 'imp_neg', '—/no vayas/no vaya/no vayamos/no vayáis/no vayan'],
+  ['ir', 'gerundio', 'yendo'],
+  ['ir', 'participio', 'ido'],
+  // --- hablar / comer / vivir：规则动词全 14 时态（词尾表已人工核对） ---
+  ['hablar', 'presente', 'hablo/hablas/habla/hablamos/habláis/hablan'],
+  ['hablar', 'indefinido', 'hablé/hablaste/habló/hablamos/hablasteis/hablaron'],
+  ['hablar', 'imperfecto', 'hablaba/hablabas/hablaba/hablábamos/hablabais/hablaban'],
+  ['hablar', 'futuro', 'hablaré/hablarás/hablará/hablaremos/hablaréis/hablarán'],
+  ['hablar', 'condicional', 'hablaría/hablarías/hablaría/hablaríamos/hablaríais/hablarían'],
+  ['hablar', 'perfecto', 'he hablado/has hablado/ha hablado/hemos hablado/habéis hablado/han hablado'],
+  ['hablar', 'pluscuamperfecto', 'había hablado/habías hablado/había hablado/habíamos hablado/habíais hablado/habían hablado'],
+  ['hablar', 'subj_pres', 'hable/hables/hable/hablemos/habléis/hablen'],
+  ['hablar', 'subj_imp', 'hablara/hablaras/hablara/habláramos/hablarais/hablaran'],
+  ['hablar', 'imp_af', '—/habla/hable/hablemos/hablad/hablen'],
+  ['hablar', 'imp_neg', '—/no hables/no hable/no hablemos/no habléis/no hablen'],
+  ['hablar', 'gerundio', 'hablando'],
+  ['hablar', 'participio', 'hablado'],
+  ['comer', 'presente', 'como/comes/come/comemos/coméis/comen'],
+  ['comer', 'indefinido', 'comí/comiste/comió/comimos/comisteis/comieron'],
+  ['comer', 'imperfecto', 'comía/comías/comía/comíamos/comíais/comían'],
+  ['comer', 'futuro', 'comeré/comerás/comerá/comeremos/comeréis/comerán'],
+  ['comer', 'condicional', 'comería/comerías/comería/comeríamos/comeríais/comerían'],
+  ['comer', 'perfecto', 'he comido/has comido/ha comido/hemos comido/habéis comido/han comido'],
+  ['comer', 'pluscuamperfecto', 'había comido/habías comido/había comido/habíamos comido/habíais comido/habían comido'],
+  ['comer', 'subj_pres', 'coma/comas/coma/comamos/comáis/coman'],
+  ['comer', 'subj_imp', 'comiera/comieras/comiera/comiéramos/comierais/comieran'],
+  ['comer', 'imp_af', '—/come/coma/comamos/comed/coman'],
+  ['comer', 'imp_neg', '—/no comas/no coma/no comamos/no comáis/no coman'],
+  ['comer', 'gerundio', 'comiendo'],
+  ['comer', 'participio', 'comido'],
+  ['vivir', 'presente', 'vivo/vives/vive/vivimos/vivís/viven'],
+  ['vivir', 'indefinido', 'viví/viviste/vivió/vivimos/vivisteis/vivieron'],
+  ['vivir', 'imperfecto', 'vivía/vivías/vivía/vivíamos/vivíais/vivían'],
+  ['vivir', 'futuro', 'viviré/vivirás/vivirá/viviremos/viviréis/vivirán'],
+  ['vivir', 'condicional', 'viviría/vivirías/viviría/viviríamos/viviríais/vivirían'],
+  ['vivir', 'perfecto', 'he vivido/has vivido/ha vivido/hemos vivido/habéis vivido/han vivido'],
+  ['vivir', 'pluscuamperfecto', 'había vivido/habías vivido/había vivido/habíamos vivido/habíais vivido/habían vivido'],
+  ['vivir', 'subj_pres', 'viva/vivas/viva/vivamos/viváis/vivan'],
+  ['vivir', 'subj_imp', 'viviera/vivieras/viviera/viviéramos/vivierais/vivieran'],
+  ['vivir', 'imp_af', '—/vive/viva/vivamos/vivid/vivan'],
+  ['vivir', 'imp_neg', '—/no vivas/no viva/no vivamos/no viváis/no vivan'],
+  ['vivir', 'gerundio', 'viviendo'],
+  ['vivir', 'participio', 'vivido'],
+  // --- 不规则 indefinido 全人称（练习池 12 词，ser/ir 已在上面覆盖） ---
+  ['tener', 'indefinido', 'tuve/tuviste/tuvo/tuvimos/tuvisteis/tuvieron'],
+  ['estar', 'indefinido', 'estuve/estuviste/estuvo/estuvimos/estuvisteis/estuvieron'],
+  ['hacer', 'indefinido', 'hice/hiciste/hizo/hicimos/hicisteis/hicieron'],
+  ['decir', 'indefinido', 'dije/dijiste/dijo/dijimos/dijisteis/dijeron'],
+  ['poder', 'indefinido', 'pude/pudiste/pudo/pudimos/pudisteis/pudieron'],
+  ['poner', 'indefinido', 'puse/pusiste/puso/pusimos/pusisteis/pusieron'],
+  ['saber', 'indefinido', 'supe/supiste/supo/supimos/supisteis/supieron'],
+  ['querer', 'indefinido', 'quise/quisiste/quiso/quisimos/quisisteis/quisieron'],
+  ['venir', 'indefinido', 'vine/viniste/vino/vinimos/vinisteis/vinieron'],
+  ['traer', 'indefinido', 'traje/trajiste/trajo/trajimos/trajisteis/trajeron'],
+  ['dar', 'indefinido', 'di/diste/dio/dimos/disteis/dieron'],
+  ['ver', 'indefinido', 'vi/viste/vio/vimos/visteis/vieron'],
+  // --- futuro/condicional 不规则词干（tendr-/har-/dir-/podr-/pondr-/saldr-/vendr-/querr-/sabr-/habr-） ---
+  ['tener', 'futuro', { 'yo': 'tendré', 'nosotros': 'tendremos' }],
+  ['hacer', 'futuro', { 'yo': 'haré', 'ellos/ellas/ustedes': 'harán' }],
+  ['decir', 'futuro', { 'yo': 'diré', 'él/ella/usted': 'dirá' }],
+  ['poder', 'futuro', { 'yo': 'podré', 'vosotros': 'podréis' }],
+  ['poner', 'futuro', { 'yo': 'pondré' }],
+  ['salir', 'futuro', { 'yo': 'saldré' }],
+  ['venir', 'futuro', { 'yo': 'vendré' }],
+  ['querer', 'futuro', { 'yo': 'querré' }],
+  ['saber', 'futuro', { 'yo': 'sabré' }],
+  ['haber', 'futuro', { 'yo': 'habré', 'él/ella/usted': 'habrá' }],
+  ['tener', 'condicional', { 'yo': 'tendría' }],
+  ['hacer', 'condicional', { 'yo': 'haría' }],
+  ['decir', 'condicional', { 'yo': 'diría' }],
+  // --- 词干变化三类代表格（yo 变 / nosotros、vosotros 不变） ---
+  ['querer', 'presente', { 'yo': 'quiero', 'nosotros': 'queremos', 'vosotros': 'queréis' }],
+  ['pensar', 'presente', { 'yo': 'pienso', 'nosotros': 'pensamos' }],
+  ['cerrar', 'presente', { 'yo': 'cierro', 'nosotros': 'cerramos' }],
+  ['entender', 'presente', { 'yo': 'entiendo', 'nosotros': 'entendemos' }],
+  ['poder', 'presente', { 'yo': 'puedo', 'nosotros': 'podemos', 'vosotros': 'podéis' }],
+  ['encontrar', 'presente', { 'yo': 'encuentro', 'nosotros': 'encontramos' }],
+  ['volver', 'presente', { 'yo': 'vuelvo', 'nosotros': 'volvemos' }],
+  ['jugar', 'presente', { 'yo': 'juego', 'nosotros': 'jugamos' }],
+  ['pedir', 'presente', { 'yo': 'pido', 'tú': 'pides', 'nosotros': 'pedimos', 'vosotros': 'pedís' }],
+  ['servir', 'presente', { 'yo': 'sirvo', 'nosotros': 'servimos' }],
+  ['seguir', 'presente', { 'yo': 'sigo', 'tú': 'sigues', 'nosotros': 'seguimos' }],
+  // --- -ir 类次级变化：subj nosotros/vosotros、indefinido 第三人称、动名词 ---
+  ['pedir', 'subj_pres', { 'yo': 'pida', 'nosotros': 'pidamos', 'vosotros': 'pidáis' }],
+  ['pedir', 'indefinido', { 'él/ella/usted': 'pidió', 'ellos/ellas/ustedes': 'pidieron' }],
+  ['pedir', 'gerundio', 'pidiendo'],
+  ['dormir', 'subj_pres', { 'yo': 'duerma', 'nosotros': 'durmamos', 'vosotros': 'durmáis' }],
+  ['dormir', 'indefinido', { 'él/ella/usted': 'durmió', 'ellos/ellas/ustedes': 'durmieron' }],
+  ['dormir', 'gerundio', 'durmiendo'],
+  ['sentir', 'subj_pres', { 'yo': 'sienta', 'nosotros': 'sintamos' }],
+  ['sentir', 'indefinido', { 'él/ella/usted': 'sintió', 'ellos/ellas/ustedes': 'sintieron' }],
+  ['sentir', 'gerundio', 'sintiendo'],
+  ['preferir', 'subj_pres', { 'nosotros': 'prefiramos' }],
+  ['preferir', 'indefinido', { 'él/ella/usted': 'prefirió' }],
+  ['morir', 'subj_pres', { 'nosotros': 'muramos' }],
+  ['morir', 'indefinido', { 'él/ella/usted': 'murió' }],
+  ['morir', 'gerundio', 'muriendo'],
+  ['morir', 'participio', 'muerto'],
+  ['decir', 'subj_pres', { 'yo': 'diga', 'nosotros': 'digamos' }],
+  ['decir', 'gerundio', 'diciendo'],
+  ['seguir', 'gerundio', 'siguiendo'],
+  ['seguir', 'indefinido', { 'él/ella/usted': 'siguió' }],
+  // --- -ar/-er 类虚拟式 nosotros 还原（不变词干） ---
+  ['querer', 'subj_pres', { 'yo': 'quiera', 'nosotros': 'queramos' }],
+  ['poder', 'subj_pres', { 'yo': 'pueda', 'nosotros': 'podamos' }],
+  ['jugar', 'subj_pres', { 'yo': 'juegue', 'nosotros': 'juguemos' }],
+  ['cerrar', 'subj_pres', { 'yo': 'cierre', 'nosotros': 'cerremos' }],
+  ['tener', 'subj_pres', { 'yo': 'tenga', 'nosotros': 'tengamos' }],
+  ['venir', 'subj_pres', { 'yo': 'venga', 'nosotros': 'vengamos' }],
+  // --- 虚拟式未完成过去时（-ra 式）抽查 ---
+  ['tener', 'subj_imp', 'tuviera/tuvieras/tuviera/tuviéramos/tuvierais/tuvieran'],
+  ['hacer', 'subj_imp', { 'yo': 'hiciera', 'nosotros': 'hiciéramos' }],
+  ['decir', 'subj_imp', { 'yo': 'dijera', 'nosotros': 'dijéramos' }],
+  ['dormir', 'subj_imp', { 'yo': 'durmiera', 'nosotros': 'durmiéramos' }],
+  // --- 拼写保持：c→qu / g→gu / z→c ---
+  ['buscar', 'subj_pres', { 'yo': 'busque' }],
+  ['buscar', 'indefinido', { 'yo': 'busqué' }],
+  ['empezar', 'subj_pres', { 'yo': 'empiece', 'nosotros': 'empecemos' }],
+  ['empezar', 'indefinido', { 'yo': 'empecé' }],
+  ['jugar', 'indefinido', { 'yo': 'jugué' }],
+  // --- 命令式肯定 tú 格（八个不规则）+ 否定 ---
+  ['venir', 'imp_af', { 'tú': 'ven' }],
+  ['hacer', 'imp_af', { 'tú': 'haz' }],
+  ['decir', 'imp_af', { 'tú': 'di' }],
+  ['poner', 'imp_af', { 'tú': 'pon' }],
+  ['salir', 'imp_af', { 'tú': 'sal' }],
+  ['ser', 'imp_af', { 'tú': 'sé' }],
+  ['ir', 'imp_af', { 'tú': 've' }],
+  ['tener', 'imp_af', { 'tú': 'ten' }],
+  ['venir', 'imp_neg', { 'tú': 'no vengas', 'nosotros': 'no vengamos' }],
+  ['hablar', 'imp_neg', { 'tú': 'no hables', 'vosotros': 'no habléis' }],
+  ['pedir', 'imp_af', { 'tú': 'pide', 'vosotros': 'pedid' }],
+  ['dormir', 'imp_af', { 'tú': 'duerme', 'nosotros': 'durmamos' }],
+  // --- 自反动词（含命令式重音移位） ---
+  ['llamarse', 'presente', { 'yo': 'me llamo', 'vosotros': 'os llamáis' }],
+  ['llamarse', 'imp_af', { 'tú': 'llámate', 'nosotros': 'llamémonos', 'vosotros': 'llamaos' }],
+  ['llamarse', 'imp_neg', { 'tú': 'no te llames' }],
+  ['llamarse', 'gerundio', 'llamándose'],
+  ['levantarse', 'imp_af', { 'tú': 'levántate', 'ellos/ellas/ustedes': 'levántense' }],
+  ['sentarse', 'imp_af', { 'tú': 'siéntate', 'nosotros': 'sentémonos', 'vosotros': 'sentaos' }],
+  ['sentarse', 'presente', { 'yo': 'me siento', 'nosotros': 'nos sentamos' }],
+  ['vestirse', 'imp_af', { 'tú': 'vístete', 'nosotros': 'vistámonos', 'vosotros': 'vestíos' }],
+  ['vestirse', 'subj_pres', { 'nosotros': 'nos vistamos' }],
+  ['vestirse', 'gerundio', 'vistiéndose'],
+  // --- 不规则过去分词 ---
+  ['hacer', 'participio', 'hecho'],
+  ['poner', 'participio', 'puesto'],
+  ['decir', 'participio', 'dicho'],
+  ['ver', 'participio', 'visto'],
+  ['abrir', 'participio', 'abierto'],
+  ['escribir', 'participio', 'escrito'],
+  ['volver', 'participio', 'vuelto'],
+  // --- y-类动词（oír/leer/creer/construir） ---
+  ['oír', 'presente', 'oigo/oyes/oye/oímos/oís/oyen'],
+  ['oír', 'indefinido', 'oí/oíste/oyó/oímos/oísteis/oyeron'],
+  ['oír', 'gerundio', 'oyendo'],
+  ['oír', 'participio', 'oído'],
+  ['oír', 'futuro', { 'yo': 'oiré' }],
+  ['leer', 'indefinido', { 'él/ella/usted': 'leyó', 'ellos/ellas/ustedes': 'leyeron' }],
+  ['leer', 'gerundio', 'leyendo'],
+  ['leer', 'participio', 'leído'],
+  ['creer', 'indefinido', { 'él/ella/usted': 'creyó' }],
+  ['construir', 'presente', 'construyo/construyes/construye/construimos/construís/construyen'],
+  ['construir', 'indefinido', { 'él/ella/usted': 'construyó', 'ellos/ellas/ustedes': 'construyeron' }],
+  ['construir', 'gerundio', 'construyendo'],
+  // --- imperfecto 仅有的三个不规则 ---
+  ['ser', 'imperfecto', { 'nosotros': 'éramos' }],
+  ['ir', 'imperfecto', { 'nosotros': 'íbamos' }],
+  ['ver', 'imperfecto', 'veía/veías/veía/veíamos/veíais/veían'],
+];
+const BENCH_CELLS = CONJ_BENCH.reduce((n, [, , f]) => n + (typeof f === 'string' ? (f.includes('/') ? 6 : 1) : Object.keys(f).length), 0);
+t(`变位基准表（${BENCH_CELLS} 格手工核对）`, () => {
+  if (BENCH_CELLS < 200) throw new Error('基准格数不足 200: ' + BENCH_CELLS);
+  for (const [inf, tense, forms] of CONJ_BENCH) {
+    const v = vByInf[inf];
+    if (!v) throw new Error('缺动词 ' + inf);
+    if (typeof forms === 'string' && !forms.includes('/')) {
+      if (v[tense] !== forms) throw new Error(`${inf}.${tense} 应为 ${forms}，实际 ${v[tense]}`);
+    } else if (typeof forms === 'string') {
+      const exp = forms.split('/');
+      VP.forEach((p, i) => {
+        if (v[tense][p] !== exp[i]) throw new Error(`${inf}.${tense}.${p} 应为 ${exp[i]}，实际 ${v[tense][p]}`);
+      });
+    } else {
+      for (const [p, exp] of Object.entries(forms)) {
+        if (v[tense][p] !== exp) throw new Error(`${inf}.${tense}.${p} 应为 ${exp}，实际 ${v[tense][p]}`);
+      }
+    }
+  }
+  return true;
+});
+t('动词库 60 词且 14 时态齐全', () => {
+  if (A.VERBS.length !== 60) throw new Error('动词数 ' + A.VERBS.length);
+  const tables = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'subj_pres', 'subj_imp', 'imp_af', 'imp_neg'];
+  for (const v of A.VERBS) {
+    if (!v.zh) throw new Error(v.inf + ' 缺中文释义');
+    for (const te of tables) for (const p of VP) if (!v[te][p]) throw new Error(`${v.inf} 缺 ${te}.${p}`);
+    if (!v.gerundio || !v.participio) throw new Error(v.inf + ' 缺非人称形式');
+  }
+  return true;
+});
+t('变位填空 conj 全流程（软键盘判分）', () => {
+  startQuiz('conj');
+  const q = A.quiz;
+  if (!q || q.questions.length !== 10) throw new Error('题数≠10');
+  for (const qu of q.questions) {
+    if (qu.type !== 'conj' || !qu.answer) throw new Error('题目异常');
+    if (!qu.tip) throw new Error('缺规律提示');
+    if (qu.q.includes('（') === false) throw new Error('缺中文标注: ' + qu.q);
+  }
+  let guard = 0;
+  while (A.quiz && A.quiz.index < A.quiz.questions.length && guard++ < 20) {
+    const cur = A.quiz.questions[A.quiz.index];
+    document.getElementById('spell-input').value = cur.answer; // 全答对
+    submitSpell();
+    nextQuestion();
+  }
+  const score = q.score;
+  restoreQuizMenu();
+  if (score !== 10) throw new Error('全对判分异常: ' + score);
+  return true;
+});
+t('变位填空严格判重音（hablo ≠ habló）', () => {
+  startQuiz('conj');
+  A.quiz.questions[A.quiz.index] = { type: 'conj', id: null, q: 'hablar（说，讲）· él/ella/usted · 简单过去时', answer: 'habló', tip: 'x' };
+  document.getElementById('spell-input').value = 'hablo'; // 缺重音应判错
+  submitSpell();
+  const wrong = A.quiz.score === 0 && A.quiz.wrong.length === 1;
+  restoreQuizMenu();
+  return wrong;
+});
+t('es-LA 隐藏 vosotros 且提示拉美模式', () => {
+  const bak = A.state.settings.variant;
+  A.state = { ...A.state, settings: { ...A.state.settings, variant: 'es-LA' } };
+  go('verbs');
+  if (!A.html('verb-list').includes('拉美模式：已隐藏 vosotros')) throw new Error('列表页缺拉美提示');
+  openVerb(0); // ser
+  const h = A.html('verb-detail');
+  if (h.includes('<th>vosotros</th>')) throw new Error('详情页仍含 vosotros 行');
+  if (!h.includes('拉美模式：已隐藏 vosotros')) throw new Error('详情页缺拉美提示');
+  // conj 与练习均不出 vosotros 题
+  let hit = false;
+  for (let i = 0; i < 15; i++) {
+    startQuiz('conj');
+    A.quiz.questions.forEach(qu => { if (qu.q.includes('vosotros')) hit = true; });
+    restoreQuizMenu();
+  }
+  startPreteriteDrill('tener');
+  if (A.drill.items.length !== 5) { drillBack(); throw new Error('es-LA 练习仍含 vosotros 格'); }
+  drillBack();
+  A.state = { ...A.state, settings: { ...A.state.settings, variant: bak } };
+  go('verbs'); openVerb(0);
+  if (!A.html('verb-detail').includes('<th>vosotros</th>')) throw new Error('es-ES 恢复失败');
+  return !hit;
+});
+t('不规则过去时分组练习全流程', () => {
+  go('preterite');
+  if (!A.html('pret-area').includes('tener') || !A.html('pret-area').includes('traer')) throw new Error('菜单未渲染');
+  startPreteriteDrill('tener');
+  if (!A.drill || A.drill.items.length !== 6) throw new Error('题数≠6');
+  let guard = 0;
+  while (A.drill && A.drill.index < A.drill.items.length && guard++ < 10) {
+    document.getElementById('drill-input').value = A.drill.items[A.drill.index].answer;
+    submitDrill();
+    nextDrill();
+  }
+  if (A.drill.right !== 6) throw new Error('判分异常: ' + A.drill.right);
+  if (!A.html('pret-area').includes('正确率 100%')) throw new Error('未显示正确率');
+  drillBack();
+  return A.drill === null;
+});
+t('词干变化三组清单与练习（答案与变位表一致）', () => {
+  go('stemchange');
+  const h = A.html('sc-area');
+  if (!h.includes('e → ie') || !h.includes('o → ue') || !h.includes('e → i')) throw new Error('三组未渲染');
+  if (!h.includes('querer') || !h.includes('pedir') || !h.includes('jugar')) throw new Error('清单缺词');
+  startStemDrill('e_i');
+  const d = A.drill;
+  if (!d || d.items.length !== 10) throw new Error('题数≠10');
+  for (const it of d.items) {
+    const inf = it.q.match(/^([^（]+)（/)[1];
+    const person = it.q.match(/· ([^·]+) ·/)[1].trim();
+    const v = A.VERBS.find(x => x.inf === inf);
+    if (!v || v.presente[person] !== it.answer) throw new Error('答案与变位表不一致: ' + it.q);
+  }
+  drillBack();
+  return true;
+});
+
+// 8. SRS 三档（SM-2 简化版：easy 提 ease、间隔 ×ease；hard 降 ease、间隔 ×1.2）
 t('SRS rate 三档调度', () => {
   A.state = { ...A.state, reviews: [{ wordId: 'w0001', due: '2000-01-01', interval: 1, reps: 0, lastReview: '' }] };
   renderReview();
   rate('easy');
   let r = A.state.reviews[0];
-  if (r.interval !== 7) throw new Error('easy 应跳到 7，实际 ' + r.interval);
+  if (r.interval !== 3 || r.ease !== 2.65) throw new Error(`easy 应为 ease 2.65 / 间隔 3，实际 ${r.ease}/${r.interval}`);
   r.due = '2000-01-01'; renderReview(); rate('hard');
   r = A.state.reviews[0];
-  if (r.interval !== 1) throw new Error('hard 应回到 1，实际 ' + r.interval);
+  if (r.interval !== 4 || r.ease !== 2.45) throw new Error(`hard 应为 ease 2.45 / 间隔 ×1.2=4，实际 ${r.ease}/${r.interval}`);
   return true;
 });
 
@@ -261,10 +809,11 @@ t('normalizeState 抗残缺', () => {
   return n1.settings.theme === 'dark' && Array.isArray(n2.reviews) && typeof n2.streak === 'object' && !!n3;
 });
 
-// 12. localStorage key 唯一
+// 12. localStorage key 白名单（esbrain_v1 主数据 + esbrain_last_snapshot 快照时间戳）
 t('localStorage 只用 esbrain_v1', () => {
   const keys = new Set(storageLog.map(([, k]) => k));
   keys.delete('esbrain_v1');
+  keys.delete('esbrain_last_snapshot');
   return keys.size === 0 ? true : (() => { throw new Error('额外 key: ' + [...keys].join(',')); })();
 });
 
@@ -278,15 +827,11 @@ t('补签一生一次且需断签 1 天', () => {
   return A.state.streak.makeupDates.length === 1;
 });
 
-// 14. 跨阶段锁定（P1-2 回归）
-t('全新账号 A1.2-L01 锁定', () => {
+// 14. 课程访问（全部课程开放）
+t('全新账号全部课程可进入', () => {
   A.state = normalizeState(null);
-  if (!isLessonUnlocked(getLesson('A1.1-L01'))) throw new Error('A1.1-L01 应解锁');
-  if (isLessonUnlocked(getLesson('A1.2-L01'))) throw new Error('A1.2-L01 应锁定');
-  // 完成 A1.1 全部后 A1.2-L01 解锁
-  const p1 = ['A1.1-L01','A1.1-L02','A1.1-L03','A1.1-L04','A1.1-L05','A1.1-L06','A1.1-L07','A1.1-L08','A1.1-L09','A1.1-L10','A1.1-L11','A1.1-L12'];
-  A.state = { ...A.state, progress: { completed: p1, p0Passed: true } };
-  return isLessonUnlocked(getLesson('A1.2-L01'));
+  return ['A1.1-L01', 'A1.2-L01', 'A2.1-L01', 'B1.1-L01', 'B1.2-L12']
+    .every(id => isLessonUnlocked(getLesson(id)));
 });
 
 // 15. 导入严格校验（P1-1 回归）
