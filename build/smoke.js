@@ -103,6 +103,8 @@ const api = `
   get WORDS() { return WORDS; },
   get LESSONS() { return LESSONS; },
   get GRAMMARS() { return GRAMMARS; },
+  get LISTENING_ALL() { return LISTENING_ALL; },
+  get LISTENING_LA() { return LISTENING_LA; },
   get drill() { return drill; },
 };`;
 (0, eval)(main + api);
@@ -182,7 +184,7 @@ t('B1 课程把听力接入学习流程并提供理解题', () => {
   A.setLearn({ learnStep: 3, learnMode: 'core' }); renderLearn();
   if (!A.html('learn-container').includes('先听后看') || A.html('learn-container').includes('<div class="lab">原文</div>')) throw new Error('听力未默认隐藏原文');
   revealLessonListening();
-  if (!A.html('learn-container').includes(A.lesson.listening.text) || !A.html('learn-container').includes('¿Qué hace la segunda persona?')) throw new Error('听力原文或理解题未渲染');
+  if (!A.html('learn-container').includes(A.lesson.listening.text) || !A.html('learn-container').includes(A.lesson.listening.questions[0].q)) throw new Error('听力原文或理解题未渲染');
   A.lesson.listening.questions.forEach((q, i) => answerLessonListening(i, q.answer));
   A.setLearn({ learnStep: 4 }); renderLearn();
   return A.quiz && A.quiz.questions.length === 5;
@@ -191,6 +193,48 @@ t('lesson 筛选渲染含 A2.1 分组与课程', () => {
   renderLessons();
   const h = A.html('lesson-groups');
   return h.includes('A2.1 进阶西语') && h.includes('A2.1-L01') && h.includes('A2.1-L12') && h.includes('将来时');
+});
+// 5.5 轮：听力内容区分度（生成物层面拦"同模板换例句"）
+t('听力正文与题干全库无重复', () => {
+  const norm = s => String(s || '').replace(/«[^»]*»/g, ' ').toLowerCase().replace(/[¿?¡!.,;:()"]/g, ' ').replace(/\s+/g, ' ').trim();
+  const texts = Object.values(A.LISTENING_ALL).map(l => norm(l.text));
+  if (new Set(texts).size !== texts.length) throw new Error('听力正文存在重复');
+  const qSets = Object.values(A.LISTENING_ALL).map(l => l.questions.map(q => norm(q.q)).sort().join('||'));
+  if (new Set(qSets).size !== qSets.length) throw new Error('听力题干集合存在重复');
+  for (const l of Object.values(A.LISTENING_ALL)) {
+    const qs = l.questions.map(q => norm(q.q));
+    if (new Set(qs).size !== qs.length) throw new Error(l.id + ' 内部题干重复');
+  }
+  return true;
+});
+t('听力答案索引分布均匀（任一取值 ≤60%）', () => {
+  const dist = {};
+  let total = 0;
+  for (const l of Object.values(A.LISTENING_ALL)) for (const q of l.questions) { dist[q.answer] = (dist[q.answer] || 0) + 1; total++; }
+  for (const [idx, n] of Object.entries(dist)) if (n / total > 0.6) throw new Error(`答案索引 ${idx} 占比 ${(n / total * 100).toFixed(0)}%`);
+  if (!dist[0] || !dist[1] || !dist[2]) throw new Error('答案索引未覆盖 0/1/2');
+  return true;
+});
+t('B1 对话 zh 为真实翻译且各课对话不重复', () => {
+  const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const b1 = A.LESSONS.filter(l => l.stage === 'P4' || l.stage === 'P5');
+  const PLACEHOLDER = /^(提出本课|用目标结构回应|追问原因|说明个人理由|邀请给出建议|用虚拟式提出建议|表示认同|确认下一步)/;
+  const seen = new Set();
+  for (const l of b1) {
+    const key = l.dialog.map(d => norm(d.es)).join('||');
+    if (seen.has(key)) throw new Error(l.id + ' 对话与其他课逐句相同');
+    seen.add(key);
+    l.dialog.forEach((d, i) => { if (PLACEHOLDER.test(d.zh)) throw new Error(`${l.id} 对话第 ${i + 1} 句 zh 是占位注释`); });
+  }
+  return true;
+});
+t('拉美听力三种口音与 voseo', () => {
+  const langs = A.LISTENING_LA.map(x => x.lang);
+  if (langs.join(',') !== 'es-MX,es-AR,es-CO') throw new Error('口音序列 ' + langs.join(','));
+  const ar = A.LISTENING_LA.find(x => x.id === 'la-ar');
+  if (!/tenés|sabés|querés|podés|sos\b/.test(ar.text)) throw new Error('la-ar 缺 voseo');
+  if (!ar.zh.includes('voseo')) throw new Error('la-ar 缺 voseo 标注');
+  return true;
 });
 t('A2.1 新课学习流可渲染（词卡→语法→对话→小测）', () => {
   openLesson('A2.1-L01');

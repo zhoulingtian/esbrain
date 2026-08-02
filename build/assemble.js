@@ -10,7 +10,7 @@ const ROOT = path.resolve(BUILD, '..');
 const read = p => fs.readFileSync(p, 'utf8');
 
 // ---------- 1. 加载数据文件（在同一 eval 作用域内合并 const） ----------
-const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'grammar.js', 'verbs.js', 'quiz-extra.js']
+const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'b1-authentic.js', 'grammar.js', 'verbs.js', 'quiz-extra.js']
   .map(f => read(path.join(DATA, f))).join('\n');
 
 const sandbox = {};
@@ -423,7 +423,9 @@ SUBJUNCTIVE_QUIZ.forEach((q, i) => {
 ck(SHADOWING_SENTENCES.length >= 30 && SHADOWING_SENTENCES.length <= 50, `跟读句 ${SHADOWING_SENTENCES.length} 不在 30–50`);
 SHADOWING_SENTENCES.forEach((x, i) => ck(Array.isArray(x) && x.length === 3 && x.every(Boolean), `跟读句 ${i + 1} 结构异常`));
 ck(LISTENING_LA.length >= 3, `拉美听力材料 ${LISTENING_LA.length} < 3`);
-LISTENING_LA.forEach((x, i) => ck(x.id && /^es-(MX|AR)$/.test(x.lang) && x.text && x.zh, `拉美听力 ${i + 1} 结构或语音异常`));
+LISTENING_LA.forEach((x, i) => ck(x.id && /^es-(MX|AR|CO)$/.test(x.lang) && x.text && x.zh, `拉美听力 ${i + 1} 结构或语音异常`));
+ck(LISTENING_LA.find(x => x.id === 'la-co')?.lang === 'es-CO', '拉美听力 la-co 语音应为 es-CO');
+ck(/tenés|sabés|querés|podés|sos\b/.test(LISTENING_LA.find(x => x.id === 'la-ar')?.text || ''), '拉美听力 la-ar 正文缺 voseo 形式');
 LISTENING_LA.forEach((x, i) => {
   ck(Array.isArray(x.questions) && x.questions.length >= 2 && x.questions.length <= 3, `拉美听力 ${i + 1} 缺理解题`);
   (x.questions || []).forEach((q, qi) => ck(q.q && Array.isArray(q.options) && q.options.length >= 3 && Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length && q.tip, `拉美听力 ${i + 1} 第 ${qi + 1} 题结构异常`));
@@ -431,6 +433,60 @@ LISTENING_LA.forEach((x, i) => {
 ck(STRESS_QUIZ.find(q => q.word === 'también')?.tip.includes('仍是一个二重元音'), 'también 重音说明未修正');
 ck(STRESS_QUIZ.find(q => q.word === 'adiós')?.tip.includes('仍是一个二重元音'), 'adiós 重音说明未修正');
 ck(SUBJUNCTIVE_QUIZ.some(q => q.tip && q.tip.includes('Me alegra que esté aquí.')), '虚拟式 ella / esté 示例未修正');
+
+// ---------- 7b. 内容区分度校验（第 5.5 轮新增：拦"同模板换例句"） ----------
+// 归一化：去掉 «...» 引号内容、转小写、去标点、压缩空白
+const normContent = s => String(s || '').replace(/«[^»]*»/g, ' ').toLowerCase().replace(/[¿?¡!.,;:()"\u201C\u201D]/g, ' ').replace(/\s+/g, ' ').trim();
+const listeningEntries = Object.values(LISTENING_ALL);
+// 1. 听力正文去重：任意两条归一化后不得相同
+{
+  const seenText = new Map();
+  for (const l of listeningEntries) {
+    const n = normContent(l.text);
+    if (seenText.has(n)) errors.push(`听力正文重复: ${seenText.get(n)} 与 ${l.id} 归一化后相同`);
+    else seenText.set(n, l.id);
+  }
+}
+// 2. 听力题干去重：两条听力之间 q 集合不得完全相同；单条内部 q 不得重复
+{
+  const seenQ = new Map();
+  for (const l of listeningEntries) {
+    const qs = (l.questions || []).map(q => normContent(q.q));
+    if (new Set(qs).size !== qs.length) errors.push(`${l.id} 听力内部题干重复`);
+    const key = [...qs].sort().join('||');
+    if (seenQ.has(key)) errors.push(`听力题干集合重复: ${seenQ.get(key)} 与 ${l.id}`);
+    else seenQ.set(key, l.id);
+  }
+}
+// 3. 答案分布：全部听力题 answer 任一取值占比不得超过 60%
+{
+  const dist = {};
+  let total = 0;
+  for (const l of listeningEntries) for (const q of l.questions || []) { dist[q.answer] = (dist[q.answer] || 0) + 1; total++; }
+  for (const [idx, n] of Object.entries(dist)) ck(n / total <= 0.6, `听力答案索引 ${idx} 占比 ${(n / total * 100).toFixed(0)}%（${n}/${total}）超过 60%`);
+}
+// 4. 选项去重：任意两条听力的 options 数组不得完全相同（逐题比对与整体比对）
+{
+  const seenOpts = new Map();
+  for (const l of listeningEntries) {
+    const key = (l.questions || []).map(q => [...q.options].map(normContent).sort().join('|')).sort().join('||');
+    if (seenOpts.has(key)) errors.push(`听力选项集合重复: ${seenOpts.get(key)} 与 ${l.id}`);
+    else seenOpts.set(key, l.id);
+  }
+}
+// 5. 对话去重与假翻译拦截：两课对话不得逐句相同；zh 不得是占位注释
+{
+  const seenDlg = new Map();
+  const PLACEHOLDER_ZH = /^(提出本课|用目标结构回应|追问原因|说明个人理由|邀请给出建议|用虚拟式提出建议|表示认同|确认下一步)/;
+  for (const l of LESSONS) {
+    const key = (l.dialog || []).map(d => normContent(d.es)).join('||');
+    if (seenDlg.has(key)) errors.push(`对话内容重复: ${seenDlg.get(key)} 与 ${l.id} 逐句相同`);
+    else seenDlg.set(key, l.id);
+    (l.dialog || []).forEach((d, i) => {
+      if (PLACEHOLDER_ZH.test(String(d.zh || ''))) errors.push(`${l.id} 对话第 ${i + 1} 句 zh 是占位注释而非翻译`);
+    });
+  }
+}
 
 console.log(`\nSTATS: 词 ${WORDS.length}（正文 ${LESSONS.reduce((s, l) => s + l.words.length, 0)} / 扩展 ${LESSONS.reduce((s, l) => s + l.extra_words.length, 0)}），课 ${LESSONS.length}，语法 ${GRAMMARS.length}，动词 ${VERBS.length}，字母 ${ALPHABET.length}，音素 ${PHONEMES.length}，规则 ${RULES.length}（核心 ${RULES.filter(r => r.core).length}），测验 ${UNLOCK_QUIZ.length}，重音 ${STRESS_QUIZ.length}，ser/estar ${SER_ESTAR_QUIZ.length}，por/para ${POR_PARA_QUIZ.length}，冠词例外 ${ARTICLE_EXCEPTIONS.length}，假朋友 ${FALSE_FRIENDS.length}，时态填空 ${TENSE_CLOZE.length} 段 / ${TENSE_CLOZE.reduce((s, p) => s + p.blanks.length, 0)} 空`);
 console.log(`去重移除 ${dupDropped.length} 条完全重复词条`);

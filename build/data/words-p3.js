@@ -63,7 +63,7 @@ const WORDS_P3 = [
 { id: "w0841", word: "más tarde", pos: "adv", gender: null, article: null, ipa: "/mas ˈtaɾðe/", zh: "晚些时候；后来", example: "Más tarde descubrimos que el museo estaba cerrado.", example_zh: "后来我们发现博物馆关门了。", lesson: "A2.1-L02", extra: true },
 { id: "w0842", word: "al final", pos: "adv", gender: null, article: null, ipa: "/al fiˈnal/", zh: "最后；最终", example: "Nos perdimos, pero al final encontramos el hotel.", example_zh: "我们迷了路，但最后找到了旅馆。", lesson: "A2.1-L02", extra: true },
 { id: "w0843", word: "testigo", pos: "n", gender: "m", article: "el", ipa: "/tesˈtiɣo/", zh: "目击者；证人", example: "Un testigo vio el accidente y llamó a la policía.", example_zh: "一位目击者看到事故并报了警。", lesson: "A2.1-L02", stress: 2, extra: true },
-{ id: "w0844", word: "policía", pos: "n", gender: "f", article: "la", ipa: "/poliˈθia/", zh: "警察；警方", example: "La policía llegó en diez minutos.", example_zh: "警察十分钟后赶到了。", lesson: "A2.1-L02", stress: 1, extra: true },
+{ id: "w0844", word: "policía", pos: "n", gender: "f", article: "la", ipa: "/poliˈθia/", zh: "警方；女警察（男警员是 el policía）", example: "La policía llegó en diez minutos.", example_zh: "警方十分钟后赶到了。", lesson: "A2.1-L02", stress: 1, extra: true },
 { id: "w0845", word: "ambulancia", pos: "n", gender: "f", article: "la", ipa: "/ambuˈlanθja/", zh: "救护车", example: "Llamamos a una ambulancia porque un hombre estaba herido.", example_zh: "我们叫了救护车，因为有一名男子受伤了。", lesson: "A2.1-L02", stress: 2, extra: true },
 { id: "w0846", word: "gritar", pos: "v", conj_group: 1, gender: null, article: null, ipa: "/ɡɾiˈtaɾ/", zh: "喊叫；大叫", example: "La niña se perdió y empezó a gritar.", example_zh: "小女孩走丢了，开始大喊。", lesson: "A2.1-L02", stress: 1, extra: true },
 { id: "w0847", word: "mirar", pos: "v", conj_group: 1, gender: null, article: null, ipa: "/miˈɾaɾ/", zh: "看；注视", example: "Miré por la ventana y vi que nevaba.", example_zh: "我往窗外一看，发现下雪了。", lesson: "A2.1-L02", stress: 1, extra: true },
@@ -604,7 +604,7 @@ const WORDS_A1_EXTRA = [
 { id: "w1351", word: "migraña", pos: "n", gender: "f", article: "la", ipa: "/miˈɣɾaɲa/", zh: "偏头痛", example: "Tengo migraña y tomo una pastilla.", example_zh: "我偏头痛,吃一片药。", lesson: "A1.2-L06", extra: true, stress: 2 },
 { id: "w1352", word: "guardar cama", pos: "v", gender: null, article: null, ipa: "/ɣwaɾˈðaɾ ˈkama/", zh: "卧床休息", example: "El médico dice que guarde cama.", example_zh: "医生说要卧床休息。", lesson: "A1.2-L06", extra: true, conj_group: 1 },
 // ===== A1.2-L07 旅行交通(补) =====
-{ id: "w1353", word: "guía", pos: "n", gender: "f", article: "la", ipa: "/ˈɡi.a/", zh: "导游;指南", example: "La guía explica el museo.", example_zh: "导游讲解博物馆。", lesson: "A1.2-L07", extra: true, stress: 2 },
+{ id: "w1353", word: "guía", pos: "n", gender: "f", article: "la", ipa: "/ˈɡi.a/", zh: "指南；女导游（男导游是 el guía）", example: "La guía explica el museo.", example_zh: "女导游讲解博物馆。", lesson: "A1.2-L07", extra: true, stress: 2 },
 { id: "w1354", word: "maletín", pos: "n", gender: "m", article: "el", ipa: "/maleˈtin/", zh: "小行李箱;公文包", example: "Llevo el ordenador en el maletín.", example_zh: "我把笔记本电脑放在公文包里。", lesson: "A1.2-L07", extra: true, stress: 1 },
 { id: "w1355", word: "candado", pos: "n", gender: "m", article: "el", ipa: "/kanˈdaðo/", zh: "挂锁", example: "La maleta tiene candado.", example_zh: "行李箱带挂锁。", lesson: "A1.2-L07", extra: true, stress: 2 },
 { id: "w1356", word: "etiqueta", pos: "n", gender: "f", article: "la", ipa: "/etiˈketa/", zh: "标签;行李牌", example: "Pongo una etiqueta en la maleta.", example_zh: "我在行李箱上贴标签。", lesson: "A1.2-L07", extra: true, stress: 2 },

@@ -97,7 +97,7 @@ const WORDS_P1A = [
   // ===== A1.1-L04 时间与日常 =====
   { id: "w0092", word: "hora", pos: "n", gender: "f", article: "la", ipa: "/ˈoɾa/", zh: "小时；时间；点钟", example: "¿A qué hora desayunas?", example_zh: "你几点吃早饭？", lesson: "A1.1-L04" },
   { id: "w0093", word: "minuto", pos: "n", gender: "m", article: "el", ipa: "/miˈnuto/", zh: "分钟", example: "Un minuto, por favor.", example_zh: "请稍等一分钟。", lesson: "A1.1-L04" },
-  { id: "w0094", word: "mañana", pos: "n", gender: "f", article: "la", ipa: "/maˈɲana/", zh: "早晨；明天（adv.）", example: "Trabajo por la mañana.", example_zh: "我上午工作。", lesson: "A1.1-L04" },
+  { id: "w0094", word: "mañana", pos: "n", gender: "f", article: "la", ipa: "/maˈɲana/", zh: "早晨；上午（「明天」是副词 mañana）", example: "Trabajo por la mañana.", example_zh: "我上午工作。", lesson: "A1.1-L04" },
   { id: "w0095", word: "tarde", pos: "n", gender: "f", article: "la", ipa: "/ˈtaɾðe/", zh: "下午；晚（adv.）", example: "Ceno muy tarde.", example_zh: "我晚饭吃得很晚。", lesson: "A1.1-L04" },
   { id: "w0096", word: "noche", pos: "n", gender: "f", article: "la", ipa: "/ˈnotʃe/", zh: "夜晚", example: "Vuelo mucho por la noche.", example_zh: "我经常飞夜航。", lesson: "A1.1-L04" },
   { id: "w0097", word: "hoy", pos: "adv", gender: null, article: null, ipa: "/ˈoj/", zh: "今天", example: "Hoy trabajo por la mañana.", example_zh: "我今天上午工作。", lesson: "A1.1-L04" },

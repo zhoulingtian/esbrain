@@ -25,7 +25,7 @@ const WORDS_P4A = [
 { id: "w1425", word: "emoción", pos: "n", gender: "f", article: "la", ipa: "/emoˈθjon/", zh: "情绪；激动", example: "Siento mucha emoción al verte.", example_zh: "见到你我很激动。", lesson: "B1.1-L01", stress: 1, extra: true },
 { id: "w1426", word: "incertidumbre", pos: "n", gender: "f", article: "la", ipa: "/inθeɾtiˈðumbɾe/", zh: "不确定", example: "La incertidumbre le hace dudar.", example_zh: "不确定性让他怀疑。", lesson: "B1.1-L01", stress: 1, extra: true },
 { id: "w1427", word: "duda", pos: "n", gender: "f", article: "la", ipa: "/ˈduða/", zh: "疑问；怀疑", example: "Tengo dudas sobre este ejercicio.", example_zh: "我对这道练习有疑问。", lesson: "B1.1-L01", stress: 2, extra: true },
-{ id: "w1428", word: "orden", pos: "n", gender: "f", article: "la", ipa: "/oɾˈðen/", zh: "命令；顺序", example: "La orden es que salgamos antes.", example_zh: "命令是我们早点出去。", lesson: "B1.1-L01", stress: 2, extra: true },
+{ id: "w1428", word: "orden", pos: "n", gender: "f", article: "la", ipa: "/oɾˈðen/", zh: "命令（「顺序」是 el orden）", example: "La orden es que salgamos antes.", example_zh: "命令是我们早点出去。", lesson: "B1.1-L01", stress: 2, extra: true },
 { id: "w1429", word: "recomendación", pos: "n", gender: "f", article: "la", ipa: "/rekomenðaˈθjon/", zh: "建议", example: "Mi recomendación es que leas este libro.", example_zh: "我的建议是你读这本书。", lesson: "B1.1-L01", stress: 1, extra: true },
 { id: "w1430", word: "sugerencia", pos: "n", gender: "f", article: "la", ipa: "/suxeˈɾenθja/", zh: "提议；建议", example: "Te hago una sugerencia: vayamos en tren.", example_zh: "我给你提个建议：我们坐火车去吧。", lesson: "B1.1-L01", stress: 2, extra: true },
 { id: "w1431", word: "expresar", pos: "v", conj_group: 1, ipa: "/eksˈpɾesaɾ/", zh: "表达", example: "Quiero expresar mi opinión.", example_zh: "我想表达我的看法。", lesson: "B1.1-L01", stress: 2, extra: true },
@@ -1157,7 +1157,7 @@ const WORDS_A2_EXTRA = [
 // 第五轮把第四轮预先整理、但未接入的高频词作为 B1 课程补词与总复习词。
 const B1_FILLER_WORDS = WORDS_A2_EXTRA;
 
-const B1_DIALOGUE_META = [
+const B1_DIALOGUE_META_LEGACY = [
   ['B1.1-L01','Espero que apruebes el examen.','Ojalá tengamos tiempo para repasar.'], ['B1.1-L02','Busco a alguien que sepa alemán.','No conozco a nadie que viva cerca.'],
   ['B1.1-L03','Te llamaré cuando llegue.','Esperaré hasta que termines.'], ['B1.1-L04','Lo hago para que todos entiendan.','Aunque llueva, iremos.'],
   ['B1.1-L05','¿Podría ayudarme un momento?','Claro, ¿qué necesitaría?'], ['B1.1-L06','Si estudias, aprobarás.','Entonces empezaré hoy.'],
@@ -1171,7 +1171,7 @@ const B1_DIALOGUE_META = [
   ['B1.2-L09','La convivencia requiere respeto.','Todos podemos colaborar.'], ['B1.2-L10','Desde mi punto de vista, no basta.','Estoy de acuerdo por estas razones.'],
   ['B1.2-L11','¿Prefieres un tono formal?','Sí, es un correo para mi profesora.'], ['B1.2-L12','¿Cuál es tu meta para B2?','Quiero expresarme con más seguridad.']
 ];
-function makeB1Dialogue(a, b) {
+function makeB1DialogueLegacy(a, b) {
   return [
     { speaker: 'A', es: a, zh: '提出本课的关键表达。' }, { speaker: 'B', es: b, zh: '用目标结构回应。' },
     { speaker: 'A', es: '¿Por qué lo dices?', zh: '追问原因。' }, { speaker: 'B', es: 'Porque es importante para mí.', zh: '说明个人理由。' },
@@ -1179,10 +1179,10 @@ function makeB1Dialogue(a, b) {
     { speaker: 'A', es: 'Me parece una buena idea.', zh: '表示认同。' }, { speaker: 'B', es: 'Perfecto, lo hacemos esta tarde.', zh: '确认下一步。' }
   ];
 }
-const DIALOGS_P4A = Object.fromEntries(B1_DIALOGUE_META.slice(0, 12).map(([id, a, b]) => [id, makeB1Dialogue(a, b)]));
-const DIALOGS_P4B = Object.fromEntries(B1_DIALOGUE_META.slice(12).map(([id, a, b]) => [id, makeB1Dialogue(a, b)]));
+const DIALOGS_P4A_LEGACY = Object.fromEntries(B1_DIALOGUE_META_LEGACY.slice(0, 12).map(([id, a, b]) => [id, makeB1DialogueLegacy(a, b)]));
+const DIALOGS_P4B_LEGACY = Object.fromEntries(B1_DIALOGUE_META_LEGACY.slice(12).map(([id, a, b]) => [id, makeB1DialogueLegacy(a, b)]));
 
-const B1_LISTENING_META = B1_DIALOGUE_META.map(([id, prompt, reply]) => ({
+const B1_LISTENING_META_LEGACY = B1_DIALOGUE_META_LEGACY.map(([id, prompt, reply]) => ({
   id,
   text: `En esta actividad, dos personas conversan sobre una situación cotidiana. Una de ellas dice: «${prompt}». La otra responde: «${reply}». Después hablan de sus planes, explican sus razones y escuchan con atención la opinión de la otra persona. No siempre están completamente de acuerdo, pero intentan encontrar una solución práctica. Al final, deciden revisar la información y volver a hablar más tarde. El diálogo muestra cómo usar las expresiones de la lección en un contexto natural y respetuoso.`,
   questions: [
@@ -1190,8 +1190,8 @@ const B1_LISTENING_META = B1_DIALOGUE_META.map(([id, prompt, reply]) => ({
     { q: '¿Cómo termina la conversación?', options: ['Deciden revisar la información', 'Discuten sin solución', 'Se van de viaje'], answer: 0, tip: 'Busca la última oración.' }
   ]
 }));
-const LISTENING_P4A = B1_LISTENING_META.slice(0, 12);
-const LISTENING_P4B = B1_LISTENING_META.slice(12);
+const LISTENING_P4A_LEGACY = B1_LISTENING_META_LEGACY.slice(0, 12);
+const LISTENING_P4B_LEGACY = B1_LISTENING_META_LEGACY.slice(12);
 
 // 独立复习池：课程容量固定后仍需覆盖的 DELE B1 高频表达。
 const B1_REVIEW_TERMS = [

@@ -2513,10 +2513,18 @@ const VERBS = [
     function voiceForLang(lang) {
       const wanted = normalizeLangTag(lang);
       const voices = getSpanishVoices();
-      return voices.find(v => normalizeLangTag(v.lang) === wanted)
-        || (wanted === 'es-ar' ? voices.find(v => normalizeLangTag(v.lang) === 'es-mx' || normalizeLangTag(v.lang) === 'es-us') : null)
-        || cachedVoice
-        || null;
+      const exact = voices.find(v => normalizeLangTag(v.lang) === wanted);
+      if (exact) return exact;
+      // 拉美口音（es-mx/es-ar/es-co/es-us 等非 es-es）缺失时优先退到其他拉美语音，避免用西班牙本土音冒充
+      if (wanted !== 'es-es') {
+        const latam = voices.find(v => normalizeLangTag(v.lang) !== 'es-es');
+        if (latam) return latam;
+      }
+      return cachedVoice || voices[0] || null;
+    }
+    function voiceForLangExact(lang) {
+      const wanted = normalizeLangTag(lang);
+      return getSpanishVoices().find(v => normalizeLangTag(v.lang) === wanted) || null;
     }
     function speakTextWithLang(text, lang) {
       if (!window.speechSynthesis) { toast('您的浏览器不支持语音朗读'); return; }
@@ -2556,7 +2564,12 @@ const VERBS = [
         return;
       }
       const voice = voiceForLang(active.lang);
-      const voiceNote = voice ? `设备将使用 ${voice.name}（${voice.lang}）朗读。` : `设备未提供可确认的 ${active.lang} 西语语音；将由浏览器决定回退语音。`;
+      const exactVoice = voiceForLangExact(active.lang);
+      const voiceNote = exactVoice
+        ? `设备将使用 ${exactVoice.name}（${exactVoice.lang}）朗读。`
+        : voice
+          ? `当前设备无该口音（${active.lang}）语音，已用 ${voice.name}（${voice.lang}）代替。`
+          : `设备未提供可确认的 ${active.lang} 西语语音；将由浏览器决定回退语音。`;
       const allAnswered = active.questions.every((_, i) => laListeningAnswers[i] !== undefined);
       const questions = laListeningRevealed ? active.questions.map((q, qi) => {
         const picked = laListeningAnswers[qi];
