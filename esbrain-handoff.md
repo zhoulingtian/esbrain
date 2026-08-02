@@ -1,7 +1,7 @@
 # ESbrain 项目 Handoff 文档
 
 **生成时间**:2026-08-03
-**当前代理**:Kimi Code CLI
+**当前代理**:Codex
 **接手对象**:Codex(或下一个代理)
 **项目路径**: `D:\esbrain`
 **方案依据**: `C:\Users\Administrator\Desktop\esbrain-plan.md`(Claude 方案)
@@ -18,7 +18,7 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 - 组装脚本 `build/assemble.js` 把骨架和数据合并成根 `index.html`。
 - 每次改动后必须跑:
   ```bash
-  cd /c/Users/Administrator/esbrain
+  cd /d/esbrain
   node build/assemble.js
   node build/smoke.js
   ```
@@ -27,6 +27,13 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 ---
 
 ## 2. 已完成的轮次(1–4 轮)
+
+### 2026-08-03 更新：第六轮 A2.2
+
+- 新增 `build/data/words-p6.js`：A2.2-L01 至 A2.2-L12 的课程词汇、8 行中西对照对话和具体场景听力；组装后每课有 12–13 个核心词、18–21 个扩展词。
+- 新增 `build/data/a22-grammar.js`：g062–g073；每条都含规则、对照表、例句和面向中文母语者的常见错误。`P3B A2.2 独立表达` 已插入 `P3 A2.1` 与 `P4 B1.1` 之间。
+- `assemble.js` 已注册新数据并校验 2800 词、72 课、73 语法、A2.2 顺序/课程规模/听力/四段式语法；`smoke.js` 覆盖课程顺序和 A2.2 学习流。
+- 最新验证：`node build/assemble.js` 为 `SYNTAX_OK` 和 `ALL_CONTENT_CHECKS_PASSED`；`node build/smoke.js` 为 `82 passed, 0 failed`。缓存版本为 `v10`。
 
 ### 2026-08-03 更新：第 5.5 轮
 
@@ -41,11 +48,12 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 | 二 专属模块(一) | 已完成 | 重音训练 76 词(新 screen-stress);ser/estar 66 题、por/para 59 题、假朋友 31 条(新 screen-falsefriends);冠词测验改例外专项 40 词;发音规则收敛为 8 核心 + 7 细节折叠 | assemble + smoke 全过,sw v3 |
 | 三 动词系统 | 已完成 | 变位引擎(data/verbs.js,规则表 + 例外覆盖);60 词 × 14 时态;旧 20 词经 verbs-legacy-fixture.js 逐格回归;动词实验室时态分组标签页;es-LA 隐藏 vosotros;变位填空测验 conj;不规则过去时池;词干变化三组练习 | assemble + smoke 61 条全过,sw v4 |
 | 四 A1-A2 | 已完成 | 词库 1328 词(去重后);A1.1/A1.2/A2.1 共 36 课;时态选择段落填空 16 段/122 空(新 screen-cloze);新词补 stress/variant/altWord 字段 | assemble + smoke 69 条全过,sw v6 |
+| 六 A2.2 过渡层 | 已完成 | 新增 A2.2 十二课与 g062–g073；P3B 插在 A2.1 与 B1.1 之间；每课有词汇、对话和具体场景听力 | 2800 词、72 课、73 语法；assemble 全绿，smoke 82 passed / 0 failed，sw v10 |
 
-**最近一次验证结果**(2026-07-29):
+**最近一次验证结果**(2026-08-03):
 - `node build/assemble.js`: SYNTAX_OK, ALL_CONTENT_CHECKS_PASSED
-- `node build/smoke.js`: 69 passed, 0 failed
-- 词库 1328, 课 36, 语法 37, 动词 60, 时态填空 16 段
+- `node build/smoke.js`: 82 passed, 0 failed
+- 词库 2800, 课 72, 语法 73, 动词 60, 时态填空 16 段
 
 ---
 
@@ -55,13 +63,15 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 
 | 文件 | 内容 | 备注 |
 |------|------|------|
-| `core.js` | 阶段配置 STAGES、字母表 ALPHABET、音素 PHONEMES、发音规则 RULES、解锁测验 UNLOCK_QUIZ | STAGES 现有 P1/P2/P3/P4(敬请期待?),需根据轮次扩展 |
+| `core.js` | 阶段配置 STAGES、字母表 ALPHABET、音素 PHONEMES、发音规则 RULES、解锁测验 UNLOCK_QUIZ | 阶段为 P0/P1/P2/P3/P3B/P4/P5，P3B 是 A2.2 |
 | `words-p1a.js` | A1.1 L01-L06 词库 + 对话 | 原始 184 条 |
 | `words-p1b.js` | A1.1 L07-L12 词库 + 对话 | 原始 184 条 |
 | `words-p2a.js` | A1.2 L01-L06 词库 + 对话 | 原始 184 条 |
 | `words-p2b.js` | A1.2 L07-L12 词库 + 对话 | 原始 185 条 |
 | `words-p3.js` | A2.1 L01-L12 词库 + A1 补词 + 对话 | 新建 |
 | `grammar.js` | 语法点 g001-g037 | A1.1/A1.2/A2.1 全部 |
+| `a22-grammar.js` | 语法点 g062-g073 | A2.2 十二课的四段式讲解 |
+| `words-p6.js` | A2.2 十二课词汇、对话与听力 | 输出 WORDS_P6、DIALOGS_P6、LISTENING_P6 |
 | `verbs.js` | 60 动词 × 14 时态变位引擎 + 例外覆盖 | 构建时展开成全量表 |
 | `quiz-extra.js` | 重音/STRESS_QUIZ、ser/estar、por/para、冠词例外、假朋友、时态填空 TENSE_CLOZE | 模块数据 |
 | `verbs-legacy-fixture.js` | 旧 20 词 × 5 时态全量表 | 仅作迁移回归 |
@@ -184,9 +194,9 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 
 ---
 
-## 5. 后续轮次(第六、七轮)—— 远期
+## 5. 后续轮次（第七轮及之后）
 
-### 第六轮:B2 内容与产出
+### 第七轮:B2 内容与产出
 - 词汇 2400 → 3800
 - B2 课程 24 课
 - 虚拟式未完成过去时 + 条件句三型

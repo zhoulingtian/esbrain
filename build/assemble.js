@@ -10,7 +10,7 @@ const ROOT = path.resolve(BUILD, '..');
 const read = p => fs.readFileSync(p, 'utf8');
 
 // ---------- 1. 加载数据文件（在同一 eval 作用域内合并 const） ----------
-const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'b1-authentic.js', 'grammar.js', 'verbs.js', 'quiz-extra.js']
+const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'verbs.js', 'quiz-extra.js']
   .map(f => read(path.join(DATA, f))).join('\n');
 
 const sandbox = {};
@@ -20,12 +20,13 @@ new Function('sandbox', dataSrc + `
   sandbox.GRAMMARS = GRAMMARS; sandbox.VERBS = VERBS;
   sandbox.BASE_WORDS = [...WORDS_P1A, ...WORDS_P1B, ...WORDS_P2A, ...WORDS_P2B, ...WORDS_P3, ...WORDS_A1_EXTRA];
   sandbox.B1_RAW_WORDS = [...WORDS_P4A, ...WORDS_P4B, ...B1_FILLER_WORDS, ...B1_REVIEW_WORDS];
+  sandbox.A22_RAW_WORDS = [...WORDS_P6, ...A22_REVIEW_WORDS];
   sandbox.B1_EXISTING_WORDS = [...WORDS_P4A, ...WORDS_P4B];
   sandbox.B1_FILLER_WORDS = B1_FILLER_WORDS;
-  sandbox.WORDS_ALL = [...sandbox.BASE_WORDS, ...sandbox.B1_RAW_WORDS];
+  sandbox.WORDS_ALL = [...sandbox.BASE_WORDS, ...sandbox.B1_RAW_WORDS, ...sandbox.A22_RAW_WORDS];
   sandbox.NEW_WORDS = [...WORDS_P3, ...WORDS_A1_EXTRA];
-  sandbox.DIALOGS_ALL = Object.assign({}, DIALOGS_P1A, DIALOGS_P1B, DIALOGS_P2A, DIALOGS_P2B, DIALOGS_P3, DIALOGS_P4A, DIALOGS_P4B);
-  sandbox.LISTENING_ALL = Object.fromEntries([...LISTENING_P4A, ...LISTENING_P4B].map(x => [x.id, x]));
+  sandbox.DIALOGS_ALL = Object.assign({}, DIALOGS_P1A, DIALOGS_P1B, DIALOGS_P2A, DIALOGS_P2B, DIALOGS_P3, DIALOGS_P4A, DIALOGS_P4B, DIALOGS_P6);
+  sandbox.LISTENING_ALL = Object.fromEntries([...LISTENING_P4A, ...LISTENING_P4B, ...LISTENING_P6].map(x => [x.id, x]));
   sandbox.STRESS_QUIZ = STRESS_QUIZ; sandbox.SER_ESTAR_QUIZ = SER_ESTAR_QUIZ;
   sandbox.POR_PARA_QUIZ = POR_PARA_QUIZ; sandbox.ARTICLE_EXCEPTIONS = ARTICLE_EXCEPTIONS;
   sandbox.FALSE_FRIENDS = FALSE_FRIENDS; sandbox.TENSE_CLOZE = TENSE_CLOZE;
@@ -33,7 +34,7 @@ new Function('sandbox', dataSrc + `
   sandbox.LISTENING_LA = LISTENING_LA;
 `)(sandbox);
 
-const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS } = sandbox;
+const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS } = sandbox;
 
 // ---------- 2. 词库：排序 + 去重（同词同词性同释义保留最早一条）+ 重编号 w0001... ----------
 WORDS_ALL.sort((a, b) => a.id.localeCompare(b.id));
@@ -88,7 +89,7 @@ byId = Object.fromEntries(WORDS.map(w => [w.id, w]));
 // B1 源数据中有少量同一 id 的历史草稿（例如 w1462），按词条保留后续 id
 // 续编检查只要求去重后的新 id 连续，不把草稿重复视为可用词。
 
-// ---------- 3. 课程表（60 课） ----------
+// ---------- 3. 课程表（72 课） ----------
 const LESSON_TABLE = [
   ['A1.1-L01', 'P1', '问候与自我介绍'], ['A1.1-L02', 'P1', '家庭与描述'],
   ['A1.1-L03', 'P1', '在咖啡馆'],       ['A1.1-L04', 'P1', '时间与日常'],
@@ -108,6 +109,12 @@ const LESSON_TABLE = [
   ['A2.1-L07', 'P3', '命令式否定与 usted'], ['A2.1-L08', 'P3', '词干变化总复习'],
   ['A2.1-L09', 'P3', '比较级与最高级'], ['A2.1-L10', 'P3', '定语从句入门'],
   ['A2.1-L11', 'P3', '过去进行时与 llevar'], ['A2.1-L12', 'P3', '将来时'],
+  ['A2.2-L01', 'P3B', '表达观点：赞同与反对'], ['A2.2-L02', 'P3B', '表达情感与愿望'],
+  ['A2.2-L03', 'P3B', '写信与电子邮件'], ['A2.2-L04', 'P3B', '烹饪与食谱'],
+  ['A2.2-L05', 'P3B', '搬家与住房'], ['A2.2-L06', 'P3B', '银行与钱'],
+  ['A2.2-L07', 'P3B', '行政手续（证件、保险）'], ['A2.2-L08', 'P3B', '旅行中的意外'],
+  ['A2.2-L09', 'P3B', '电影与娱乐'], ['A2.2-L10', 'P3B', '西语世界的节日'],
+  ['A2.2-L11', 'P3B', '假设与愿望（条件式）'], ['A2.2-L12', 'P3B', 'A2 总复习'],
   ['B1.1-L01', 'P4', '虚拟式现在时：WEIRDO'], ['B1.1-L02', 'P4', '不确定与未发生的事'],
   ['B1.1-L03', 'P4', '将来时间从句'], ['B1.1-L04', 'P4', '目的与让步'],
   ['B1.1-L05', 'P4', '条件式现在时'], ['B1.1-L06', 'P4', '第一类条件句'],
@@ -186,7 +193,7 @@ const warn = [];
 const ck = (cond, msg) => { if (!cond) errors.push(msg); };
 
 // 数量
-ck(WORDS.length >= 2400, `词库仅 ${WORDS.length}，期望 ≥2400`);
+ck(WORDS.length >= 2800, `词库仅 ${WORDS.length}，期望 ≥2800`);
 ck(ALPHABET.length === 27, `字母 ${ALPHABET.length} ≠ 27`);
 ck(ALPHABET.find(x => x.letter === 'C')?.ipa_la === '/se/', '拉美 C 字母名 IPA 应为 /se/');
 ck(ALPHABET.find(x => x.letter === 'Z')?.ipa_la === '/ˈseta/', '拉美 Z 字母名 IPA 应为 /ˈseta/');
@@ -197,13 +204,13 @@ ck(PHONEMES.length >= 25, `音素 ${PHONEMES.length} < 25`);
 ck(RULES.length === 15, `规则 ${RULES.length} ≠ 15（8 核心 + 7 细节）`);
 ck(RULES.filter(r => r.core).length === 8, `核心规则 ${RULES.filter(r => r.core).length} ≠ 8`);
 ck(UNLOCK_QUIZ.length === 10, `解锁测验 ${UNLOCK_QUIZ.length} ≠ 10`);
-ck(GRAMMARS.length === 61, `语法 ${GRAMMARS.length} ≠ 61`);
+ck(GRAMMARS.length === 73, `语法 ${GRAMMARS.length} ≠ 73`);
 ck(VERBS.length === 60, `动词 ${VERBS.length} ≠ 60`);
-ck(LESSONS.length === 60, `课程 ${LESSONS.length} ≠ 60`);
+ck(LESSONS.length === 72, `课程 ${LESSONS.length} ≠ 72`);
 
 // 每课规模与对话（A2.1 课容量更大、对话更长）
 for (const l of LESSONS) {
-  if (l.stage === 'P4' || l.stage === 'P5') {
+  if (l.stage === 'P3B' || l.stage === 'P4' || l.stage === 'P5') {
     ck(l.words.length >= 12 && l.words.length <= 14, `${l.id} 正文词 ${l.words.length} 不在 12–14`);
     ck(l.extra_words.length >= 18 && l.extra_words.length <= 26, `${l.id} 扩展词 ${l.extra_words.length} 不在 18–26`);
     ck(l.dialog.length === 8, `${l.id} 对话 ${l.dialog.length} 句 ≠ 8`);
@@ -224,6 +231,18 @@ for (const l of LESSONS) {
   l.dialog.forEach((d, i) => {
     ck(d.es && d.zh, `${l.id} 对话第 ${i + 1} 句缺 es/zh`);
     ck(d.speaker === (i % 2 === 0 ? 'A' : 'B'), `${l.id} 对话第 ${i + 1} 句 speaker 未交替`);
+  });
+}
+
+// 第六轮 A2.2：12 课、语法和四段式讲解必须一起存在。
+{
+  const a22 = LESSONS.filter(l => l.stage === 'P3B');
+  ck(a22.length === 12, `A2.2 课程 ${a22.length} ≠ 12`);
+  a22.forEach((l, i) => {
+    ck(l.id === `A2.2-L${String(i + 1).padStart(2, '0')}`, `A2.2 课程顺序错误: ${l.id}`);
+    ck(l.grammar_id === `g${String(62 + i).padStart(3, '0')}`, `${l.id} 语法应为 g${String(62 + i).padStart(3, '0')}`);
+    const g = GRAMMARS.find(x => x.id === l.grammar_id);
+    ck(g && /规则：/.test(g.content) && /<table>/.test(g.content) && /例句：/.test(g.content) && /常见错误：/.test(g.content), `${l.id} 语法未满足规则、表格、例句、常见错误四段式`);
   });
 }
 

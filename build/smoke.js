@@ -146,25 +146,38 @@ for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'm
   t('go(' + s + ')', () => { go(s); return true; });
 }
 
-// 3. lessons：P4 敬请期待、36 课、P0 条目
-t('lessons 含 60 课与 B1 分段', () => {
+// 3. lessons：72 课、A2.2 过渡层、P0 条目
+t('lessons 含 72 课与 A2.2/B1 分段', () => {
   renderLessons();
   const h = A.html('lesson-groups');
   const items = (h.match(/lesson-item/g) || []).length;
-  if (items < 61) throw new Error('课程条目仅 ' + items);
-  return h.includes('发音入门') && h.includes('问候与自我介绍') && h.includes('B1.1-L01') && h.includes('B1.2-L12');
+  if (items < 73) throw new Error('课程条目仅 ' + items);
+  const a21 = h.indexOf('A2.1-L12');
+  const a22 = h.indexOf('A2.2-L01');
+  const b11 = h.indexOf('B1.1-L01');
+  return h.includes('发音入门') && h.includes('问候与自我介绍') && h.includes('A2.2 独立表达')
+    && h.includes('A2.2-L12') && h.includes('B1.2-L12') && a21 < a22 && a22 < b11;
 });
 
-// 3b. 第四轮：A2.1 十二课挂载、词库总量、语法 37 条
-t('词库总数 ≥2400 且 B1 二十四课齐全', () => {
-  if (A.WORDS.length < 2400) throw new Error('词库仅 ' + A.WORDS.length);
+// 3b. A2.1/A2.2 与 B1 课程挂载、词库总量、语法条数
+t('词库总数 ≥2800 且 A2.2/B1 课程齐全', () => {
+  if (A.WORDS.length < 2800) throw new Error('词库仅 ' + A.WORDS.length);
   const a21 = A.LESSONS.filter(l => l.stage === 'P3');
   if (a21.length !== 12) throw new Error('A2.1 课数 ' + a21.length);
-  if (A.GRAMMARS.length !== 61) throw new Error('语法条数 ' + A.GRAMMARS.length);
+  if (A.GRAMMARS.length !== 73) throw new Error('语法条数 ' + A.GRAMMARS.length);
   for (const l of a21) {
     if (!l.grammar_id) throw new Error(l.id + ' 缺语法点');
     if (l.words.length + l.extra_words.length < 30) throw new Error(l.id + ' 词数不足 30');
     if (!l.dialog || l.dialog.length < 6) throw new Error(l.id + ' 对话不足 6 句');
+  }
+  const a22 = A.LESSONS.filter(l => l.stage === 'P3B');
+  if (a22.length !== 12) throw new Error('A2.2 课数 ' + a22.length);
+  for (const [i, l] of a22.entries()) {
+    if (l.id !== `A2.2-L${String(i + 1).padStart(2, '0')}`) throw new Error('A2.2 顺序错误: ' + l.id);
+    if (l.words.length < 12 || l.words.length > 14 || l.extra_words.length < 18 || l.extra_words.length > 26) throw new Error(l.id + ' 词数异常');
+    if (!l.listening || l.dialog.length !== 8 || l.grammar_id !== `g${String(i + 62).padStart(3, '0')}`) throw new Error(l.id + ' 缺听力、对话或对应语法');
+    const grammar = A.GRAMMARS.find(g => g.id === l.grammar_id);
+    if (!grammar || !/规则：/.test(grammar.content) || !/<table>/.test(grammar.content) || !/例句：/.test(grammar.content) || !/常见错误：/.test(grammar.content)) throw new Error(l.id + ' 语法不是四段式');
   }
   return true;
 });
@@ -193,6 +206,16 @@ t('lesson 筛选渲染含 A2.1 分组与课程', () => {
   renderLessons();
   const h = A.html('lesson-groups');
   return h.includes('A2.1 进阶西语') && h.includes('A2.1-L01') && h.includes('A2.1-L12') && h.includes('将来时');
+});
+t('A2.2 学习流可渲染语法、对话与具体听力', () => {
+  openLesson('A2.2-L08');
+  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  if (!A.html('learn-container').includes('Se me olvidó')) throw new Error('A2.2 g069 未渲染');
+  A.setLearn({ learnStep: 2 }); renderLearn();
+  if (!A.html('learn-container').includes('Se me ha perdido la maleta')) throw new Error('A2.2 对话未渲染');
+  A.setLearn({ learnStep: 3 }); renderLearn();
+  revealLessonListening();
+  return A.html('learn-container').includes('Durante un viaje a Córdoba') && A.lesson.listening.questions.length === 2;
 });
 // 5.5 轮：听力内容区分度（生成物层面拦"同模板换例句"）
 t('听力正文与题干全库无重复', () => {
@@ -874,7 +897,7 @@ t('补签一生一次且需断签 1 天', () => {
 // 14. 课程访问（全部课程开放）
 t('全新账号全部课程可进入', () => {
   A.state = normalizeState(null);
-  return ['A1.1-L01', 'A1.2-L01', 'A2.1-L01', 'B1.1-L01', 'B1.2-L12']
+  return ['A1.1-L01', 'A1.2-L01', 'A2.1-L01', 'A2.2-L01', 'B1.1-L01', 'B1.2-L12']
     .every(id => isLessonUnlocked(getLesson(id)));
 });
 

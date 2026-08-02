@@ -3,7 +3,8 @@ const STAGES = {
   P0: { title: 'P0 发音入门', next: 'P1' },
   P1: { title: 'P1 A1.1 生存西语', next: 'P2' },
   P2: { title: 'P2 A1.2 提高西语', next: 'P3' },
-  P3: { title: 'P3 A2.1 进阶西语', next: 'P4' },
+  P3: { title: 'P3 A2.1 进阶西语', next: 'P3B' },
+  P3B: { title: 'P3B A2.2 独立表达', next: 'P4' },
   P4: { title: 'P4 B1.1 独立表达', next: 'P5' },
   P5: { title: 'P5 B1.2 论述与互动', next: null }
 };
