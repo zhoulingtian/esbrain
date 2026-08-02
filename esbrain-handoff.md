@@ -2,7 +2,7 @@
 
 **更新时间**: 2026-08-03
 **项目路径**: `D:\esbrain`
-**当前状态**: 路线图第 5.5 至第八轮均已完成并验收；根目录 `index.html` 是生成物。
+**当前状态**: 路线图第 5.5 至第九轮均已完成并验收；根目录 `index.html` 是生成物。
 
 ## 1. 项目与工作流
 
@@ -27,6 +27,7 @@ ESbrain 是离线单文件 PWA 西语自学工具，课程从 A1 覆盖至 B2。
 | 六 | A2.2 12 课、g062 至 g073，阶段 P3B | 2800 词、72 课、73 语法；smoke 82 / 0，sw v10 |
 | 七 | B2.1/B2.2 24 课、g074 至 g097、B2 时态、40 个口语自查任务 | 3825 词、96 课、97 语法；smoke 86 / 0，sw v11 |
 | 八 | 学习计划向导、分级错题/周报、私密 Gist 备份与冲突选择 | smoke 89 / 0，sw v12 |
+| 九 | 11 篇文化阅读、法语同源词开关与发音陷阱提示 | smoke 90 / 0，sw v13 |
 
 ### 第八轮验收细节
 
@@ -55,6 +56,7 @@ ESbrain 是离线单文件 PWA 西语自学工具，课程从 A1 覆盖至 B2。
 | `verbs.js` | 60 动词和 B2 完成时/虚拟式扩展 |
 | `quiz-extra.js` | 重音、专项题、拉美听力、时态填空 |
 | `speaking.js` | 20 个角色扮演和 20 个即兴陈述任务 |
+| `culture.js` | 11 篇文化阅读与法语同源词映射 |
 | `verbs-legacy-fixture.js` | 旧 20 动词回归 fixture |
 
 ### 运行时要点
@@ -88,12 +90,12 @@ ESbrain 是离线单文件 PWA 西语自学工具，课程从 A1 覆盖至 B2。
 ## 4. 最后验证结果
 
 - `node build/assemble.js`: `SYNTAX_OK (3 script blocks)`、`ALL_CONTENT_CHECKS_PASSED`
-- `node build/smoke.js`: `89 passed, 0 failed`
+- `node build/smoke.js`: `90 passed, 0 failed`
 - 内容规模：3825 词、96 课、97 条语法、60 动词、40 个口语任务。
 - 所有用户操作可在课程间自由跳转；学习计划只提供建议。
 
 ## 5. Git 与后续工作
 
-- 已提交：`eaa4319 Complete round 7 B2 curriculum and speaking`、`0707524 Complete round 8 learning plans and safe Gist sync`。
-- 当前需要提交的是第八轮审计收尾：课程听力错题归类、计划完成率/五任务 smoke 覆盖、生成的 `index.html`、以及本 handoff 和 `TASKBOOK.md` 的最终数字。
+- 已提交：`eaa4319 Complete round 7 B2 curriculum and speaking`、`0707524 Complete round 8 learning plans and safe Gist sync`、`2f0bfaf Finalize round 8 plan and listening audit`。
+- 当前需要提交的是第九轮：文化阅读、法语对照开关、构建校验、生成的 `index.html`、缓存版本与文档。
 - 工作区有用户已有的无关改动和未跟踪文件；提交时只能显式暂存本轮文件，禁止 `git add .`。

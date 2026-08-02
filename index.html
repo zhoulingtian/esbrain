@@ -1154,6 +1154,9 @@ p { margin: 0 0 10px; }
       <div class="tool-card" role="button" tabindex="0" onclick="go('listening-la')" onkeydown="activateOnKey(event)">
         <h3>拉美朗读对照 <span class="badge badge-accent">A2 起</span></h3><p class="muted">先听后看，比较系统提供的 es-MX / es-AR 朗读与文本理解。</p>
       </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('culture')" onkeydown="activateOnKey(event)">
+        <h3>文化阅读 <span class="badge badge-accent">A2 - B1</span></h3><p class="muted">从西班牙与拉美的具体地点阅读语言、日常生活和地区差异。</p>
+      </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('falsefriends')" onkeydown="activateOnKey(event)">
         <h3>假朋友 <span class="badge badge-accent">A2 起</span></h3>
         <p class="muted">形似义异词（embarazada、éxito、actualmente 等）+ 四选一小测。</p>
@@ -1210,6 +1213,7 @@ p { margin: 0 0 10px; }
     <div id="screen-shadowing" class="screen hidden"><h2 class="mb-12">发音跟读</h2><div id="shadowing-area"></div></div>
     <div id="screen-speaking" class="screen hidden"><h2 class="mb-12">口语任务</h2><div id="speaking-area"></div></div>
     <div id="screen-listening-la" class="screen hidden"><h2 class="mb-12">拉美朗读对照</h2><div id="listening-la-area"></div></div>
+    <div id="screen-culture" class="screen hidden"><h2 class="mb-12">文化阅读</h2><div id="culture-area"></div></div>
 
     <!-- 词库 -->
     <div id="screen-words" class="screen hidden">
@@ -1291,6 +1295,12 @@ p { margin: 0 0 10px; }
           <button class="theme-opt variant-opt" id="variant-es-ES" onclick="setVariant('es-ES')">西班牙本土</button>
           <button class="theme-opt variant-opt" id="variant-es-LA" onclick="setVariant('es-LA')">拉丁美洲</button>
         </div>
+      </div>
+      <div class="card">
+        <h3>法语对照</h3>
+        <p class="muted">仅为有法语基础的学习者显示西法同源词；默认关闭，不影响其他词卡。</p>
+        <button class="btn btn-secondary w-full mt-12" id="french-cognates-toggle" aria-pressed="false" onclick="toggleFrenchCognates()">开启法语同源词对照</button>
+        <div id="french-traps" class="mt-12 hidden"></div>
       </div>
       <div class="card">
         <h3>语音自检</h3>
@@ -2222,7 +2232,8 @@ const WORDS = [
     "zh": "家庭；家人",
     "example": "Mi familia es grande.",
     "example_zh": "我家是个大家庭。",
-    "lesson": "A1.1-L02"
+    "lesson": "A1.1-L02",
+    "fr": "famille"
   },
   {
     "id": "w0032",
@@ -2306,7 +2317,8 @@ const WORDS = [
     "zh": "问题（阳性！el problema）",
     "example": "No hay problema.",
     "example_zh": "没问题。",
-    "lesson": "A1.1-L02"
+    "lesson": "A1.1-L02",
+    "fr": "problème"
   },
   {
     "id": "w0039",
@@ -4479,7 +4491,8 @@ const WORDS = [
     "zh": "音乐",
     "example": "Me gusta la música española.",
     "example_zh": "我喜欢西班牙音乐。",
-    "lesson": "A1.1-L08"
+    "lesson": "A1.1-L08",
+    "fr": "musique"
   },
   {
     "id": "w0218",
@@ -5649,7 +5662,8 @@ const WORDS = [
     "zh": "地址；方向",
     "example": "¿Esta es la dirección?",
     "example_zh": "这是地址吗？",
-    "lesson": "A1.1-L11"
+    "lesson": "A1.1-L11",
+    "fr": "direction"
   },
   {
     "id": "w0314",
@@ -6063,7 +6077,8 @@ const WORDS = [
     "zh": "大学",
     "example": "La universidad está en el centro.",
     "example_zh": "大学在市中心。",
-    "lesson": "A1.1-L12"
+    "lesson": "A1.1-L12",
+    "fr": "université"
   },
   {
     "id": "w0348",
@@ -6364,7 +6379,8 @@ const WORDS = [
     "zh": "颜色",
     "example": "¿De qué color es la camisa?",
     "example_zh": "这件衬衫是什么颜色的？",
-    "lesson": "A1.2-L01"
+    "lesson": "A1.2-L01",
+    "fr": "couleur"
   },
   {
     "id": "w0373",
@@ -8212,7 +8228,8 @@ const WORDS = [
     "zh": "医院",
     "example": "El hospital está en el centro.",
     "example_zh": "医院在市中心。",
-    "lesson": "A1.2-L06"
+    "lesson": "A1.2-L06",
+    "fr": "hôpital"
   },
   {
     "id": "w0524",
@@ -9194,7 +9211,8 @@ const WORDS = [
     "zh": "经历、体验",
     "example": "Fue una experiencia increíble.",
     "example_zh": "那是一次不可思议的经历。",
-    "lesson": "A1.2-L09"
+    "lesson": "A1.2-L09",
+    "fr": "expérience"
   },
   {
     "id": "w0605",
@@ -9819,7 +9837,8 @@ const WORDS = [
     "zh": "传统",
     "example": "Es una tradición muy antigua.",
     "example_zh": "这是一个非常古老的传统。",
-    "lesson": "A1.2-L11"
+    "lesson": "A1.2-L11",
+    "fr": "tradition"
   },
   {
     "id": "w0656",
@@ -10988,7 +11007,8 @@ const WORDS = [
     "example": "El guía nos contó una historia muy interesante.",
     "example_zh": "导游给我们讲了一个很有趣的故事。",
     "lesson": "A2.1-L02",
-    "stress": 2
+    "stress": 2,
+    "fr": "histoire"
   },
   {
     "id": "w0749",
@@ -13260,7 +13280,8 @@ const WORDS = [
     "example": "Guarde el documento en esta carpeta.",
     "example_zh": "请把文件存到这个文件夹里。",
     "lesson": "A2.1-L07",
-    "stress": 2
+    "stress": 2,
+    "fr": "document"
   },
   {
     "id": "w0919",
@@ -14415,7 +14436,8 @@ const WORDS = [
     "example": "La calidad del desayuno era mejor que la del hotel anterior.",
     "example_zh": "早餐质量比之前那家酒店好。",
     "lesson": "A2.1-L09",
-    "stress": 1
+    "stress": 1,
+    "fr": "qualité"
   },
   {
     "id": "w1007",
@@ -14470,7 +14492,8 @@ const WORDS = [
     "example": "Las opiniones de este hostal son mejores que las del otro.",
     "example_zh": "这家旅馆的评价比那家好。",
     "lesson": "A2.1-L09",
-    "stress": 1
+    "stress": 1,
+    "fr": "opinion"
   },
   {
     "id": "w1011",
@@ -14654,7 +14677,8 @@ const WORDS = [
     "example": "La comunidad de vecinos se reúne cada mes.",
     "example_zh": "业主社区每月开一次会。",
     "lesson": "A2.1-L10",
-    "stress": 1
+    "stress": 1,
+    "fr": "communauté"
   },
   {
     "id": "w1025",
@@ -15806,7 +15830,8 @@ const WORDS = [
     "example": "Mañana tomaremos la decisión final sobre el destino.",
     "example_zh": "明天我们将对目的地做出最终决定。",
     "lesson": "A2.1-L12",
-    "stress": 1
+    "stress": 1,
+    "fr": "décision"
   },
   {
     "id": "w1112",
@@ -18780,7 +18805,8 @@ const WORDS = [
     "example": "Es posible que cambie de trabajo.",
     "example_zh": "我有可能换工作。",
     "lesson": "B1.1-L01",
-    "stress": 2
+    "stress": 2,
+    "fr": "possible"
   },
   {
     "id": "w1342",
@@ -18802,7 +18828,8 @@ const WORDS = [
     "example": "Es necesario que estudies más.",
     "example_zh": "你有必要再多学一些。",
     "lesson": "B1.1-L01",
-    "stress": 2
+    "stress": 2,
+    "fr": "nécessaire"
   },
   {
     "id": "w1344",
@@ -18813,7 +18840,8 @@ const WORDS = [
     "example": "Es importante que descanses.",
     "example_zh": "你休息好很重要。",
     "lesson": "B1.1-L01",
-    "stress": 2
+    "stress": 2,
+    "fr": "important"
   },
   {
     "id": "w1345",
@@ -19325,7 +19353,8 @@ const WORDS = [
     "example": "Te diré mi decisión en cuanto la tenga.",
     "example_zh": "我一有决定就告诉你。",
     "lesson": "B1.1-L03",
-    "stress": 1
+    "stress": 1,
+    "fr": "décision"
   },
   {
     "id": "w1388",
@@ -20253,7 +20282,8 @@ const WORDS = [
     "example": "Es una experiencia que había vivido antes.",
     "example_zh": "这是他以前经历过的。",
     "lesson": "B1.1-L07",
-    "stress": 2
+    "stress": 2,
+    "fr": "expérience"
   },
   {
     "id": "w1465",
@@ -20646,7 +20676,8 @@ const WORDS = [
     "example": "No asumo responsabilidad por daños accidentales.",
     "example_zh": "我不承担意外损坏的责任。",
     "lesson": "B1.1-L08",
-    "stress": 1
+    "stress": 1,
+    "fr": "responsabilité"
   },
   {
     "id": "w1497",
@@ -21234,7 +21265,8 @@ const WORDS = [
     "example": "En mi opinión, es una buena idea.",
     "example_zh": "在我看来，这是个好主意。",
     "lesson": "B1.1-L11",
-    "stress": 1
+    "stress": 1,
+    "fr": "opinion"
   },
   {
     "id": "w1547",
@@ -21260,7 +21292,8 @@ const WORDS = [
     "example": "En conclusión, debemos actuar ya.",
     "example_zh": "总之，我们必须马上行动。",
     "lesson": "B1.1-L11",
-    "stress": 1
+    "stress": 1,
+    "fr": "conclusion"
   },
   {
     "id": "w1549",
@@ -21325,7 +21358,8 @@ const WORDS = [
     "example": "En comparación con el año pasado, mejoramos.",
     "example_zh": "与去年相比，我们进步了。",
     "lesson": "B1.1-L11",
-    "stress": 1
+    "stress": 1,
+    "fr": "comparaison"
   },
   {
     "id": "w1554",
@@ -21338,7 +21372,8 @@ const WORDS = [
     "example": "El contraste entre los dos modelos es grande.",
     "example_zh": "两种型号之间的对比很大。",
     "lesson": "B1.1-L11",
-    "stress": 2
+    "stress": 2,
+    "fr": "contraste"
   },
   {
     "id": "w1555",
@@ -21351,7 +21386,8 @@ const WORDS = [
     "example": "Hay una relación causa-efecto.",
     "example_zh": "存在因果关系。",
     "lesson": "B1.1-L11",
-    "stress": 1
+    "stress": 1,
+    "fr": "relation"
   },
   {
     "id": "w1556",
@@ -21934,7 +21970,8 @@ const WORDS = [
     "example": "Busco algo diferente a lo habitual.",
     "example_zh": "我在找与往常不同的东西。",
     "lesson": "B1.2-L02",
-    "stress": 2
+    "stress": 2,
+    "fr": "différent"
   },
   {
     "id": "w1603",
@@ -23439,7 +23476,8 @@ const WORDS = [
     "example": "La economía mejora lentamente.",
     "example_zh": "经济在缓慢好转。",
     "lesson": "B1.2-L08",
-    "stress": 2
+    "stress": 2,
+    "fr": "économie"
   },
   {
     "id": "w1735",
@@ -23746,7 +23784,8 @@ const WORDS = [
     "example": "La educación reduce la desigualdad.",
     "example_zh": "教育减少不平等。",
     "lesson": "B1.2-L09",
-    "stress": 1
+    "stress": 1,
+    "fr": "éducation"
   },
   {
     "id": "w1759",
@@ -23759,7 +23798,8 @@ const WORDS = [
     "example": "En mi opinión, es necesario cambiar.",
     "example_zh": "在我看来，有必要改变。",
     "lesson": "B1.2-L10",
-    "stress": 1
+    "stress": 1,
+    "fr": "opinion"
   },
   {
     "id": "w1760",
@@ -28464,7 +28504,8 @@ const WORDS = [
     "example": "Me gusta la cultura española.",
     "example_zh": "我喜欢西班牙文化。",
     "lesson": "B1.2-L09",
-    "stress": 2
+    "stress": 2,
+    "fr": "culture"
   },
   {
     "id": "w2199",
@@ -28490,7 +28531,8 @@ const WORDS = [
     "example": "La comunicación es clave.",
     "example_zh": "交流是关键。",
     "lesson": "B1.2-L09",
-    "stress": 1
+    "stress": 1,
+    "fr": "communication"
   },
   {
     "id": "w2201",
@@ -28711,7 +28753,8 @@ const WORDS = [
     "example": "El problema es complejo.",
     "example_zh": "问题很复杂。",
     "lesson": "B1.2-L10",
-    "stress": 2
+    "stress": 2,
+    "fr": "problème"
   },
   {
     "id": "w2218",
@@ -28828,7 +28871,8 @@ const WORDS = [
     "example": "La cantidad no importa.",
     "example_zh": "数量不重要。",
     "lesson": "B1.2-L11",
-    "stress": 1
+    "stress": 1,
+    "fr": "quantité"
   },
   {
     "id": "w2227",
@@ -29202,7 +29246,8 @@ const WORDS = [
     "example_zh": "在完整句中使用这个 B1 高频表达。",
     "lesson": "B1.2-L12",
     "stress": 2,
-    "b1_review": true
+    "b1_review": true,
+    "fr": "différent"
   },
   {
     "id": "w2257",
@@ -29298,7 +29343,8 @@ const WORDS = [
     "example_zh": "在完整句中使用这个 B1 高频表达。",
     "lesson": "B1.2-L12",
     "stress": 2,
-    "b1_review": true
+    "b1_review": true,
+    "fr": "général"
   },
   {
     "id": "w2265",
@@ -29418,7 +29464,8 @@ const WORDS = [
     "example_zh": "在完整句中使用这个 B1 高频表达。",
     "lesson": "B1-REV",
     "stress": 2,
-    "b1_review": true
+    "b1_review": true,
+    "fr": "nécessaire"
   },
   {
     "id": "w2275",
@@ -29466,7 +29513,8 @@ const WORDS = [
     "example_zh": "在完整句中使用这个 B1 高频表达。",
     "lesson": "B1-REV",
     "stress": 2,
-    "b1_review": true
+    "b1_review": true,
+    "fr": "possible"
   },
   {
     "id": "w2279",
@@ -31284,7 +31332,8 @@ const WORDS = [
     "example": "Uso “opinión” en esta situación.",
     "example_zh": "在本课情境中使用“观点”。",
     "lesson": "A2.2-L01",
-    "stress": 2
+    "stress": 2,
+    "fr": "opinion"
   },
   {
     "id": "w2426",
@@ -32208,7 +32257,8 @@ const WORDS = [
     "example": "Uso “documento” en esta situación.",
     "example_zh": "在本课情境中使用“文件”。",
     "lesson": "A2.2-L03",
-    "stress": 2
+    "stress": 2,
+    "fr": "document"
   },
   {
     "id": "w2510",
@@ -32329,7 +32379,8 @@ const WORDS = [
     "example": "Uso “cantidad” en esta situación.",
     "example_zh": "在本课情境中使用“数量”。",
     "lesson": "A2.2-L04",
-    "stress": 2
+    "stress": 2,
+    "fr": "quantité"
   },
   {
     "id": "w2521",
@@ -33154,7 +33205,8 @@ const WORDS = [
     "example": "Uso “cantidad” en esta situación.",
     "example_zh": "在本课情境中使用“金额”。",
     "lesson": "A2.2-L06",
-    "stress": 2
+    "stress": 2,
+    "fr": "quantité"
   },
   {
     "id": "w2596",
@@ -34353,7 +34405,8 @@ const WORDS = [
     "example": "Uso “tradición” en esta situación.",
     "example_zh": "在本课情境中使用“传统”。",
     "lesson": "A2.2-L10",
-    "stress": 2
+    "stress": 2,
+    "fr": "tradition"
   },
   {
     "id": "w2705",
@@ -34386,7 +34439,8 @@ const WORDS = [
     "example": "Uso “música” en esta situación.",
     "example_zh": "在本课情境中使用“音乐”。",
     "lesson": "A2.2-L10",
-    "stress": 2
+    "stress": 2,
+    "fr": "musique"
   },
   {
     "id": "w2708",
@@ -35101,7 +35155,8 @@ const WORDS = [
     "example": "Uso “comparación” en esta situación.",
     "example_zh": "在本课情境中使用“比较”。",
     "lesson": "A2.2-L12",
-    "stress": 2
+    "stress": 2,
+    "fr": "comparaison"
   },
   {
     "id": "w2773",
@@ -43813,7 +43868,8 @@ const WORDS = [
     "example": "En el contexto de un taller analiza una viñeta sobre trámites públicos, se emplea «contraste».",
     "example_zh": "在“un taller analiza una viñeta sobre trámites públicos”的语境中使用“反差”。",
     "lesson": "B2.2-L10",
-    "stress": 2
+    "stress": 2,
+    "fr": "contraste"
   },
   {
     "id": "w3565",
@@ -72468,6 +72524,362 @@ const SPEAKING_TASKS = [
     "sampleAnswer_zh": "关键在于区分尖锐意见与煽动歧视、攻击群体。捍卫言论自由不等于接受威胁。平台和法律可通过公开规则、申诉机会和可解释决定来行动；否则审核会任意化并失去合法性。最佳做法结合教育、保护受害者与透明程序。"
   }
 ];
+const CULTURE_ARTICLES = [
+  {
+    "id": "culture-madrid",
+    "area": "España",
+    "place": "马德里",
+    "level": "A2",
+    "text": "Madrid no es solo la capital administrativa de España. Es una ciudad donde la vida pública ocupa plazas, parques y terrazas durante muchas horas del día. En el centro, la Puerta del Sol reúne a personas que van al trabajo, visitantes que buscan una dirección y familias que se encuentran antes de comer. Desde allí se puede caminar hasta el Palacio Real, el Mercado de San Miguel o el barrio de las Letras. Cada zona tiene un ritmo diferente, pero todas se conectan por el metro y por calles muy transitadas.\n\nUna costumbre importante es salir a tomar algo sin convertir la visita en una comida rápida. Dos amigos pueden pedir una bebida, compartir una tapa y hablar durante una hora. Por la tarde, muchos madrileños pasean por el Retiro. El parque tiene un estanque, exposiciones y caminos donde la gente corre, lee o toca música. En los domingos de buen tiempo se llena de familias y artistas.\n\nMadrid también ayuda a entender la diversidad de España. Mucha gente ha llegado de otras regiones y de otros países para estudiar o trabajar. Por eso se oyen acentos distintos y se encuentran restaurantes muy variados. Cuando alguien dice que va a quedar en Madrid, normalmente no habla solo de un lugar turístico: habla de una ciudad que se usa, se discute y se comparte cada día.",
+    "translation": "马德里不只是西班牙的行政首都。这是一座公共生活长时间发生在广场、公园和露天座位区的城市。在市中心，太阳门广场聚集了去上班的人、寻找方向的游客，以及吃饭前见面的家庭。从那里可以步行到王宫、圣米格尔市场或文学区。每个区域都有不同节奏，但都由地铁和繁忙街道连接。\n\n一个重要习惯是出门喝点东西，而不是把见面变成匆忙吃饭。两个朋友可以点饮料、分享小吃、聊上一个小时。下午，许多马德里人会到丽池公园散步。公园有湖、展览和小路，人们在那里跑步、阅读或演奏音乐。天气好的周日，那里满是家庭和艺术家。\n\n马德里也能帮助人理解西班牙的多样性。很多人从其他地区和国家来到这里学习或工作。因此能听到不同口音，也能找到许多不同的餐馆。当有人说要在马德里见面时，通常不只是在说一个旅游点，而是在说一座每天被使用、讨论和共享的城市。",
+    "notes": [
+      {
+        "word": "plaza",
+        "zh": "广场"
+      },
+      {
+        "word": "terraza",
+        "zh": "露天座位区"
+      },
+      {
+        "word": "quedar",
+        "zh": "约好见面"
+      },
+      {
+        "word": "tapa",
+        "zh": "小份下酒菜"
+      },
+      {
+        "word": "estanque",
+        "zh": "池塘、湖"
+      }
+    ]
+  },
+  {
+    "id": "culture-cataluna",
+    "area": "España",
+    "place": "加泰罗尼亚",
+    "level": "A2",
+    "text": "Cataluña está en el noreste de España y tiene una relación muy visible con el mar Mediterráneo. Barcelona es su ciudad más conocida, pero la región incluye pueblos de montaña, zonas agrícolas y una costa larga. En Barcelona, la arquitectura llama la atención: edificios de Antoni Gaudí, como la Sagrada Familia o la Casa Batlló, usan formas que parecen plantas, olas o animales. No son edificios iguales a los de otras capitales europeas.\n\nLa lengua catalana se usa junto al español en escuelas, carteles y conversaciones cotidianas. Para un visitante, ver dos lenguas no significa que la gente no pueda comunicarse; significa que la región protege una parte importante de su historia. En una panadería se puede escuchar una pregunta en catalán y recibir una respuesta en español sin que nadie se sorprenda.\n\nLa comida también muestra esa relación entre territorio y vida diaria. El pan con tomate es sencillo: pan, tomate, aceite y sal. Sin embargo, se prepara con atención y suele acompañar comidas familiares. En los mercados hay pescado, verduras y productos de temporada. Conocer Cataluña no consiste solo en visitar monumentos: también consiste en observar cómo una lengua, una cocina y una ciudad muy turística conviven con barrios donde la gente estudia, trabaja y hace compras.",
+    "translation": "加泰罗尼亚位于西班牙东北部，与地中海有很明显的联系。巴塞罗那是最知名的城市，但这个地区还包括山区小镇、农业地带和长长的海岸。在巴塞罗那，建筑非常引人注意：安东尼奥·高迪的圣家堂和巴特罗之家等建筑，使用像植物、海浪或动物的形状，它们和其他欧洲首都的建筑不一样。\n\n加泰罗尼亚语与西班牙语一起出现在学校、标牌和日常对话中。对游客来说，看到两种语言并不代表人们无法沟通，而是说明这个地区保护自己历史的重要部分。在面包店里，你可能听到加泰罗尼亚语的提问，再用西班牙语得到回答，没有人会觉得奇怪。\n\n食物也表现出土地和日常生活的关系。番茄面包很简单：面包、番茄、橄榄油和盐。不过，人们会认真准备它，家庭用餐时常会搭配它。市场里有鱼、蔬菜和当季产品。了解加泰罗尼亚不只是参观纪念建筑，也要观察一种语言、一种饮食和一座旅游城市如何与人们学习、工作和购物的社区共存。",
+    "notes": [
+      {
+        "word": "costa",
+        "zh": "海岸"
+      },
+      {
+        "word": "cartel",
+        "zh": "标牌"
+      },
+      {
+        "word": "panadería",
+        "zh": "面包店"
+      },
+      {
+        "word": "de temporada",
+        "zh": "当季的"
+      },
+      {
+        "word": "convivir",
+        "zh": "共存"
+      }
+    ]
+  },
+  {
+    "id": "culture-andalucia",
+    "area": "España",
+    "place": "安达卢西亚",
+    "level": "A2",
+    "text": "Andalucía ocupa una parte grande del sur de España y reúne paisajes muy distintos. Hay playas en Cádiz y Málaga, pueblos blancos en las montañas y ciudades con una historia árabe muy visible. En Granada, la Alhambra conserva palacios, patios y jardines construidos durante siglos. Sus paredes tienen dibujos y palabras, y sus fuentes hacen que el agua sea una parte importante del espacio. Visitarla ayuda a entender que la historia española tiene muchas capas.\n\nSevilla es conocida por sus patios, sus naranjos y su verano muy caluroso. En primavera, la gente sale más temprano o más tarde para evitar las horas de más sol. Las fiestas locales, como la Feria de Abril, tienen música, vestidos tradicionales y reuniones familiares, pero no son una representación preparada solo para turistas. También forman parte de la vida social de muchas personas.\n\nEl flamenco nació de encuentros entre comunidades y no se reduce a una canción alegre. Puede expresar dolor, orgullo, humor o deseo. Una guitarra, unas palmas y una voz pueden crear un ambiente intenso incluso en una sala pequeña. Al aprender sobre Andalucía conviene evitar la idea de que toda la región es igual: Córdoba, Jaén, Huelva y Almería tienen economías, acentos y paisajes propios.",
+    "translation": "安达卢西亚占据西班牙南部很大一部分，拥有非常不同的风景。加的斯和马拉加有海滩，山区有白色小镇，还有历史上阿拉伯影响明显的城市。在格拉纳达，阿尔罕布拉宫保存了数百年间建成的宫殿、庭院和花园。墙上有图案和文字，喷泉让水成为空间的重要组成部分。参观它有助于理解西班牙历史有许多层次。\n\n塞维利亚以庭院、橙树和炎热的夏天闻名。春天人们会更早或更晚出门，避开最晒的时段。四月节等本地节日有音乐、传统服装和家庭聚会，但并不是只为游客准备的表演，它们也是许多人社会生活的一部分。\n\n弗拉门戈来自不同社群之间的相遇，并不只是欢乐歌曲。它可以表达痛苦、自豪、幽默或愿望。一把吉他、掌声和声音，即使在小房间里也能营造强烈气氛。了解安达卢西亚时，应避免把整个地区看成一样：科尔多瓦、哈恩、韦尔瓦和阿尔梅里亚都有自己的经济、口音和风景。",
+    "notes": [
+      {
+        "word": "patio",
+        "zh": "庭院"
+      },
+      {
+        "word": "fuente",
+        "zh": "喷泉"
+      },
+      {
+        "word": "naranjo",
+        "zh": "橙树"
+      },
+      {
+        "word": "palmas",
+        "zh": "拍掌声"
+      },
+      {
+        "word": "capa",
+        "zh": "层次"
+      }
+    ]
+  },
+  {
+    "id": "culture-pais-vasco",
+    "area": "España",
+    "place": "巴斯克",
+    "level": "A2",
+    "text": "El País Vasco está al norte de España, junto al mar Cantábrico y cerca de Francia. Allí llueve más que en muchas otras zonas del país, por eso el paisaje suele ser muy verde. Bilbao cambió mucho en las últimas décadas. Durante mucho tiempo fue una ciudad industrial, con fábricas y un puerto importante. Después abrió espacios culturales, mejoró las orillas de la ría y construyó el museo Guggenheim. El edificio de metal no es solamente un lugar para ver arte; se convirtió en un símbolo de la transformación de la ciudad.\n\nEn el País Vasco se habla español y euskera. El euskera no se parece al español ni al francés, y por eso muchas palabras de las calles llaman la atención de los visitantes. Aprender a reconocer algunos nombres muestra respeto, aunque no sea necesario hablar la lengua para viajar allí.\n\nLa comida ocupa un lugar especial. En los bares se encuentran pintxos, pequeñas porciones que se eligen en la barra. Un pintxo puede tener pan, pescado, tortilla, queso o una combinación más creativa. La costumbre no es pedir diez platos solo para una persona, sino probar poco a poco, conversar y moverse de un bar a otro. Esa forma de comer explica algo importante: la gastronomía vasca combina productos locales, técnica y vida social.",
+    "translation": "巴斯克地区位于西班牙北部，靠近坎塔布连海和法国。那里比西班牙许多地区雨水更多，因此风景常常很绿。毕尔巴鄂在最近几十年变化很大。很长时间里它是一座工业城市，有工厂和重要港口。后来它开辟文化空间、改善河口两岸，并建造了古根海姆博物馆。这座金属建筑不只是看艺术的地方，也成了城市转型的象征。\n\n在巴斯克，人们使用西班牙语和巴斯克语。巴斯克语不像西班牙语也不像法语，因此街道上的许多词会吸引游客注意。即使旅行时不必会说它，学着认出一些地名也显示尊重。\n\n食物有特别的位置。酒吧里能找到 pintxos，也就是在吧台挑选的小份食物。它可以有面包、鱼、土豆蛋饼、奶酪或更有创意的搭配。习惯不是一个人点十个盘子，而是慢慢尝、聊天，再从一家酒吧走到另一家。这种吃法说明了重要一点：巴斯克美食结合了当地食材、技术和社交生活。",
+    "notes": [
+      {
+        "word": "ría",
+        "zh": "河口湾"
+      },
+      {
+        "word": "orilla",
+        "zh": "岸边"
+      },
+      {
+        "word": "euskera",
+        "zh": "巴斯克语"
+      },
+      {
+        "word": "barra",
+        "zh": "吧台"
+      },
+      {
+        "word": "probar",
+        "zh": "尝试、品尝"
+      }
+    ]
+  },
+  {
+    "id": "culture-galicia",
+    "area": "España",
+    "place": "加利西亚",
+    "level": "A2",
+    "text": "Galicia está en el noroeste de España, frente al océano Atlántico. La lluvia, las nubes y el mar aparecen mucho en la imagen de la región, pero no describen todo. Hay rías profundas, bosques, pequeñas aldeas y ciudades universitarias como Santiago de Compostela. Esta ciudad recibe cada año a personas que terminan el Camino de Santiago. Algunas llegan por motivos religiosos, otras por deporte, amistad o curiosidad. Al final del camino, muchos viajeros se reúnen en la plaza delante de la catedral y cuentan lo que han vivido.\n\nEl gallego se habla junto al español y comparte rasgos con el portugués. En los pueblos y en las familias puede tener una presencia muy fuerte. Escucharlo no es una dificultad que haya que superar; es una oportunidad para entender que España tiene varias lenguas y memorias locales.\n\nLa cocina gallega depende mucho del mar. El pulpo a la gallega se sirve normalmente con aceite, pimentón y sal. También son conocidos los mariscos, las empanadas y las patatas. Sin embargo, el producto no llega solo a la mesa: detrás hay pescadores, mercados y personas que saben cuándo es la temporada adecuada. Al hablar de Galicia, conviene pensar tanto en el paisaje como en las redes de trabajo que unen costa, pueblo y ciudad.",
+    "translation": "加利西亚位于西班牙西北部，面向大西洋。雨、云和海常出现在人们对这个地区的印象中，但这并不能说明全部。这里有深入内陆的海湾、森林、小村庄和圣地亚哥-德孔波斯特拉这样的大学城。每年，这座城市接待完成圣地亚哥之路的人。有些人因为宗教而来，有些人为了运动、友谊或好奇。到达终点后，许多旅人会聚在大教堂前的广场上，分享自己的经历。\n\n加利西亚语与西班牙语一起使用，并和葡萄牙语有共同特征。在村庄和家庭中，它的存在可能很强。听到它不该被当成必须克服的困难，而是理解西班牙拥有多种语言和地方记忆的机会。\n\n加利西亚美食很依赖大海。加利西亚式章鱼通常配橄榄油、红椒粉和盐。这里的海鲜、馅饼和土豆也很有名。但食物不是直接来到餐桌：背后有渔民、市场和知道正确季节的人。谈加利西亚时，既要想到风景，也要想到把海岸、村庄和城市连接起来的劳动网络。",
+    "notes": [
+      {
+        "word": "ría",
+        "zh": "深入陆地的海湾"
+      },
+      {
+        "word": "aldea",
+        "zh": "小村庄"
+      },
+      {
+        "word": "catedral",
+        "zh": "大教堂"
+      },
+      {
+        "word": "marisco",
+        "zh": "海鲜"
+      },
+      {
+        "word": "temporada",
+        "zh": "季节、时令"
+      }
+    ]
+  },
+  {
+    "id": "culture-mexico",
+    "area": "América Latina",
+    "place": "墨西哥",
+    "level": "B1",
+    "text": "México no se entiende bien mediante una sola imagen de pirámides, playas o comida picante. Es un país federal con grandes diferencias entre el norte desértico, las ciudades del altiplano, las comunidades indígenas del sur y las costas del Caribe y del Pacífico. La Ciudad de México concentra universidades, museos, oficinas y barrios donde las personas pasan muchas horas desplazándose. A la vez, conserva mercados de barrio, puestos de comida y celebraciones locales que organizan la vida cotidiana.\n\nEl Día de Muertos suele aparecer en películas y anuncios, pero para muchas familias no es una fiesta uniforme ni una representación de tristeza. Las ofrendas pueden incluir fotos, velas, flores de cempasúchil y alimentos que recordaban a una persona fallecida. Prepararlas permite hablar de la memoria familiar y de la relación entre generaciones. Las formas de celebrarlo cambian según el estado, la comunidad y la historia de cada familia.\n\nLa cocina mexicana ofrece otro ejemplo de diversidad. Un taco no designa una receta única: cambia según la tortilla, el relleno, la salsa y la región. El maíz tiene importancia alimentaria, histórica y simbólica, y su cultivo se relaciona con conocimientos locales sobre semillas y temporadas. Para un estudiante de español, México también muestra la riqueza de las variedades lingüísticas. Expresiones como ahorita, órale o ¿mande? dependen del contexto, de la relación entre hablantes y de la zona. Escucharlas con curiosidad es más útil que intentar convertirlas de inmediato en equivalentes exactos de otra variedad.",
+    "summary": "墨西哥具有强烈的地区差异，不能被金字塔、海滩或“辣食”单一概括。文章以墨西哥城、亡灵节、玉米和塔可说明：日常生活、家庭记忆、农业知识和语言变体彼此相连。学习者应把 ahorita、órale、¿mande? 等表达放回具体地区和人际语境中理解。",
+    "notes": [
+      {
+        "word": "altiplano",
+        "zh": "高原地区"
+      },
+      {
+        "word": "ofrenda",
+        "zh": "祭台供品"
+      },
+      {
+        "word": "cempasúchil",
+        "zh": "万寿菊"
+      },
+      {
+        "word": "relleno",
+        "zh": "馅料"
+      },
+      {
+        "word": "semilla",
+        "zh": "种子"
+      },
+      {
+        "word": "variedad lingüística",
+        "zh": "语言变体"
+      }
+    ]
+  },
+  {
+    "id": "culture-argentina",
+    "area": "América Latina",
+    "place": "阿根廷",
+    "level": "B1",
+    "text": "Argentina se extiende desde regiones subtropicales hasta la Patagonia, por lo que hablar de un único paisaje argentino resulta engañoso. Buenos Aires concentra población, universidades, editoriales y espacios culturales, pero ciudades como Córdoba, Rosario, Mendoza o Salta tienen historias y ritmos propios. En la capital, los cafés y las librerías son lugares para trabajar, discutir y pasar tiempo; en otras zonas, la relación con la montaña, el vino o la agricultura organiza actividades diferentes.\n\nEl español rioplatense es una de las características más reconocibles. En muchas situaciones se usa vos en lugar de tú: vos sabés, tenés, querés. No es una versión incorrecta del español, sino una forma estable con reglas de pronunciación y conjugación. También se oye la pronunciación característica de ll e y en palabras como calle o yo. Un estudiante no necesita imitarla para comunicarse, pero reconocerla evita confundir una variedad normal con un error.\n\nEl mate es otro símbolo frecuente, aunque simplificarlo como una bebida nacional puede ocultar su función social. Compartir mate implica turnos, confianza y pequeñas normas: una persona prepara, otra espera, y el recipiente circula sin que cada participante cambie la bombilla. No ocurre igual en todas las familias ni en todos los trabajos, pero ayuda a comprender cómo un objeto sencillo puede ordenar una conversación. La memoria de las migraciones europeas, los pueblos originarios y las crisis económicas también forma parte de la cultura argentina; ninguna de esas historias cabe completa en un estereotipo de tango y fútbol.",
+    "summary": "阿根廷从亚热带延伸到巴塔哥尼亚，城市和地区生活差异显著。文章重点解释拉普拉塔河流域的 voseo 不是错误，而是有稳定规则的语言变体；同时以共享马黛茶说明小物件也能承载轮次、信任和社交规范。",
+    "notes": [
+      {
+        "word": "rioplatense",
+        "zh": "拉普拉塔河流域的"
+      },
+      {
+        "word": "voseo",
+        "zh": "vos 变体用法"
+      },
+      {
+        "word": "conjugación",
+        "zh": "动词变位"
+      },
+      {
+        "word": "bombilla",
+        "zh": "马黛茶吸管"
+      },
+      {
+        "word": "migración",
+        "zh": "迁移、移民"
+      },
+      {
+        "word": "pueblo originario",
+        "zh": "原住民群体"
+      }
+    ]
+  },
+  {
+    "id": "culture-colombia",
+    "area": "América Latina",
+    "place": "哥伦比亚",
+    "level": "B1",
+    "text": "Colombia tiene dos océanos, cordilleras, selvas y ciudades situadas a alturas muy distintas. Esa geografía influye en los alimentos, los medios de transporte y los acentos. Bogotá está en una meseta elevada y su clima puede cambiar varias veces durante un día. Medellín creció en un valle, Cali se asocia con ritmos de salsa y Cartagena mantiene una relación intensa con el Caribe y con la historia colonial. Presentar al país como un lugar homogéneo borra esas diferencias.\n\nEl café colombiano es conocido fuera del país, pero detrás de una taza hay un trabajo agrícola complejo. Muchas fincas son pequeñas y dependen de la temporada, del precio internacional y de caminos que conectan las montañas con las ciudades. En algunas regiones, las familias participan en la recolección y las cooperativas ayudan a vender el producto. Hablar de café no debería reducirse a decir que es excelente: también permite preguntar quién lo cultiva, cómo se distribuye y qué riesgos asumen los productores.\n\nEn la conversación cotidiana se oyen fórmulas de cortesía que pueden sorprender. Sumercé, por ejemplo, se usa en ciertas zonas con un valor cercano y respetuoso, no necesariamente distante. También cambian los diminutivos y las maneras de pedir algo. Conocer estas elecciones ayuda a escuchar intenciones, pero no obliga a usarlas sin contexto. La mejor estrategia es observar, preguntar con respeto y aceptar que una misma lengua puede construir cercanía de formas muy diversas.",
+    "summary": "哥伦比亚的两洋、山脉、雨林与高原城市塑造了显著的地区差异。文章用波哥大、麦德林、卡利、卡塔赫纳和咖啡生产说明“哥伦比亚”不是单一经验；也解释 sumercé 等礼貌表达应在具体地区和关系中理解。",
+    "notes": [
+      {
+        "word": "cordillera",
+        "zh": "山脉"
+      },
+      {
+        "word": "meseta",
+        "zh": "高原、台地"
+      },
+      {
+        "word": "finca",
+        "zh": "农场"
+      },
+      {
+        "word": "recolección",
+        "zh": "采收"
+      },
+      {
+        "word": "cooperativa",
+        "zh": "合作社"
+      },
+      {
+        "word": "cortesía",
+        "zh": "礼貌表达"
+      }
+    ]
+  },
+  {
+    "id": "culture-peru",
+    "area": "América Latina",
+    "place": "秘鲁",
+    "level": "B1",
+    "text": "Perú reúne costa desértica, Andes y Amazonía, tres espacios que condicionan la vida de maneras muy diferentes. Lima, situada junto al Pacífico, concentra instituciones nacionales y una escena gastronómica muy conocida. Sin embargo, la historia peruana no se limita a la capital. Cusco conserva una relación visible con el mundo inca, mientras que comunidades andinas y amazónicas mantienen lenguas, técnicas agrícolas y formas de organización que merecen atención propia.\n\nLa comida peruana se ha hecho internacional, pero sus platos no nacen solamente en restaurantes modernos. La papa, el maíz, el ají y muchos pescados dependen de territorios concretos. El ceviche, por ejemplo, combina pescado fresco, cítricos, ají y acompañamientos que varían según la costa. Explicar un plato exige hablar también de mercados, pescadores, agricultores y conocimientos transmitidos entre generaciones.\n\nEl quechua es una lengua viva con variedades regionales y millones de hablantes en los Andes. Pensar que pertenece solo al pasado impide ver su presencia en familias, música, comercio y educación. En español peruano aparecen además préstamos y formas locales de nombrar el paisaje. Para quien estudia español, Perú ofrece una lección útil: aprender una lengua no consiste únicamente en memorizar una norma nacional, sino en reconocer que las palabras circulan entre comunidades con historias distintas. Esa atención ayuda a evitar tanto la idealización turística como la idea de que la diversidad es un obstáculo.",
+    "summary": "秘鲁的海岸、安第斯和亚马孙构成三种不同生活条件。文章把利马、库斯科、秘鲁饮食和克丘亚语联系起来，强调菜肴背后有市场、渔民、农民和代际知识；克丘亚语是有区域差异的活语言，而不是只属于过去。",
+    "notes": [
+      {
+        "word": "Andes",
+        "zh": "安第斯山脉"
+      },
+      {
+        "word": "ají",
+        "zh": "辣椒"
+      },
+      {
+        "word": "acompañamiento",
+        "zh": "配菜"
+      },
+      {
+        "word": "préstamo",
+        "zh": "借词"
+      },
+      {
+        "word": "transmitir",
+        "zh": "传递"
+      },
+      {
+        "word": "diversidad",
+        "zh": "多样性"
+      }
+    ]
+  },
+  {
+    "id": "culture-chile",
+    "area": "América Latina",
+    "place": "智利",
+    "level": "B1",
+    "text": "Chile es un país largo y estrecho entre la cordillera de los Andes y el océano Pacífico. Su extensión norte-sur hace que convivan el desierto de Atacama, valles agrícolas, ciudades lluviosas y zonas cercanas a los hielos patagónicos. Esa variedad obliga a desconfiar de cualquier descripción rápida. Santiago concentra una parte importante de la población y de la economía, pero Valparaíso, Concepción, Antofagasta y las regiones del sur aportan experiencias culturales distintas.\n\nValparaíso es conocido por sus cerros, ascensores y murales. Sus casas de colores no son solo un fondo para fotografías: la ciudad presenta desafíos de transporte, conservación y acceso a servicios en calles inclinadas. Mirar sus barrios con atención permite pasar de la postal a preguntas sobre cómo viven sus habitantes. La poesía de Pablo Neruda y otras tradiciones literarias también han dado visibilidad internacional a Chile, aunque la cultura del país no se reduce a unos pocos autores famosos.\n\nEl español chileno puede resultar rápido para estudiantes de otras variedades. Algunas consonantes se debilitan en el habla informal y ciertas expresiones locales cambian mucho de una generación a otra. En vez de decidir que se habla mal, conviene distinguir entre registro, velocidad y contexto. Escuchar entrevistas, conversaciones reales y noticias con subtítulos es una manera más honesta de acostumbrarse. La lengua chilena muestra que la comprensión auditiva requiere tiempo y que la variedad no es una excepción: es una condición normal de una lengua compartida.",
+    "summary": "智利狭长的地理让阿塔卡马、农业山谷、雨城和巴塔哥尼亚冰原并存。文章以瓦尔帕莱索的山坡城市生活与智利西语的听觉难度为例，提醒学习者把口音理解为语体、语速和语境的组合，而不是“说得对或错”。",
+    "notes": [
+      {
+        "word": "estrecho",
+        "zh": "狭窄的"
+      },
+      {
+        "word": "cerro",
+        "zh": "山丘"
+      },
+      {
+        "word": "ascensor",
+        "zh": "缆车式升降机"
+      },
+      {
+        "word": "conservación",
+        "zh": "保护、维护"
+      },
+      {
+        "word": "registro",
+        "zh": "语体"
+      },
+      {
+        "word": "subtítulo",
+        "zh": "字幕"
+      }
+    ]
+  },
+  {
+    "id": "culture-cuba",
+    "area": "América Latina",
+    "place": "古巴",
+    "level": "B1",
+    "text": "Cuba es un archipiélago caribeño cuya historia está marcada por la colonización, la esclavitud, la independencia, la revolución y una relación compleja con otros países. La Habana suele ser la primera imagen para visitantes: edificios de distintas épocas, coches antiguos, el malecón y música en espacios públicos. Pero la ciudad no es un museo al aire libre. Sus habitantes estudian, reparan viviendas, esperan transporte y organizan redes familiares en condiciones económicas que cambian con frecuencia.\n\nLa música cubana ha influido en muchos géneros latinoamericanos y caribeños. Son, rumba, danzón y salsa no son etiquetas intercambiables; cada uno tiene trayectorias, instrumentos y contextos sociales propios. Escuchar una canción puede abrir una conversación sobre raíces africanas, españolas y caribeñas, pero también sobre quién puede acceder a escenarios, estudios o enseñanza musical.\n\nEn la vida diaria, palabras como guagua para autobús o asere para amigo reflejan usos locales. Aprenderlas puede ser divertido, siempre que no se conviertan en una imitación superficial. Lo más útil es saber que existen, reconocer cuándo aparecen y elegir con prudencia si corresponde usarlas. Cuba enseña una idea importante para el aprendizaje cultural: los símbolos visibles atraen la atención, pero entender un lugar exige preguntar por las personas, las decisiones y las desigualdades que permanecen detrás de esos símbolos.",
+    "summary": "古巴不能只用老爷车、海堤或音乐概括。文章把哈瓦那的日常生活、不同音乐类型和 guagua、asere 等本地表达放回殖民、革命与经济变化的背景中，强调文化学习应从显眼符号继续追问人们的生活和不平等。",
+    "notes": [
+      {
+        "word": "archipiélago",
+        "zh": "群岛"
+      },
+      {
+        "word": "malecón",
+        "zh": "海滨大道、防波堤"
+      },
+      {
+        "word": "vivienda",
+        "zh": "住房"
+      },
+      {
+        "word": "trayectoria",
+        "zh": "发展历程"
+      },
+      {
+        "word": "imitar",
+        "zh": "模仿"
+      },
+      {
+        "word": "desigualdad",
+        "zh": "不平等"
+      }
+    ]
+  }
+];
 //__DATA_END__
     // ====================== 状态管理 ======================
     function defaultState() {
@@ -72480,7 +72892,7 @@ const SPEAKING_TASKS = [
         skillMistakes: [], // { key, label, screen, quizType, count, lastAt }
         skillMistakeLog: [], // { date, key }，语法专项与听力周报的真实错题事件
         mistakeLog: [],   // { date, wordId } 真实答错事件，供周报使用
-        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES' },
+        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES', frenchCognates: false },
         learningPlan: { level: 'A1', minutes: 30, focus: 'balanced', configuredAt: '' },
         cloudBackup: { token: '', gistId: '', lastSync: '' },
         checkins: {},     // { 'YYYY-MM-DD': minutes }
@@ -72555,6 +72967,7 @@ const SPEAKING_TASKS = [
         if (Number.isFinite(s.voiceRate) && s.voiceRate > 0) out.settings.voiceRate = Math.min(3, Math.max(0.25, s.voiceRate));
         if (['light', 'dark', 'auto'].includes(s.theme)) out.settings.theme = s.theme;
         if (['es-ES', 'es-LA'].includes(s.variant)) out.settings.variant = s.variant;
+        if (typeof s.frenchCognates === 'boolean') out.settings.frenchCognates = s.frenchCognates;
       }
       if (input.learningPlan && typeof input.learningPlan === 'object' && !Array.isArray(input.learningPlan)) {
         const p = input.learningPlan;
@@ -72695,17 +73108,17 @@ const SPEAKING_TASKS = [
     function speakIcon(size) { return `<svg width="${size || 16}" height="${size || 16}" style="vertical-align:middle"><use href="#icon-volume"/></svg>`; }
 
     // ====================== 路由 ======================
-    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la'];
+    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la', 'culture'];
     const NAV_MAP = {
       home: 'home', stats: 'home', weekly: 'home', settings: 'home',
       phonetics: 'phonetics', lessons: 'lessons', learn: 'lessons',
       review: 'review', tools: 'tools', quiz: 'tools', numbers: 'tools',
-      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools'
+      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools', culture: 'tools'
     };
     const SCREEN_TITLES = {
       phonetics: '发音入门', lessons: '课程', learn: '学习', review: '复习',
       quiz: '测验中心', numbers: '数字专项', mistakes: '错题本', tools: '工具箱',
-      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照',
+      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照', culture: '文化阅读',
       verbs: '动词变位', preterite: '不规则过去时', stemchange: '词干变化动词', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
     };
     function go(screen) {
@@ -72737,9 +73150,10 @@ const SPEAKING_TASKS = [
       if (screen === 'shadowing') renderShadowing();
       if (screen === 'speaking') renderSpeaking();
       if (screen === 'listening-la') renderListeningLA();
+      if (screen === 'culture') renderCulture();
       if (screen === 'stats') renderStats();
       if (screen === 'weekly') renderWeekly();
-      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); renderCloudBackup(); }
+      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); renderCloudBackup(); renderFrenchCognates(); }
     }
 
     // ====================== 新手引导 ======================
@@ -74080,12 +74494,31 @@ const SPEAKING_TASKS = [
       startDrill('stemchange', `${g.label} 词干变化 · 现在时`, items, renderStemChange);
     }
 
+    // ====================== 文化阅读 ======================
+    let cultureArticleId = '';
+    function renderCulture() {
+      const active = CULTURE_ARTICLES.find(a => a.id === cultureArticleId);
+      if (!active) {
+        const card = a => `<div class="tool-card" role="button" tabindex="0" onclick="openCulture('${a.id}')" onkeydown="activateOnKey(event)"><div class="muted">${a.area} · ${a.level}</div><h3>${a.place}</h3><p class="muted">${a.level === 'A2' ? '中西对照阅读' : '西语原文 + 中文摘要'} · ${a.notes.length} 个注释词</p></div>`;
+        setHtml('culture-area', `<div class="card"><h3>从地点理解西语世界</h3><p class="muted">A2 提供完整中西对照；B1 保留西语原文并给出中文摘要。所有文章围绕具体地区的日常、语言和历史，不把文化压缩成旅游标签。</p></div><div class="section-title">西班牙</div>${CULTURE_ARTICLES.filter(a => a.area === 'España').map(card).join('')}<div class="section-title">拉丁美洲</div>${CULTURE_ARTICLES.filter(a => a.area === 'América Latina').map(card).join('')}`);
+        return;
+      }
+      const paragraphs = text => String(text).split('\n\n').map(p => `<p class="es" style="line-height:1.85;">${p}</p>`).join('');
+      const notes = active.notes.map(n => `<span class="badge badge-accent" style="margin:0 6px 6px 0;display:inline-block;"><span class="es">${n.word}</span> · ${n.zh}</span>`).join('');
+      const support = active.level === 'A2'
+        ? `<div class="card-flat"><h3>中文对照</h3>${String(active.translation).split('\n\n').map(p => `<p class="zh" style="line-height:1.75;">${p}</p>`).join('')}</div>`
+        : `<div class="card-flat"><h3>中文摘要</h3><p class="zh" style="line-height:1.75;">${active.summary}</p></div>`;
+      setHtml('culture-area', `<button class="btn btn-sm btn-secondary" onclick="closeCulture()">返回阅读目录</button><div class="card mt-12"><div class="muted">${active.area} · ${active.level}</div><h3>${active.place}</h3>${paragraphs(active.text)}</div>${support}<div class="card"><h3>生词注释</h3><div>${notes}</div></div>`);
+    }
+    function openCulture(id) { cultureArticleId = id; renderCulture(); }
+    function closeCulture() { cultureArticleId = ''; renderCulture(); }
+
     // ====================== 词库 ======================
     function renderWords() {
       const q = ($('word-search').value || '').trim().toLowerCase();
       const learned = new Set(state.reviews.map(r => r.wordId));
       let list = WORDS;
-      if (q) list = WORDS.filter(w => w.word.toLowerCase().includes(q) || w.zh.includes(q) || (w.ipa && w.ipa.includes(q)));
+      if (q) list = WORDS.filter(w => w.word.toLowerCase().includes(q) || w.zh.includes(q) || (w.ipa && w.ipa.includes(q)) || (state.settings.frenchCognates && w.fr && w.fr.toLowerCase().includes(q)));
       if (!list.length) {
         $('words-list').innerHTML = '<div class="empty-state"><h3>没有匹配的词条</h3><p class="muted">换个关键词试试。</p></div>';
         return;
@@ -74094,7 +74527,8 @@ const SPEAKING_TASKS = [
         const isLearned = learned.has(w.id);
         const rec = isLearned ? state.reviews.find(r => r.wordId === w.id) : null;
         const disp = displayWord(w);
-        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div><div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}${rec ? `<div style="margin-top:6px;"><button class="btn btn-sm btn-secondary" onclick="toggleSuspend('${w.id}')">${rec.suspended ? '恢复' : '暂缓'}</button></div>` : ''}</div></div></div>`;
+        const french = state.settings.frenchCognates && w.fr ? `<div class="muted" style="font-size:12px;margin-top:5px;">法语同源：<span class="es">${w.fr}</span></div>` : '';
+        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div>${french}<div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}${rec ? `<div style="margin-top:6px;"><button class="btn btn-sm btn-secondary" onclick="toggleSuspend('${w.id}')">${rec.suspended ? '恢复' : '暂缓'}</button></div>` : ''}</div></div></div>`;
       }).join('');
     }
     // 暂缓/恢复：suspended 的词不进复习队列和测验池
@@ -74349,6 +74783,19 @@ const SPEAKING_TASKS = [
       if ($('gist-token')) $('gist-token').value = backup.token || '';
       if ($('gist-id')) $('gist-id').value = backup.gistId || '';
       if ($('gist-status')) setText('gist-status', backup.lastSync ? `上次同步：${backup.lastSync}` : '尚未同步。');
+    }
+    function renderFrenchCognates() {
+      const enabled = state.settings.frenchCognates === true;
+      const button = $('french-cognates-toggle'), traps = $('french-traps');
+      if (button) { button.textContent = enabled ? '关闭法语同源词对照' : '开启法语同源词对照'; button.setAttribute('aria-pressed', String(enabled)); }
+      if (!traps) return;
+      traps.classList.toggle('hidden', !enabled);
+      traps.innerHTML = enabled ? `<div class="card-flat"><h3>法语学习者发音陷阱</h3><ul class="muted" style="margin:8px 0 0;padding-left:20px;line-height:1.7;"><li>法语小舌音会污染西语 <span class="es">r</span>；西语需要舌尖的单击或颤音。</li><li>法语鼻化元音会让 <span class="es">-an / -on</span> 读错；西语元音与后面的 <span class="es">n</span> 都要发出。</li><li>不要把法语词尾辅音不发音的习惯带入西语；词尾 <span class="es">-s</span> 和 <span class="es">-n</span> 常承载复数或变位信息。</li><li>同源词能帮助猜义，但重音、性别和搭配仍需按西语重新学习。</li></ul></div>` : '';
+    }
+    function toggleFrenchCognates() {
+      state.settings.frenchCognates = !state.settings.frenchCognates;
+      saveState(); renderFrenchCognates();
+      toast(state.settings.frenchCognates ? '已显示法语同源词对照' : '已隐藏法语同源词对照');
     }
     function saveCloudBackupSettings() {
       state.cloudBackup = { ...(state.cloudBackup || {}), token: $('gist-token').value.trim(), gistId: $('gist-id').value.trim() };

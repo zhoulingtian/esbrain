@@ -106,6 +106,7 @@ const api = `
   get LISTENING_ALL() { return LISTENING_ALL; },
   get LISTENING_LA() { return LISTENING_LA; },
   get SPEAKING_TASKS() { return SPEAKING_TASKS; },
+  get CULTURE_ARTICLES() { return CULTURE_ARTICLES; },
   get drill() { return drill; },
 };`;
 (0, eval)(main + api);
@@ -157,6 +158,23 @@ t('口语模块提供两类真实任务与明确的自查边界', () => {
   openSpeaking('sp-mono-001');
   const detail = A.html('speaking-area');
   return list.includes('角色扮演') && list.includes('即兴陈述') && list.includes('不是语法或地道度评分') && detail.includes('SpeechRecognition') && detail.includes('teletrabajo');
+});
+t('文化阅读覆盖指定地点、分级呈现与法语对照默认关闭', () => {
+  if (A.CULTURE_ARTICLES.length !== 11) throw new Error('文化条目数量异常');
+  const places = ['马德里', '加泰罗尼亚', '安达卢西亚', '巴斯克', '加利西亚', '墨西哥', '阿根廷', '哥伦比亚', '秘鲁', '智利', '古巴'];
+  if (!places.every(place => A.CULTURE_ARTICLES.some(a => a.place === place))) throw new Error('文化地点缺失');
+  A.state = normalizeState(null);
+  if (A.state.settings.frenchCognates !== false) throw new Error('法语对照默认未关闭');
+  go('culture');
+  if (!A.html('culture-area').includes('从地点理解西语世界')) throw new Error('文化目录未渲染');
+  openCulture('culture-madrid');
+  if (!A.html('culture-area').includes('中文对照') || !A.html('culture-area').includes('Madrid no es solo')) throw new Error('A2 双语阅读未渲染：' + A.html('culture-area').slice(0, 160));
+  openCulture('culture-mexico');
+  if (!A.html('culture-area').includes('中文摘要') || !A.html('culture-area').includes('México no se entiende')) throw new Error('B1 阅读未渲染');
+  toggleFrenchCognates();
+  if (!A.state.settings.frenchCognates || !normalizeState(A.state).settings.frenchCognates) throw new Error('法语开关未持久化');
+  $('word-search').value = 'familia'; renderWords();
+  return A.html('words-list').includes('法语同源：') && A.html('words-list').includes('famille');
 });
 
 // 3. lessons：96 课、A2.2 过渡层、B1 与 B2 条目

@@ -10,7 +10,7 @@ const ROOT = path.resolve(BUILD, '..');
 const read = p => fs.readFileSync(p, 'utf8');
 
 // ---------- 1. 加载数据文件（在同一 eval 作用域内合并 const） ----------
-const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'words-p7.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'b2-grammar.js', 'verbs.js', 'quiz-extra.js', 'speaking.js']
+const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'words-p7.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'b2-grammar.js', 'verbs.js', 'quiz-extra.js', 'speaking.js', 'culture.js']
   .map(f => read(path.join(DATA, f))).join('\n');
 
 const sandbox = {};
@@ -34,9 +34,11 @@ new Function('sandbox', dataSrc + `
   sandbox.SUBJUNCTIVE_QUIZ = SUBJUNCTIVE_QUIZ; sandbox.SHADOWING_SENTENCES = SHADOWING_SENTENCES;
   sandbox.LISTENING_LA = LISTENING_LA;
   sandbox.SPEAKING_TASKS = SPEAKING_TASKS;
+  sandbox.CULTURE_ARTICLES = CULTURE_ARTICLES;
+  sandbox.FRENCH_COGNATES = FRENCH_COGNATES;
 `)(sandbox);
 
-const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, SPEAKING_TASKS, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS, B2_RAW_WORDS } = sandbox;
+const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, SPEAKING_TASKS, CULTURE_ARTICLES, FRENCH_COGNATES, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS, B2_RAW_WORDS } = sandbox;
 
 // ---------- 2. 词库：排序 + 去重（同词同词性同释义保留最早一条）+ 重编号 w0001... ----------
 WORDS_ALL.sort((a, b) => a.id.localeCompare(b.id));
@@ -97,7 +99,10 @@ for (const id of B2_IDS) {
   own.forEach((w, i) => { w.extra = i >= 13; });
 }
 extraSet = new Set(WORDS_DEDUP.filter(w => w.extra));
-WORDS = WORDS_DEDUP.map(w => { const { extra, ...rest } = w; return rest; });
+WORDS = WORDS_DEDUP.map(w => {
+  const { extra, ...rest } = w;
+  return FRENCH_COGNATES[rest.word] ? { ...rest, fr: FRENCH_COGNATES[rest.word] } : rest;
+});
 byId = Object.fromEntries(WORDS.map(w => [w.id, w]));
 
 // B1 源数据中有少量同一 id 的历史草稿（例如 w1462），按词条保留后续 id
@@ -188,6 +193,7 @@ const dataSection = '//__DATA_BEGIN__\n'
   + 'const SHADOWING_SENTENCES = ' + J(SHADOWING_SENTENCES) + ';\n'
   + 'const LISTENING_LA = ' + J(LISTENING_LA) + ';\n'
   + 'const SPEAKING_TASKS = ' + J(SPEAKING_TASKS) + ';\n'
+  + 'const CULTURE_ARTICLES = ' + J(CULTURE_ARTICLES) + ';\n'
   + '//__DATA_END__';
 
 // ---------- 5. 替换骨架数据区 ----------
@@ -513,6 +519,29 @@ LISTENING_LA.forEach((x, i) => {
 ck(STRESS_QUIZ.find(q => q.word === 'también')?.tip.includes('仍是一个二重元音'), 'también 重音说明未修正');
 ck(STRESS_QUIZ.find(q => q.word === 'adiós')?.tip.includes('仍是一个二重元音'), 'adiós 重音说明未修正');
 ck(SUBJUNCTIVE_QUIZ.some(q => q.tip && q.tip.includes('Me alegra que esté aquí.')), '虚拟式 ella / esté 示例未修正');
+
+// 第九轮文化阅读与法语同源词：避免只有空入口或统一模板的短文。
+{
+  const requiredPlaces = ['马德里', '加泰罗尼亚', '安达卢西亚', '巴斯克', '加利西亚', '墨西哥', '阿根廷', '哥伦比亚', '秘鲁', '智利', '古巴'];
+  ck(Array.isArray(CULTURE_ARTICLES) && CULTURE_ARTICLES.length === requiredPlaces.length, `文化条目 ${CULTURE_ARTICLES && CULTURE_ARTICLES.length} ≠ ${requiredPlaces.length}`);
+  const ids = new Set(), texts = new Set();
+  for (const article of CULTURE_ARTICLES || []) {
+    const words = String(article.text || '').trim().split(/\s+/).filter(Boolean).length;
+    ck(article.id && !ids.has(article.id), `文化条目 id 缺失或重复: ${article.id}`); ids.add(article.id);
+    ck(requiredPlaces.includes(article.place), `文化地点不在任务书范围: ${article.place}`);
+    ck(['A2', 'B1'].includes(article.level), `${article.id} 阅读等级异常`);
+    ck(words >= 200 && words <= 300, `${article.id} 正文 ${words} 词，不在 200–300`);
+    ck(Array.isArray(article.notes) && article.notes.length >= 5 && article.notes.length <= 8 && article.notes.every(n => n.word && n.zh), `${article.id} 生词注释不在 5–8`);
+    const normalized = String(article.text || '').toLowerCase().replace(/[¿?¡!.,;:()"\u201C\u201D]/g, ' ').replace(/\s+/g, ' ').trim();
+    ck(!texts.has(normalized), `${article.id} 正文与其他文化条目重复`); texts.add(normalized);
+    if (article.level === 'A2') ck(typeof article.translation === 'string' && article.translation.length >= 300, `${article.id} 缺少 A2 中西对照`);
+    if (article.level === 'B1') ck(typeof article.summary === 'string' && article.summary.length >= 60, `${article.id} 缺少 B1 中文摘要`);
+  }
+  ck((CULTURE_ARTICLES || []).filter(a => a.level === 'A2').length === 5, '文化 A2 条目应为 5 篇');
+  ck((CULTURE_ARTICLES || []).filter(a => a.level === 'B1').length === 6, '文化 B1 条目应为 6 篇');
+  const cognateWords = WORDS.filter(w => typeof w.fr === 'string' && w.fr.length > 1);
+  ck(cognateWords.length >= 30, `法语同源词仅 ${cognateWords.length} 条，期望至少 30`);
+}
 
 // ---------- 7b. 内容区分度校验（第 5.5 轮新增：拦"同模板换例句"） ----------
 // 归一化：去掉 «...» 引号内容、转小写、去标点、压缩空白

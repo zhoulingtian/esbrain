@@ -1154,6 +1154,9 @@ p { margin: 0 0 10px; }
       <div class="tool-card" role="button" tabindex="0" onclick="go('listening-la')" onkeydown="activateOnKey(event)">
         <h3>拉美朗读对照 <span class="badge badge-accent">A2 起</span></h3><p class="muted">先听后看，比较系统提供的 es-MX / es-AR 朗读与文本理解。</p>
       </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('culture')" onkeydown="activateOnKey(event)">
+        <h3>文化阅读 <span class="badge badge-accent">A2 - B1</span></h3><p class="muted">从西班牙与拉美的具体地点阅读语言、日常生活和地区差异。</p>
+      </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('falsefriends')" onkeydown="activateOnKey(event)">
         <h3>假朋友 <span class="badge badge-accent">A2 起</span></h3>
         <p class="muted">形似义异词（embarazada、éxito、actualmente 等）+ 四选一小测。</p>
@@ -1210,6 +1213,7 @@ p { margin: 0 0 10px; }
     <div id="screen-shadowing" class="screen hidden"><h2 class="mb-12">发音跟读</h2><div id="shadowing-area"></div></div>
     <div id="screen-speaking" class="screen hidden"><h2 class="mb-12">口语任务</h2><div id="speaking-area"></div></div>
     <div id="screen-listening-la" class="screen hidden"><h2 class="mb-12">拉美朗读对照</h2><div id="listening-la-area"></div></div>
+    <div id="screen-culture" class="screen hidden"><h2 class="mb-12">文化阅读</h2><div id="culture-area"></div></div>
 
     <!-- 词库 -->
     <div id="screen-words" class="screen hidden">
@@ -1291,6 +1295,12 @@ p { margin: 0 0 10px; }
           <button class="theme-opt variant-opt" id="variant-es-ES" onclick="setVariant('es-ES')">西班牙本土</button>
           <button class="theme-opt variant-opt" id="variant-es-LA" onclick="setVariant('es-LA')">拉丁美洲</button>
         </div>
+      </div>
+      <div class="card">
+        <h3>法语对照</h3>
+        <p class="muted">仅为有法语基础的学习者显示西法同源词；默认关闭，不影响其他词卡。</p>
+        <button class="btn btn-secondary w-full mt-12" id="french-cognates-toggle" aria-pressed="false" onclick="toggleFrenchCognates()">开启法语同源词对照</button>
+        <div id="french-traps" class="mt-12 hidden"></div>
       </div>
       <div class="card">
         <h3>语音自检</h3>
@@ -1457,7 +1467,7 @@ const VERBS = [
         skillMistakes: [], // { key, label, screen, quizType, count, lastAt }
         skillMistakeLog: [], // { date, key }，语法专项与听力周报的真实错题事件
         mistakeLog: [],   // { date, wordId } 真实答错事件，供周报使用
-        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES' },
+        settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES', frenchCognates: false },
         learningPlan: { level: 'A1', minutes: 30, focus: 'balanced', configuredAt: '' },
         cloudBackup: { token: '', gistId: '', lastSync: '' },
         checkins: {},     // { 'YYYY-MM-DD': minutes }
@@ -1532,6 +1542,7 @@ const VERBS = [
         if (Number.isFinite(s.voiceRate) && s.voiceRate > 0) out.settings.voiceRate = Math.min(3, Math.max(0.25, s.voiceRate));
         if (['light', 'dark', 'auto'].includes(s.theme)) out.settings.theme = s.theme;
         if (['es-ES', 'es-LA'].includes(s.variant)) out.settings.variant = s.variant;
+        if (typeof s.frenchCognates === 'boolean') out.settings.frenchCognates = s.frenchCognates;
       }
       if (input.learningPlan && typeof input.learningPlan === 'object' && !Array.isArray(input.learningPlan)) {
         const p = input.learningPlan;
@@ -1672,17 +1683,17 @@ const VERBS = [
     function speakIcon(size) { return `<svg width="${size || 16}" height="${size || 16}" style="vertical-align:middle"><use href="#icon-volume"/></svg>`; }
 
     // ====================== 路由 ======================
-    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la'];
+    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la', 'culture'];
     const NAV_MAP = {
       home: 'home', stats: 'home', weekly: 'home', settings: 'home',
       phonetics: 'phonetics', lessons: 'lessons', learn: 'lessons',
       review: 'review', tools: 'tools', quiz: 'tools', numbers: 'tools',
-      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools'
+      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools', culture: 'tools'
     };
     const SCREEN_TITLES = {
       phonetics: '发音入门', lessons: '课程', learn: '学习', review: '复习',
       quiz: '测验中心', numbers: '数字专项', mistakes: '错题本', tools: '工具箱',
-      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照',
+      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照', culture: '文化阅读',
       verbs: '动词变位', preterite: '不规则过去时', stemchange: '词干变化动词', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
     };
     function go(screen) {
@@ -1714,9 +1725,10 @@ const VERBS = [
       if (screen === 'shadowing') renderShadowing();
       if (screen === 'speaking') renderSpeaking();
       if (screen === 'listening-la') renderListeningLA();
+      if (screen === 'culture') renderCulture();
       if (screen === 'stats') renderStats();
       if (screen === 'weekly') renderWeekly();
-      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); renderCloudBackup(); }
+      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); renderCloudBackup(); renderFrenchCognates(); }
     }
 
     // ====================== 新手引导 ======================
@@ -3057,12 +3069,31 @@ const VERBS = [
       startDrill('stemchange', `${g.label} 词干变化 · 现在时`, items, renderStemChange);
     }
 
+    // ====================== 文化阅读 ======================
+    let cultureArticleId = '';
+    function renderCulture() {
+      const active = CULTURE_ARTICLES.find(a => a.id === cultureArticleId);
+      if (!active) {
+        const card = a => `<div class="tool-card" role="button" tabindex="0" onclick="openCulture('${a.id}')" onkeydown="activateOnKey(event)"><div class="muted">${a.area} · ${a.level}</div><h3>${a.place}</h3><p class="muted">${a.level === 'A2' ? '中西对照阅读' : '西语原文 + 中文摘要'} · ${a.notes.length} 个注释词</p></div>`;
+        setHtml('culture-area', `<div class="card"><h3>从地点理解西语世界</h3><p class="muted">A2 提供完整中西对照；B1 保留西语原文并给出中文摘要。所有文章围绕具体地区的日常、语言和历史，不把文化压缩成旅游标签。</p></div><div class="section-title">西班牙</div>${CULTURE_ARTICLES.filter(a => a.area === 'España').map(card).join('')}<div class="section-title">拉丁美洲</div>${CULTURE_ARTICLES.filter(a => a.area === 'América Latina').map(card).join('')}`);
+        return;
+      }
+      const paragraphs = text => String(text).split('\n\n').map(p => `<p class="es" style="line-height:1.85;">${p}</p>`).join('');
+      const notes = active.notes.map(n => `<span class="badge badge-accent" style="margin:0 6px 6px 0;display:inline-block;"><span class="es">${n.word}</span> · ${n.zh}</span>`).join('');
+      const support = active.level === 'A2'
+        ? `<div class="card-flat"><h3>中文对照</h3>${String(active.translation).split('\n\n').map(p => `<p class="zh" style="line-height:1.75;">${p}</p>`).join('')}</div>`
+        : `<div class="card-flat"><h3>中文摘要</h3><p class="zh" style="line-height:1.75;">${active.summary}</p></div>`;
+      setHtml('culture-area', `<button class="btn btn-sm btn-secondary" onclick="closeCulture()">返回阅读目录</button><div class="card mt-12"><div class="muted">${active.area} · ${active.level}</div><h3>${active.place}</h3>${paragraphs(active.text)}</div>${support}<div class="card"><h3>生词注释</h3><div>${notes}</div></div>`);
+    }
+    function openCulture(id) { cultureArticleId = id; renderCulture(); }
+    function closeCulture() { cultureArticleId = ''; renderCulture(); }
+
     // ====================== 词库 ======================
     function renderWords() {
       const q = ($('word-search').value || '').trim().toLowerCase();
       const learned = new Set(state.reviews.map(r => r.wordId));
       let list = WORDS;
-      if (q) list = WORDS.filter(w => w.word.toLowerCase().includes(q) || w.zh.includes(q) || (w.ipa && w.ipa.includes(q)));
+      if (q) list = WORDS.filter(w => w.word.toLowerCase().includes(q) || w.zh.includes(q) || (w.ipa && w.ipa.includes(q)) || (state.settings.frenchCognates && w.fr && w.fr.toLowerCase().includes(q)));
       if (!list.length) {
         $('words-list').innerHTML = '<div class="empty-state"><h3>没有匹配的词条</h3><p class="muted">换个关键词试试。</p></div>';
         return;
@@ -3071,7 +3102,8 @@ const VERBS = [
         const isLearned = learned.has(w.id);
         const rec = isLearned ? state.reviews.find(r => r.wordId === w.id) : null;
         const disp = displayWord(w);
-        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div><div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}${rec ? `<div style="margin-top:6px;"><button class="btn btn-sm btn-secondary" onclick="toggleSuspend('${w.id}')">${rec.suspended ? '恢复' : '暂缓'}</button></div>` : ''}</div></div></div>`;
+        const french = state.settings.frenchCognates && w.fr ? `<div class="muted" style="font-size:12px;margin-top:5px;">法语同源：<span class="es">${w.fr}</span></div>` : '';
+        return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:20px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="ipa">${w.ipa || ''}</div><div class="zh" style="font-weight:600;margin-top:4px;">${w.zh}</div>${french}<div class="muted es" style="font-size:12px;">${w.example || ''}</div></div><div style="text-align:right;font-size:12px;flex-shrink:0;">${isLearned ? '<span class="badge badge-masc">已学</span>' : '<span class="badge badge-locked">未学</span>'}${rec ? `<div style="margin-top:6px;"><button class="btn btn-sm btn-secondary" onclick="toggleSuspend('${w.id}')">${rec.suspended ? '恢复' : '暂缓'}</button></div>` : ''}</div></div></div>`;
       }).join('');
     }
     // 暂缓/恢复：suspended 的词不进复习队列和测验池
@@ -3326,6 +3358,19 @@ const VERBS = [
       if ($('gist-token')) $('gist-token').value = backup.token || '';
       if ($('gist-id')) $('gist-id').value = backup.gistId || '';
       if ($('gist-status')) setText('gist-status', backup.lastSync ? `上次同步：${backup.lastSync}` : '尚未同步。');
+    }
+    function renderFrenchCognates() {
+      const enabled = state.settings.frenchCognates === true;
+      const button = $('french-cognates-toggle'), traps = $('french-traps');
+      if (button) { button.textContent = enabled ? '关闭法语同源词对照' : '开启法语同源词对照'; button.setAttribute('aria-pressed', String(enabled)); }
+      if (!traps) return;
+      traps.classList.toggle('hidden', !enabled);
+      traps.innerHTML = enabled ? `<div class="card-flat"><h3>法语学习者发音陷阱</h3><ul class="muted" style="margin:8px 0 0;padding-left:20px;line-height:1.7;"><li>法语小舌音会污染西语 <span class="es">r</span>；西语需要舌尖的单击或颤音。</li><li>法语鼻化元音会让 <span class="es">-an / -on</span> 读错；西语元音与后面的 <span class="es">n</span> 都要发出。</li><li>不要把法语词尾辅音不发音的习惯带入西语；词尾 <span class="es">-s</span> 和 <span class="es">-n</span> 常承载复数或变位信息。</li><li>同源词能帮助猜义，但重音、性别和搭配仍需按西语重新学习。</li></ul></div>` : '';
+    }
+    function toggleFrenchCognates() {
+      state.settings.frenchCognates = !state.settings.frenchCognates;
+      saveState(); renderFrenchCognates();
+      toast(state.settings.frenchCognates ? '已显示法语同源词对照' : '已隐藏法语同源词对照');
     }
     function saveCloudBackupSettings() {
       state.cloudBackup = { ...(state.cloudBackup || {}), token: $('gist-token').value.trim(), gistId: $('gist-id').value.trim() };
