@@ -888,9 +888,16 @@ t('es-ES 优先', () => {
 
 // 11. 导出/导入
 t('导出 JSON 可解析', () => {
+  A.state = normalizeState({ cloudBackup: { token: 'must-not-export', gistId: 'abc123', lastSync: '2026-08-03' } });
   exportData();
   const data = JSON.parse(lastBlob);
-  return data && data.settings && Array.isArray(data.reviews);
+  return data && data.settings && Array.isArray(data.reviews) && data.cloudBackup.token === '';
+});
+t('学习计划、分级错题日志与 Gist 元数据可安全迁移', () => {
+  const s = normalizeState({ learningPlan: { level: 'B2', minutes: 60, focus: 'grammar', configuredAt: '2026-08-03' }, cloudBackup: { token: 'local-token', gistId: 'abc123', lastSync: '2026-08-03' }, skillMistakeLog: [{ date: '2026-08-03', key: 'subjunctive' }] });
+  if (s.learningPlan.level !== 'B2' || s.learningPlan.minutes !== 60 || s.learningPlan.focus !== 'grammar') throw new Error('学习计划迁移失败');
+  if (s.cloudBackup.gistId !== 'abc123' || s.skillMistakeLog.length !== 1) throw new Error('备份或错题日志迁移失败');
+  A.state = s; const plan = dailyPlan(); return plan.p.minutes === 60 && plan.focusTitle.includes('语法');
 });
 t('normalizeState 抗残缺', () => {
   const n1 = normalizeState({ settings: { theme: 'dark' } });

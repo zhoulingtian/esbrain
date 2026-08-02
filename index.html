@@ -933,7 +933,12 @@ p { margin: 0 0 10px; }
         <h1>每天一点点</h1>
         <p class="muted">复习旧词 → 学习新课 → 自动打卡。阴阳性颜色编码、间隔重复、每周复盘，帮你稳步积累。</p>
         <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
-        <button class="btn w-full" onclick="finishOb()">开始学习</button>
+        <div class="choice-grid mt-12" style="text-align:left;">
+          <label>目标级别<select id="plan-level" class="input"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option></select></label>
+          <label>每天时间<select id="plan-minutes" class="input"><option value="15">15 分钟</option><option value="30" selected>30 分钟</option><option value="60">60 分钟</option></select></label>
+          <label>学习偏好<select id="plan-focus" class="input"><option value="balanced">均衡</option><option value="vocab">偏词汇</option><option value="grammar">偏语法</option><option value="listening">偏听说</option></select></label>
+        </div>
+        <button class="btn w-full mt-12" onclick="finishOb()">生成我的学习计划</button>
       </div>
     </div>
 
@@ -1275,6 +1280,11 @@ p { margin: 0 0 10px; }
         </div>
       </div>
       <div class="card">
+        <h3>学习计划</h3>
+        <p class="muted" id="plan-summary">首次设置会根据目标、时间和偏好安排首页建议；所有课程仍保持开放。</p>
+        <button class="btn btn-secondary w-full mt-12" onclick="restartLearningPlan()">重新设置学习计划</button>
+      </div>
+      <div class="card">
         <h3>地区变体</h3>
         <p class="muted">选择朗读口音：西班牙本土（es-ES）或拉丁美洲（es-LA）。</p>
         <div class="theme-opts mt-12">
@@ -1301,6 +1311,14 @@ p { margin: 0 0 10px; }
         <h3>本地快照</h3>
         <p class="muted">每周首次打开时自动把学习数据备份到浏览器本地数据库（最多保留 8 份），可恢复或导出。</p>
         <div id="snapshot-list" class="mt-12"></div>
+      </div>
+      <div class="card">
+        <h3>GitHub Gist 备份</h3>
+        <p class="muted">Token 仅保存在这台浏览器的学习数据中。同步前请确认 Gist 为私密；时间线分叉时必须手动选择，绝不静默覆盖。</p>
+        <label class="sr-only" for="gist-token">GitHub Token</label><input id="gist-token" class="input mt-12" type="password" placeholder="GitHub token（gist 权限）" autocomplete="off">
+        <label class="sr-only" for="gist-id">私密 Gist ID</label><input id="gist-id" class="input mt-12" placeholder="私密 Gist ID（留空则新建）" autocomplete="off">
+        <div class="choice-grid mt-12"><button class="btn btn-secondary" onclick="saveCloudBackupSettings()">保存设置</button><button class="btn" onclick="syncGist()">同步到 Gist</button></div>
+        <div id="gist-status" class="muted mt-12"></div><div id="gist-conflict" class="mt-12"></div>
       </div>
       <div class="card">
         <h3>危险操作</h3>
@@ -72460,8 +72478,11 @@ const SPEAKING_TASKS = [
         reviewLog: [],    // { date, wordId, level: 'new'|'hard'|'mid'|'easy' }，只保留 90 天且最多 2000 条
         mistakes: [],     // { wordId, count, lastAt }
         skillMistakes: [], // { key, label, screen, quizType, count, lastAt }
+        skillMistakeLog: [], // { date, key }，语法专项与听力周报的真实错题事件
         mistakeLog: [],   // { date, wordId } 真实答错事件，供周报使用
         settings: { dailyGoal: 10, voiceRate: 1, theme: 'auto', variant: 'es-ES' },
+        learningPlan: { level: 'A1', minutes: 30, focus: 'balanced', configuredAt: '' },
+        cloudBackup: { token: '', gistId: '', lastSync: '' },
         checkins: {},     // { 'YYYY-MM-DD': minutes }
         streak: { current: 0, lastDate: '', makeupUsed: false, makeupDates: [] },
         sessionStart: Date.now()
@@ -72522,6 +72543,9 @@ const SPEAKING_TASKS = [
           count: Number.isFinite(m.count) && m.count > 0 ? Math.floor(m.count) : 1,
           lastAt: isValidDate(m.lastAt) ? m.lastAt : ''
         }));
+      if (Array.isArray(input.skillMistakeLog)) out.skillMistakeLog = input.skillMistakeLog
+        .filter(e => e && isValidDate(e.date) && typeof e.key === 'string' && /^[a-z-]{2,32}$/.test(e.key))
+        .map(e => ({ date: e.date, key: e.key }));
       if (Array.isArray(input.mistakeLog)) out.mistakeLog = input.mistakeLog
         .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId))
         .map(e => ({ date: e.date, wordId: e.wordId }));
@@ -72531,6 +72555,19 @@ const SPEAKING_TASKS = [
         if (Number.isFinite(s.voiceRate) && s.voiceRate > 0) out.settings.voiceRate = Math.min(3, Math.max(0.25, s.voiceRate));
         if (['light', 'dark', 'auto'].includes(s.theme)) out.settings.theme = s.theme;
         if (['es-ES', 'es-LA'].includes(s.variant)) out.settings.variant = s.variant;
+      }
+      if (input.learningPlan && typeof input.learningPlan === 'object' && !Array.isArray(input.learningPlan)) {
+        const p = input.learningPlan;
+        if (['A1', 'A2', 'B1', 'B2'].includes(p.level)) out.learningPlan.level = p.level;
+        if ([15, 30, 60].includes(p.minutes)) out.learningPlan.minutes = p.minutes;
+        if (['balanced', 'vocab', 'grammar', 'listening'].includes(p.focus)) out.learningPlan.focus = p.focus;
+        if (isValidDate(p.configuredAt)) out.learningPlan.configuredAt = p.configuredAt;
+      }
+      if (input.cloudBackup && typeof input.cloudBackup === 'object' && !Array.isArray(input.cloudBackup)) {
+        const b = input.cloudBackup;
+        if (typeof b.token === 'string' && b.token.length <= 200) out.cloudBackup.token = b.token;
+        if (typeof b.gistId === 'string' && /^[a-f0-9]{0,64}$/i.test(b.gistId)) out.cloudBackup.gistId = b.gistId;
+        if (isValidDate(b.lastSync)) out.cloudBackup.lastSync = b.lastSync;
       }
       if (input.checkins && typeof input.checkins === 'object' && !Array.isArray(input.checkins)) {
         for (const [k, v] of Object.entries(input.checkins)) {
@@ -72702,14 +72739,28 @@ const SPEAKING_TASKS = [
       if (screen === 'listening-la') renderListeningLA();
       if (screen === 'stats') renderStats();
       if (screen === 'weekly') renderWeekly();
-      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); }
+      if (screen === 'settings') { renderVoiceCheck(); renderSnapshotList(); renderCloudBackup(); }
     }
 
     // ====================== 新手引导 ======================
     let obIndex = 0;
     function showOnboarding() { show('onboarding'); }
     function nextOb() { hide('ob-slide-' + obIndex); obIndex++; show('ob-slide-' + obIndex); }
-    function finishOb() { state.onboarding = true; saveState(); hide('onboarding'); show('nav'); go('home'); }
+    function finishOb() {
+      state.learningPlan = { level: $('plan-level').value, minutes: Number($('plan-minutes').value), focus: $('plan-focus').value, configuredAt: fmtDate() };
+      state.onboarding = true; saveState(); hide('onboarding'); show('nav'); go('home');
+    }
+    function planLabel(focus) { return ({ balanced: '均衡', vocab: '偏词汇', grammar: '偏语法', listening: '偏听说' })[focus] || '均衡'; }
+    function dailyPlan() {
+      const p = state.learningPlan || defaultState().learningPlan;
+      const due = state.reviews.filter(r => !r.suspended && r.due <= fmtDate()).length;
+      const minutes = p.minutes;
+      const review = Math.min(due, Math.max(4, Math.floor(minutes * .4)));
+      const next = getNextLesson();
+      const focusAction = p.focus === 'grammar' ? "go('subjunctive')" : p.focus === 'listening' ? "go('quiz');startQuiz('listen')" : p.focus === 'vocab' ? "go('words')" : (next ? `openLesson('${next.id}')` : "go('lessons')");
+      const focusTitle = p.focus === 'grammar' ? '语法专项练习' : p.focus === 'listening' ? '听力理解练习' : p.focus === 'vocab' ? '词汇巩固' : (next ? `学习 ${next.id}` : '浏览课程');
+      return { p, due, review, focusAction, focusTitle };
+    }
 
     // ====================== 数据查询 ======================
     function getWord(id) { return WORDS.find(w => w.id === id); }
@@ -72745,6 +72796,7 @@ const SPEAKING_TASKS = [
       const circ = 2 * Math.PI * 27;
       const undone = (due > 0 ? 1 : 0) + (nextLesson ? 1 : 0) + (!checked ? 1 : 0);
       const stageInfo = nextLesson ? STAGES[nextLesson.stage] : null;
+      const plan = dailyPlan();
 
       const companion = !checked && state.reviews.length === 0
         ? '第一天，从认识西语的声音开始。'
@@ -72785,6 +72837,7 @@ const SPEAKING_TASKS = [
           </div>
         </div>
         <button class="home-cta" onclick="${ctaAction}"><span class="cta-text">${ctaText}</span><span class="cta-arrow">→</span></button>
+        <div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;"><h3>今日计划</h3><button class="btn btn-sm btn-secondary" onclick="go('settings')">调整</button></div><p class="muted">${plan.p.level} 目标 · ${plan.p.minutes} 分钟 · ${planLabel(plan.p.focus)}。建议可随时跳过，不会锁定课程。</p><div class="task-list">${taskRow('plan-review', '定向复习', plan.due ? `${plan.review} / ${plan.due} 个到期词` : '暂无到期词，保持节奏', plan.due === 0, "go('review')")}${taskRow('plan-focus', plan.focusTitle, '按你的偏好安排', false, plan.focusAction)}</div></div>
         <div class="section-title">今日任务</div>
         <div class="task-list">${reviewRow}${learnRow}${checkinRow}</div>
         <div class="section-title">当前阶段</div>
@@ -73418,6 +73471,8 @@ const SPEAKING_TASKS = [
       const existing = list.find(m => m.key === key);
       if (existing) { existing.count++; existing.lastAt = fmtDate(); }
       else list.push({ key, ...meta, count: 1, lastAt: fmtDate() });
+      state.skillMistakeLog = (state.skillMistakeLog || []).filter(e => e.date >= fmtDate(addDays(new Date(), -90)));
+      state.skillMistakeLog.push({ date: fmtDate(), key });
       saveState();
     }
 
@@ -73780,8 +73835,11 @@ const SPEAKING_TASKS = [
         const disp = displayWord(w);
         return `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><span class="word-display ${genderClass(w)}" style="font-size:18px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="muted">${w.zh}</div><div class="muted" style="font-size:11px;">最近：${m.lastAt || '—'}</div></div><div style="text-align:right;flex-shrink:0;"><div class="badge badge-fem">${m.count} 次</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"><button class="btn btn-sm btn-secondary" onclick="reviewMistake('${m.wordId}')">加入复习</button><button class="btn btn-sm btn-danger" onclick="removeMistake('${m.wordId}')">移除</button></div></div></div></div>`;
       }).join('');
-      const skillHtml = skillList.map(m => `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><span style="font-weight:700;">${m.label}</span><div class="muted" style="font-size:11px;">专项错题 · 最近：${m.lastAt || '—'}</div></div><div style="text-align:right;flex-shrink:0;"><div class="badge badge-fem">${m.count} 次</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"><button class="btn btn-sm btn-secondary" onclick="reviewSkillMistake('${m.key}')">定向复习</button><button class="btn btn-sm btn-danger" onclick="removeSkillMistake('${m.key}')">移除</button></div></div></div></div>`).join('');
-      list.innerHTML = skillHtml + wordHtml;
+      const card = (m, type) => `<div class="card-flat"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><span style="font-weight:700;">${m.label}</span><div class="muted" style="font-size:11px;">${type} · 最近：${m.lastAt || '—'}</div></div><div style="text-align:right;flex-shrink:0;"><div class="badge badge-fem">${m.count} 次</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"><button class="btn btn-sm btn-secondary" onclick="reviewSkillMistake('${m.key}')">定向复习</button><button class="btn btn-sm btn-danger" onclick="removeSkillMistake('${m.key}')">移除</button></div></div></div></div>`;
+      const grammar = skillList.filter(m => m.quizType !== 'listen');
+      const listening = skillList.filter(m => m.quizType === 'listen');
+      const section = (title, content) => content ? `<h3 class="mt-12">${title}</h3>${content}` : '';
+      list.innerHTML = section('词汇错题', wordHtml) + section('语法与专项错题', grammar.map(m => card(m, '专项错题')).join('')) + section('听力错题', listening.map(m => card(m, '听力错题')).join(''));
     }
     function reviewMistake(id) {
       const rec = state.reviews.find(r => r.wordId === id);
@@ -74171,13 +74229,24 @@ const SPEAKING_TASKS = [
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div><span class="word-display ${genderClass(w)}" style="font-size:18px;">${disp}</span> <button class="speak" aria-label="朗读" onclick="speakText('${escAttr(disp)}')">${speakIcon()}</button><div class="muted">${w.zh}</div></div><span class="badge badge-fem">${it.count} 次</span></div>`;
           }).join('');
       const weakCard = `<div class="card"><h3>薄弱点 TOP5</h3>${weakList}</div>`;
+      const inWeek = d => typeof d === 'string' && d >= cur.start && d <= cur.end;
+      const skillCounts = {};
+      (state.skillMistakeLog || []).filter(e => inWeek(e.date)).forEach(e => skillCounts[e.key] = (skillCounts[e.key] || 0) + 1);
+      const skillRows = Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).map(([key, count]) => {
+        const item = (state.skillMistakes || []).find(m => m.key === key); return item ? `<div class="setting-row"><span>${item.quizType === 'listen' ? '听力' : '语法专项'} · ${item.label}</span><b>${count} 次</b></div>` : '';
+      }).join('') || '<p class="muted">本周没有专项或听力错题记录。</p>';
+      const hard = (state.reviewLog || []).filter(e => inWeek(e.date) && e.level === 'hard').length;
+      const answered = (state.reviewLog || []).filter(e => inWeek(e.date) && e.level !== 'new').length;
+      const accuracy = answered ? Math.round((answered - hard) / answered * 100) : null;
+      const advice = accuracy !== null && accuracy < 60 ? '上周有欠账，本周先补齐到期复习并重做错得最多的专项。' : accuracy !== null && accuracy >= 90 ? '复习稳定，可在保持到期复习后增加一项新课或听力练习。' : '优先完成到期复习，再针对本周错得最多的专项做一轮定向练习。';
+      const skillCard = `<div class="card"><h3>专项与听力</h3>${skillRows}<p class="muted">复习自评准确率：${accuracy === null ? '暂无足够数据' : accuracy + '%'}。${advice}</p></div>`;
       const today = fmtDate();
       const limit = fmtDate(addDays(new Date(), 7));
       const upcoming = state.reviews.filter(r => r.due >= today && r.due <= limit).length;
       const overdue = state.reviews.filter(r => r.due < today).length;
       const preview = `<div class="card"><h3>下周预告</h3><p class="muted" style="margin:0;">未来 7 天（含今日到期）共有 <b style="color:var(--accent);">${upcoming}</b> 个词待复习。${overdue ? `另有 ${overdue} 个逾期词待处理。` : ''}</p></div>`;
       c.innerHTML = `<p class="muted mb-12">本周（${rangeLabel}，周一至周日）</p>` + overview
-        + `<div class="weekly-grid">` + compare + weakCard + preview + `</div>`;
+        + `<div class="weekly-grid">` + compare + weakCard + skillCard + preview + `</div>`;
     }
 
     // ====================== 设置 ======================
@@ -74216,6 +74285,7 @@ const SPEAKING_TASKS = [
     }
     function saveDailyGoal() { state.settings.dailyGoal = parseInt($('daily-goal').value, 10); saveState(); }
     function saveVoiceRate() { state.settings.voiceRate = parseFloat($('voice-rate').value); saveState(); }
+    function restartLearningPlan() { state.onboarding = false; saveState(); location.reload(); }
     // 语音自检：展示检测到的西语语音，提示文案随地区变体调整
     function renderVoiceCheck() {
       const box = $('voice-check');
@@ -74247,14 +74317,60 @@ const SPEAKING_TASKS = [
       }
       box.innerHTML = html;
     }
+    function exportableState(source) {
+      const copy = deepClone(source);
+      if (copy.cloudBackup) copy.cloudBackup.token = '';
+      return copy;
+    }
     function exportData() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportableState(state), null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'esbrain-backup-' + fmtDate() + '.json';
       a.click();
       URL.revokeObjectURL(a.href);
       toast('已导出');
+    }
+    function stateSummary(s) {
+      return { reviews: (s.reviews || []).length, checkins: Object.keys(s.checkins || {}).length, lastStudy: Object.keys(s.checkins || {}).sort().pop() || '—' };
+    }
+    function renderCloudBackup() {
+      const backup = state.cloudBackup || {};
+      const plan = state.learningPlan || defaultState().learningPlan;
+      if ($('plan-summary')) setText('plan-summary', `当前：${plan.level} 目标 · 每天 ${plan.minutes} 分钟 · ${planLabel(plan.focus)}。建议可随时跳过，不会锁定课程。`);
+      if ($('gist-token')) $('gist-token').value = backup.token || '';
+      if ($('gist-id')) $('gist-id').value = backup.gistId || '';
+      if ($('gist-status')) setText('gist-status', backup.lastSync ? `上次同步：${backup.lastSync}` : '尚未同步。');
+    }
+    function saveCloudBackupSettings() {
+      state.cloudBackup = { ...(state.cloudBackup || {}), token: $('gist-token').value.trim(), gistId: $('gist-id').value.trim() };
+      saveState(); renderCloudBackup(); toast('Gist 设置已保存在本机');
+    }
+    function gistHeaders(token) { return { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+    async function syncGist() {
+      saveCloudBackupSettings(); const b = state.cloudBackup;
+      if (!b.token) return toast('请先填写 GitHub token');
+      try {
+        let remote = null;
+        if (b.gistId) { const r = await fetch('https://api.github.com/gists/' + b.gistId, { headers: gistHeaders(b.token) }); if (!r.ok) throw new Error('无法读取 Gist（' + r.status + '）'); const g = await r.json(); remote = JSON.parse(g.files['esbrain-backup.json'].content); }
+        if (remote && remote.lastSync && b.lastSync && remote.lastSync !== b.lastSync) return showGistConflict(remote);
+        await pushGist(state); toast('Gist 同步完成');
+      } catch (e) { toast('Gist 同步失败：' + e.message); }
+    }
+    async function pushGist(source) {
+      const b = state.cloudBackup, payload = exportableState(source); payload.cloudBackup = { ...b, token: '', lastSync: fmtDate() }; payload.lastSync = fmtDate();
+      const body = { description: 'ESbrain private learning backup', public: false, files: { 'esbrain-backup.json': { content: JSON.stringify(payload, null, 2) } } };
+      const url = b.gistId ? 'https://api.github.com/gists/' + b.gistId : 'https://api.github.com/gists';
+      const r = await fetch(url, { method: b.gistId ? 'PATCH' : 'POST', headers: gistHeaders(b.token), body: JSON.stringify(body) }); if (!r.ok) throw new Error('写入失败（' + r.status + '）');
+      const g = await r.json(); state.cloudBackup = { ...b, gistId: g.id, lastSync: payload.lastSync }; saveState(); renderCloudBackup();
+    }
+    function showGistConflict(remote) {
+      const local = stateSummary(state), cloud = stateSummary(remote); const box = $('gist-conflict');
+      box.innerHTML = `<div class="card-flat"><h3>发现同步冲突</h3><p class="muted">本地与云端在上次同步后都有变化。请选择保留哪一份，或先导出本地 JSON 后手动合并。</p><p>本地：复习 ${local.reviews} · 打卡 ${local.checkins} 天 · 最近 ${local.lastStudy}<br>云端：复习 ${cloud.reviews} · 打卡 ${cloud.checkins} 天 · 最近 ${cloud.lastStudy}</p><div class="choice-grid"><button class="btn" onclick="resolveGistConflict('local')">保留本地并上传</button><button class="btn btn-secondary" onclick="resolveGistConflict('remote')">使用云端</button><button class="btn btn-secondary" onclick="exportData()">导出后手动合并</button></div></div>`; window.__gistConflict = remote;
+    }
+    async function resolveGistConflict(choice) {
+      const remote = window.__gistConflict; if (!remote) return;
+      try { if (choice === 'local') await pushGist(state); else { const credentials = state.cloudBackup; state = normalizeState(remote); state.cloudBackup = { ...credentials, lastSync: remote.lastSync || fmtDate() }; saveState(); go('home'); } $('gist-conflict').innerHTML = ''; toast(choice === 'local' ? '已保留本地并上传' : '已采用云端数据'); } catch (e) { toast('处理冲突失败：' + e.message); }
     }
     function importData() { $('import-file').click(); }
     // 导入/恢复快照共用的收尾流程：normalizeState → saveState → 刷新界面
@@ -74380,7 +74496,7 @@ const SPEAKING_TASKS = [
     function exportSnapshot(ts) {
       getSnapshot(ts).then(snap => {
         if (!snap || !snap.state) throw new Error('快照不存在');
-        const blob = new Blob([JSON.stringify(snap.state, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(exportableState(snap.state), null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'esbrain-snapshot-' + fmtDate(new Date(ts)) + '.json';

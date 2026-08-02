@@ -1,4 +1,4 @@
-const CACHE_NAME = 'esbrain-v11';
+const CACHE_NAME = 'esbrain-v12';
 const urlsToCache = [
   './',
   './index.html',
