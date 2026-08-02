@@ -14,7 +14,7 @@ ESbrain 是离线单文件 PWA 西语自学工具，课程从 A1 覆盖至 B2。
   node build/assemble.js
   node build/smoke.js
   ```
-- `sw.js` 目前使用 `esbrain-v12`。仅在新的功能轮次结束时升级缓存版本。
+- `sw.js` 目前使用 `esbrain-v13`。仅在新的功能轮次结束时升级缓存版本。
 - 不改 SRS 行为；除已完成的 B2 时态扩展外，不改动词规则和例外结构。
 
 ## 2. 已完成轮次
