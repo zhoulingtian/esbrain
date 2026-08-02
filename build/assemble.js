@@ -10,7 +10,7 @@ const ROOT = path.resolve(BUILD, '..');
 const read = p => fs.readFileSync(p, 'utf8');
 
 // ---------- 1. 加载数据文件（在同一 eval 作用域内合并 const） ----------
-const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'verbs.js', 'quiz-extra.js']
+const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'words-p7.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'b2-grammar.js', 'verbs.js', 'quiz-extra.js', 'speaking.js']
   .map(f => read(path.join(DATA, f))).join('\n');
 
 const sandbox = {};
@@ -21,20 +21,22 @@ new Function('sandbox', dataSrc + `
   sandbox.BASE_WORDS = [...WORDS_P1A, ...WORDS_P1B, ...WORDS_P2A, ...WORDS_P2B, ...WORDS_P3, ...WORDS_A1_EXTRA];
   sandbox.B1_RAW_WORDS = [...WORDS_P4A, ...WORDS_P4B, ...B1_FILLER_WORDS, ...B1_REVIEW_WORDS];
   sandbox.A22_RAW_WORDS = [...WORDS_P6, ...A22_REVIEW_WORDS];
+  sandbox.B2_RAW_WORDS = [...WORDS_P7A, ...WORDS_P7B, ...B2_COURSE_SUPPLEMENTS, ...B2_REVIEW_WORDS];
   sandbox.B1_EXISTING_WORDS = [...WORDS_P4A, ...WORDS_P4B];
   sandbox.B1_FILLER_WORDS = B1_FILLER_WORDS;
-  sandbox.WORDS_ALL = [...sandbox.BASE_WORDS, ...sandbox.B1_RAW_WORDS, ...sandbox.A22_RAW_WORDS];
+  sandbox.WORDS_ALL = [...sandbox.BASE_WORDS, ...sandbox.B1_RAW_WORDS, ...sandbox.A22_RAW_WORDS, ...sandbox.B2_RAW_WORDS];
   sandbox.NEW_WORDS = [...WORDS_P3, ...WORDS_A1_EXTRA];
-  sandbox.DIALOGS_ALL = Object.assign({}, DIALOGS_P1A, DIALOGS_P1B, DIALOGS_P2A, DIALOGS_P2B, DIALOGS_P3, DIALOGS_P4A, DIALOGS_P4B, DIALOGS_P6);
-  sandbox.LISTENING_ALL = Object.fromEntries([...LISTENING_P4A, ...LISTENING_P4B, ...LISTENING_P6].map(x => [x.id, x]));
+  sandbox.DIALOGS_ALL = Object.assign({}, DIALOGS_P1A, DIALOGS_P1B, DIALOGS_P2A, DIALOGS_P2B, DIALOGS_P3, DIALOGS_P4A, DIALOGS_P4B, DIALOGS_P6, DIALOGS_P7A, DIALOGS_P7B);
+  sandbox.LISTENING_ALL = Object.fromEntries([...LISTENING_P4A, ...LISTENING_P4B, ...LISTENING_P6, ...LISTENING_P7A, ...LISTENING_P7B].map(x => [x.id, x]));
   sandbox.STRESS_QUIZ = STRESS_QUIZ; sandbox.SER_ESTAR_QUIZ = SER_ESTAR_QUIZ;
   sandbox.POR_PARA_QUIZ = POR_PARA_QUIZ; sandbox.ARTICLE_EXCEPTIONS = ARTICLE_EXCEPTIONS;
   sandbox.FALSE_FRIENDS = FALSE_FRIENDS; sandbox.TENSE_CLOZE = TENSE_CLOZE;
   sandbox.SUBJUNCTIVE_QUIZ = SUBJUNCTIVE_QUIZ; sandbox.SHADOWING_SENTENCES = SHADOWING_SENTENCES;
   sandbox.LISTENING_LA = LISTENING_LA;
+  sandbox.SPEAKING_TASKS = SPEAKING_TASKS;
 `)(sandbox);
 
-const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS } = sandbox;
+const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, SPEAKING_TASKS, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS, B2_RAW_WORDS } = sandbox;
 
 // ---------- 2. 词库：排序 + 去重（同词同词性同释义保留最早一条）+ 重编号 w0001... ----------
 WORDS_ALL.sort((a, b) => a.id.localeCompare(b.id));
@@ -82,6 +84,18 @@ for (const id of B1_IDS) {
   selected.forEach((w, i) => { w.lesson = id; w.extra = i >= 13; });
 }
 survivingB1.filter(w => !usedB1.has(w)).forEach(w => { w.lesson = 'B1-REV'; w.extra = true; });
+
+// B2 source words can overlap earlier levels. After global deduplication,
+// promote the remaining course-specific terms into the stable 13 + 26 layout
+// instead of letting the original index decide which ones are "core".
+const B2_IDS = [...Array(12)].map((_, i) => `B2.1-L${String(i + 1).padStart(2, '0')}`)
+  .concat([...Array(12)].map((_, i) => `B2.2-L${String(i + 1).padStart(2, '0')}`));
+const b2RawSet = new Set(B2_RAW_WORDS);
+const survivingB2 = WORDS_DEDUP.filter(w => b2RawSet.has(w));
+for (const id of B2_IDS) {
+  const own = survivingB2.filter(w => w.lesson === id).slice(0, 39);
+  own.forEach((w, i) => { w.extra = i >= 13; });
+}
 extraSet = new Set(WORDS_DEDUP.filter(w => w.extra));
 WORDS = WORDS_DEDUP.map(w => { const { extra, ...rest } = w; return rest; });
 byId = Object.fromEntries(WORDS.map(w => [w.id, w]));
@@ -127,6 +141,18 @@ const LESSON_TABLE = [
   ['B1.2-L07', 'P5', '高频动词短语'], ['B1.2-L08', 'P5', '图表与趋势'],
   ['B1.2-L09', 'P5', '社会议题词汇'], ['B1.2-L10', 'P5', '观点与辩论'],
   ['B1.2-L11', 'P5', '语体差异识别'], ['B1.2-L12', 'P5', 'B1 总复习与 B2 预览'],
+  ['B2.1-L01', 'P6', '虚拟式未完成过去时：-ra 与 -se'], ['B2.1-L02', 'P6', '第二类条件句：si + subjuntivo imperfecto'],
+  ['B2.1-L03', 'P6', '第三类条件句：过去反事实'], ['B2.1-L04', 'P6', '虚拟式完成时与愈过去时'],
+  ['B2.1-L05', 'P6', '间接引语的时态后移'], ['B2.1-L06', 'P6', '被动语态：ser、estar 与 participio'],
+  ['B2.1-L07', 'P6', '分词与副动词的独立结构'], ['B2.1-L08', 'P6', '名词化与抽象表达'],
+  ['B2.1-L09', 'P6', '让步结构：aunque 的语义差异'], ['B2.1-L10', 'P6', '原因与结果的连接方式'],
+  ['B2.1-L11', 'P6', '论说文结构'], ['B2.1-L12', 'P6', 'B2.1 总复习'],
+  ['B2.2-L01', 'P7', '语体差异：书面、口语、正式与非正式'], ['B2.2-L02', 'P7', '西班牙与拉美表达差异'],
+  ['B2.2-L03', 'P7', '习语与固定搭配'], ['B2.2-L04', 'P7', '委婉与含蓄表达'],
+  ['B2.2-L05', 'P7', '报刊语言与新闻体'], ['B2.2-L06', 'P7', '正式信函与投诉信'],
+  ['B2.2-L07', 'P7', '图表描述与数据评论'], ['B2.2-L08', 'P7', '辩论中的反驳技巧'],
+  ['B2.2-L09', 'P7', '口语填充与话轮转换'], ['B2.2-L10', 'P7', '幽默与讽刺的识别'],
+  ['B2.2-L11', 'P7', '文学片段阅读入门'], ['B2.2-L12', 'P7', 'B2 总复习：精确、得体与论证'],
 ];
 
 const LESSONS = LESSON_TABLE.map(([id, stage, title]) => {
@@ -161,6 +187,7 @@ const dataSection = '//__DATA_BEGIN__\n'
   + 'const SUBJUNCTIVE_QUIZ = ' + J(SUBJUNCTIVE_QUIZ) + ';\n'
   + 'const SHADOWING_SENTENCES = ' + J(SHADOWING_SENTENCES) + ';\n'
   + 'const LISTENING_LA = ' + J(LISTENING_LA) + ';\n'
+  + 'const SPEAKING_TASKS = ' + J(SPEAKING_TASKS) + ';\n'
   + '//__DATA_END__';
 
 // ---------- 5. 替换骨架数据区 ----------
@@ -193,7 +220,7 @@ const warn = [];
 const ck = (cond, msg) => { if (!cond) errors.push(msg); };
 
 // 数量
-ck(WORDS.length >= 2800, `词库仅 ${WORDS.length}，期望 ≥2800`);
+ck(WORDS.length >= 3800, `词库仅 ${WORDS.length}，期望 ≥3800`);
 ck(ALPHABET.length === 27, `字母 ${ALPHABET.length} ≠ 27`);
 ck(ALPHABET.find(x => x.letter === 'C')?.ipa_la === '/se/', '拉美 C 字母名 IPA 应为 /se/');
 ck(ALPHABET.find(x => x.letter === 'Z')?.ipa_la === '/ˈseta/', '拉美 Z 字母名 IPA 应为 /ˈseta/');
@@ -204,13 +231,13 @@ ck(PHONEMES.length >= 25, `音素 ${PHONEMES.length} < 25`);
 ck(RULES.length === 15, `规则 ${RULES.length} ≠ 15（8 核心 + 7 细节）`);
 ck(RULES.filter(r => r.core).length === 8, `核心规则 ${RULES.filter(r => r.core).length} ≠ 8`);
 ck(UNLOCK_QUIZ.length === 10, `解锁测验 ${UNLOCK_QUIZ.length} ≠ 10`);
-ck(GRAMMARS.length === 73, `语法 ${GRAMMARS.length} ≠ 73`);
+ck(GRAMMARS.length === 97, `语法 ${GRAMMARS.length} ≠ 97`);
 ck(VERBS.length === 60, `动词 ${VERBS.length} ≠ 60`);
-ck(LESSONS.length === 72, `课程 ${LESSONS.length} ≠ 72`);
+ck(LESSONS.length === 96, `课程 ${LESSONS.length} ≠ 96`);
 
 // 每课规模与对话（A2.1 课容量更大、对话更长）
 for (const l of LESSONS) {
-  if (l.stage === 'P3B' || l.stage === 'P4' || l.stage === 'P5') {
+  if (l.stage === 'P3B' || l.stage === 'P4' || l.stage === 'P5' || l.stage === 'P6' || l.stage === 'P7') {
     ck(l.words.length >= 12 && l.words.length <= 14, `${l.id} 正文词 ${l.words.length} 不在 12–14`);
     ck(l.extra_words.length >= 18 && l.extra_words.length <= 26, `${l.id} 扩展词 ${l.extra_words.length} 不在 18–26`);
     ck(l.dialog.length === 8, `${l.id} 对话 ${l.dialog.length} 句 ≠ 8`);
@@ -247,6 +274,21 @@ for (const l of LESSONS) {
 }
 
 // 词条结构（名词冠词允许 el/la/los/las；el agua / el hambre 为合法的「阴性用 el」特例）
+// Round 7: every B2 grammar entry remains reachable from its matching lesson
+// and retains the same four-part instructional standard as A2.2.
+{
+  const b2 = LESSONS.filter(l => l.stage === 'P6' || l.stage === 'P7');
+  ck(b2.length === 24, `B2 course count ${b2.length} != 24`);
+  b2.forEach((l, i) => {
+    const expectedId = i < 12 ? `B2.1-L${String(i + 1).padStart(2, '0')}` : `B2.2-L${String(i - 11).padStart(2, '0')}`;
+    const expectedGrammar = `g${String(74 + i).padStart(3, '0')}`;
+    ck(l.id === expectedId, `B2 order error: ${l.id}`);
+    ck(l.grammar_id === expectedGrammar, `${l.id} grammar should be ${expectedGrammar}`);
+    const g = GRAMMARS.find(x => x.id === l.grammar_id);
+    ck(g && /规则：/.test(g.content) && /<table>/.test(g.content) && /例句：/.test(g.content) && /常见错误：/.test(g.content), `${l.id} grammar lacks four-part explanation`);
+  });
+}
+
 const FEM_EL = new Set(['agua', 'hambre']);
 for (const w of WORDS) {
   if (w.pos === 'n') ck(w.gender === 'm' || w.gender === 'f', `${w.id} ${w.word} 名词缺 gender`);
@@ -332,7 +374,7 @@ for (const [inf, tenses] of Object.entries(CONJ)) {
 ck(vByInf.llamarse.presente['vosotros'] === 'os llamáis', 'llamarse vosotros 变位错误');
 ck(vByInf.levantarse.indefinido['él/ella/usted'] === 'se levantó', 'levantarse indefinido 变位错误');
 // 每个动词 12 个人称时态 × 6 人称齐全 + 动名词/过去分词单形式
-const VERB_TENSE_TABLES = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'subj_pres', 'subj_imp', 'imp_af', 'imp_neg'];
+const VERB_TENSE_TABLES = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'futuro_perfecto', 'condicional_perfecto', 'subj_pres', 'subj_perfecto', 'subj_imp', 'subj_imp_se', 'subj_pluscuamperfecto', 'imp_af', 'imp_neg'];
 for (const v of VERBS) {
   ck(v.zh, `${v.inf} 缺中文释义`);
   for (const t of VERB_TENSE_TABLES) {
@@ -441,6 +483,25 @@ SUBJUNCTIVE_QUIZ.forEach((q, i) => {
 });
 ck(SHADOWING_SENTENCES.length >= 30 && SHADOWING_SENTENCES.length <= 50, `跟读句 ${SHADOWING_SENTENCES.length} 不在 30–50`);
 SHADOWING_SENTENCES.forEach((x, i) => ck(Array.isArray(x) && x.length === 3 && x.every(Boolean), `跟读句 ${i + 1} 结构异常`));
+
+// Round 7: speaking prompts are content, not a placeholder UI. Keep each
+// task independently usable and require enough material for repeated practice.
+{
+  ck(Array.isArray(SPEAKING_TASKS) && SPEAKING_TASKS.length >= 40, `口语任务 ${SPEAKING_TASKS && SPEAKING_TASKS.length} < 40`);
+  const ids = new Set();
+  const roleplays = (SPEAKING_TASKS || []).filter(t => t.type === 'roleplay');
+  const monologues = (SPEAKING_TASKS || []).filter(t => t.type === 'monologue');
+  ck(roleplays.length >= 20, `角色扮演 ${roleplays.length} < 20`);
+  ck(monologues.length >= 20, `即兴陈述 ${monologues.length} < 20`);
+  for (const task of SPEAKING_TASKS || []) {
+    ck(task.id && !ids.has(task.id), `口语任务 id 缺失或重复: ${task.id}`); ids.add(task.id);
+    ck(['A2', 'B1', 'B2'].includes(task.level), `${task.id} level 异常`);
+    ck(task.scenario || task.topic, `${task.id} 缺少场景或话题`);
+    ck(typeof task.sampleAnswer === 'string' && task.sampleAnswer.trim().split(/\s+/).length >= 12 && task.sampleAnswer_zh, `${task.id} 缺少可用的中西样例`);
+    if (task.type === 'roleplay') ck(Array.isArray(task.requiredElements) && task.requiredElements.length >= 4 && task.requiredElements.every(Boolean), `${task.id} 缺少可检查的角色扮演要点`);
+    if (task.type === 'monologue') ck(task.topic_zh && task.prepTime >= 30 && task.targetDuration >= 60 && Array.isArray(task.requiredStructure) && task.requiredStructure.length >= 4 && Array.isArray(task.usefulPhrases) && task.usefulPhrases.length >= 4, `${task.id} 缺少陈述时间、结构或提示语`);
+  }
+}
 ck(LISTENING_LA.length >= 3, `拉美听力材料 ${LISTENING_LA.length} < 3`);
 LISTENING_LA.forEach((x, i) => ck(x.id && /^es-(MX|AR|CO)$/.test(x.lang) && x.text && x.zh, `拉美听力 ${i + 1} 结构或语音异常`));
 ck(LISTENING_LA.find(x => x.id === 'la-co')?.lang === 'es-CO', '拉美听力 la-co 语音应为 es-CO');

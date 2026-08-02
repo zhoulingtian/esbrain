@@ -1,4 +1,4 @@
-// ESbrain 动词库：60 词 × 14 时态语式
+// ESbrain 动词库：60 词 × 18 时态语式
 // 数据只存例外（不规则覆盖），规则形式由下方变位引擎按词尾表生成。
 // 本文件在 build/assemble.js 中求值，展开后的全量表随数据区写入 index.html；
 // 运行时（skeleton.html）只读展开结果，不含引擎。
@@ -35,14 +35,19 @@ const VEND = {
   // 虚拟式未完成过去时（-ra 式）：第三人称复数 indefinido 去 -ron 后加下列词尾；
   // nosotros 格重音落在词干最后一个元音上（habláramos / fuéramos），由引擎补标。
   subj_imp: ['ra', 'ras', 'ra', 'ramos', 'rais', 'ran'],
+  subj_imp_se: ['se', 'ses', 'se', 'semos', 'seis', 'sen'],
   // 不规则 indefinido 两套词尾：-e 类（tuv-/sup-/hic-/dij-…）与无重音类（dar/ver）
   indef_irreg1: ['e', 'iste', 'o', 'imos', 'isteis', 'ieron'],
   indef_irreg2: ['i', 'iste', 'io', 'imos', 'isteis', 'ieron'],
 };
 
-// haber 现在时 / 未完成过去时，用于拼复合时态
+// haber 各时态，用于拼复合时态。
 const VHABER_PRES   = ['he', 'has', 'ha', 'hemos', 'habéis', 'han'];
 const VHABER_IMPERF = ['había', 'habías', 'había', 'habíamos', 'habíais', 'habían'];
+const VHABER_FUT    = ['habré', 'habrás', 'habrá', 'habremos', 'habréis', 'habrán'];
+const VHABER_COND   = ['habría', 'habrías', 'habría', 'habríamos', 'habríais', 'habrían'];
+const VHABER_SUBJ   = ['haya', 'hayas', 'haya', 'hayamos', 'hayáis', 'hayan'];
+const VHABER_SUBJ_IMP = ['hubiera', 'hubieras', 'hubiera', 'hubiéramos', 'hubierais', 'hubieran'];
 
 // ---------- 引擎辅助函数 ----------
 // 词干变化：替换词干最后一个目标元音。e→ie（querer）、o→ue（poder）、
@@ -144,6 +149,9 @@ function expandVerb(v) {
   // 复合时态 = haber + 过去分词
   out.perfecto = vTable(VHABER_PRES.map(h => h + ' ' + participio), v);
   out.pluscuamperfecto = vTable(VHABER_IMPERF.map(h => h + ' ' + participio), v);
+  out.futuro_perfecto = vTable(VHABER_FUT.map(h => h + ' ' + participio), v);
+  out.condicional_perfecto = vTable(VHABER_COND.map(h => h + ' ' + participio), v);
+  out.subj_perfecto = vTable(VHABER_SUBJ.map(h => h + ' ' + participio), v);
 
   // indefinido：整表覆盖 > 不规则词干 > -ir 词干变化第三人称 > 规则
   if (v.indef) out.indefinido = v.indef;
@@ -207,6 +215,9 @@ function expandVerb(v) {
     const s = p3.slice(0, -3);
     const forms = VEND.subj_imp.map((e, i) => (i === 3 ? vAccentLastVowel(s) : s) + e);
     out.subj_imp = vTable(forms, v);
+    const seForms = VEND.subj_imp_se.map((e, i) => (i === 3 ? vAccentLastVowel(s) : s) + e);
+    out.subj_imp_se = vTable(seForms, v);
+    out.subj_pluscuamperfecto = vTable(VHABER_SUBJ_IMP.map(h => h + ' ' + participio), v);
   }
 
   // 命令式肯定：tú=现在时第三人称单数（或覆盖），nosotros/usted/ustedes=虚拟式现在时，

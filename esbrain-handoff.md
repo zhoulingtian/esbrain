@@ -35,6 +35,13 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 - `assemble.js` 已注册新数据并校验 2800 词、72 课、73 语法、A2.2 顺序/课程规模/听力/四段式语法；`smoke.js` 覆盖课程顺序和 A2.2 学习流。
 - 最新验证：`node build/assemble.js` 为 `SYNTAX_OK` 和 `ALL_CONTENT_CHECKS_PASSED`；`node build/smoke.js` 为 `82 passed, 0 failed`。缓存版本为 `v10`。
 
+### 2026-08-03 更新：第七轮 B2 与口语产出
+
+- 新增 `build/data/words-p7.js` 与 `build/data/b2-grammar.js`：B2.1/B2.2 共 24 课、g074–g097；每课固定 13 核心词、26 扩展词、8 行对话和具体情境听力。阶段链为 `P5 -> P6 -> P7 -> null`。
+- `build/data/verbs.js` 扩展 B2 所需的 futuro/condicional perfecto、subjuntivo perfecto、`-se` 未完成过去时和虚拟式愈过去时；旧 20 词变位回归保持通过。
+- 新增 `build/data/speaking.js` 和 `screen-speaking`：20 条角色扮演与 20 条即兴陈述。识别文本或录音只用于时长、要点和重复词自查，不输出虚假的语言质量分数。西语样例已进行重音复核。
+- 最新验证：浏览器实际走查 B2.1-L03 的词卡、四段式语法、对话和听力，以及口语模块；`node build/assemble.js` 全绿，`node build/smoke.js` 为 `86 passed, 0 failed`。词库 3825、课程 96、语法 97，缓存版本为 `v11`。
+
 ### 2026-08-03 更新：第 5.5 轮
 
 - `build/data/b1-authentic.js` 现为 B1 课程对话与听力的唯一有效来源；`words-p4.js` 中的旧批量模板保留为 `*_LEGACY`，不再接入运行时。
@@ -49,6 +56,7 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 | 三 动词系统 | 已完成 | 变位引擎(data/verbs.js,规则表 + 例外覆盖);60 词 × 14 时态;旧 20 词经 verbs-legacy-fixture.js 逐格回归;动词实验室时态分组标签页;es-LA 隐藏 vosotros;变位填空测验 conj;不规则过去时池;词干变化三组练习 | assemble + smoke 61 条全过,sw v4 |
 | 四 A1-A2 | 已完成 | 词库 1328 词(去重后);A1.1/A1.2/A2.1 共 36 课;时态选择段落填空 16 段/122 空(新 screen-cloze);新词补 stress/variant/altWord 字段 | assemble + smoke 69 条全过,sw v6 |
 | 六 A2.2 过渡层 | 已完成 | 新增 A2.2 十二课与 g062–g073；P3B 插在 A2.1 与 B1.1 之间；每课有词汇、对话和具体场景听力 | 2800 词、72 课、73 语法；assemble 全绿，smoke 82 passed / 0 failed，sw v10 |
+| 七 B2 内容与口语产出 | 已完成 | B2.1/B2.2 24 课、g074–g097、B2 变位扩展、40 条口语自查任务 | 3825 词、96 课、97 语法；浏览器走查，assemble 全绿，smoke 86 passed / 0 failed，sw v11 |
 
 **最近一次验证结果**(2026-08-03):
 - `node build/assemble.js`: SYNTAX_OK, ALL_CONTENT_CHECKS_PASSED
@@ -72,6 +80,9 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 | `grammar.js` | 语法点 g001-g037 | A1.1/A1.2/A2.1 全部 |
 | `a22-grammar.js` | 语法点 g062-g073 | A2.2 十二课的四段式讲解 |
 | `words-p6.js` | A2.2 十二课词汇、对话与听力 | 输出 WORDS_P6、DIALOGS_P6、LISTENING_P6 |
+| `words-p7.js` | B2.1/B2.2 词汇、对话与听力 | 输出 WORDS_P7A/B、DIALOGS_P7A/B、LISTENING_P7A/B |
+| `b2-grammar.js` | 语法点 g074-g097 | B2 两阶段的四段式讲解 |
+| `speaking.js` | 40 条口语任务 | 20 角色扮演 + 20 即兴陈述 |
 | `verbs.js` | 60 动词 × 14 时态变位引擎 + 例外覆盖 | 构建时展开成全量表 |
 | `quiz-extra.js` | 重音/STRESS_QUIZ、ser/estar、por/para、冠词例外、假朋友、时态填空 TENSE_CLOZE | 模块数据 |
 | `verbs-legacy-fixture.js` | 旧 20 词 × 5 时态全量表 | 仅作迁移回归 |
@@ -95,6 +106,7 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 | `screen-preterite` | `go('preterite')`, `renderPreterite()` | 不规则过去时练习 |
 | `screen-stemchange` | `go('stemchange')`, `renderStemChange()` | 词干变化练习 |
 | `screen-cloze` | `go('cloze')`, `startCloze(id)` | 时态选择段落填空 |
+| `screen-speaking` | `go('speaking')`, `renderSpeaking()` | 角色扮演与限时陈述的客观自查 |
 | `screen-settings` | `go('settings')`, `applyTheme()` 等 | 设置,含地区变体、快照 |
 
 测验题型注册在 `buildQuestions(type, pool)` 附近,现有类型:`lesson`, `es2zh`, `zh2es`, `listen`, `article`, `serestar`, `porpara`, `ff`, `conj`。
@@ -117,7 +129,16 @@ ESbrain 是一个单文件 PWA 西语自学工具,目标是从零基础覆盖到
 
 ---
 
-## 4. 下一轮(第五轮:B1 内容)—— 待完成
+## 4. 下一轮（第八轮：学习路径与辅助）—— 待完成
+
+### 4.1 目标
+
+- 首次启动向导收集目标级别、每日可用时间和学习偏好，并以真实到期复习数生成可跳过的每日建议。
+- 记录词汇、语法专项和听力三类错题，周日按真实完成率与正确率生成具体的下周建议。
+- 在设置页实现 GitHub Gist 备份：token 只保留在本地状态；本地与云端 `lastSync` 分叉时展示两边的统计并要求用户选择保留或手动合并，禁止静默覆盖。
+- 完成后缓存升至 v12，补齐构建和 smoke 覆盖，再更新本文档。
+
+### 4.2 历史 B1 实施记录（已完成，保留作参考）
 
 ### 4.1 目标
 

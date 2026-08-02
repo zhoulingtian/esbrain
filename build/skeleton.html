@@ -1143,6 +1143,9 @@ p { margin: 0 0 10px; }
       <div class="tool-card" role="button" tabindex="0" onclick="go('shadowing')" onkeydown="activateOnKey(event)">
         <h3>发音跟读 <span class="badge badge-masc">A0 起</span></h3><p class="muted">40 句难点跟读；识别不可用时录音回放。</p>
       </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('speaking')" onkeydown="activateOnKey(event)">
+        <h3>口语任务 <span class="badge badge-accent">A2 - B2</span></h3><p class="muted">情境角色扮演与限时陈述；只做时长、要点和重复自查。</p>
+      </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('listening-la')" onkeydown="activateOnKey(event)">
         <h3>拉美朗读对照 <span class="badge badge-accent">A2 起</span></h3><p class="muted">先听后看，比较系统提供的 es-MX / es-AR 朗读与文本理解。</p>
       </div>
@@ -1200,6 +1203,7 @@ p { margin: 0 0 10px; }
 
     <div id="screen-subjunctive" class="screen hidden"><h2 class="mb-12">虚拟式现在时 · WEIRDO</h2><div id="subjunctive-area"></div></div>
     <div id="screen-shadowing" class="screen hidden"><h2 class="mb-12">发音跟读</h2><div id="shadowing-area"></div></div>
+    <div id="screen-speaking" class="screen hidden"><h2 class="mb-12">口语任务</h2><div id="speaking-area"></div></div>
     <div id="screen-listening-la" class="screen hidden"><h2 class="mb-12">拉美朗读对照</h2><div id="listening-la-area"></div></div>
 
     <!-- 词库 -->
@@ -1631,17 +1635,17 @@ const VERBS = [
     function speakIcon(size) { return `<svg width="${size || 16}" height="${size || 16}" style="vertical-align:middle"><use href="#icon-volume"/></svg>`; }
 
     // ====================== 路由 ======================
-    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'listening-la'];
+    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la'];
     const NAV_MAP = {
       home: 'home', stats: 'home', weekly: 'home', settings: 'home',
       phonetics: 'phonetics', lessons: 'lessons', learn: 'lessons',
       review: 'review', tools: 'tools', quiz: 'tools', numbers: 'tools',
-      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', 'listening-la': 'tools'
+      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools'
     };
     const SCREEN_TITLES = {
       phonetics: '发音入门', lessons: '课程', learn: '学习', review: '复习',
       quiz: '测验中心', numbers: '数字专项', mistakes: '错题本', tools: '工具箱',
-      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', 'listening-la': '拉美朗读对照',
+      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照',
       verbs: '动词变位', preterite: '不规则过去时', stemchange: '词干变化动词', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
     };
     function go(screen) {
@@ -1671,6 +1675,7 @@ const VERBS = [
       if (screen === 'cloze') renderCloze();
       if (screen === 'subjunctive') renderSubjunctive();
       if (screen === 'shadowing') renderShadowing();
+      if (screen === 'speaking') renderSpeaking();
       if (screen === 'listening-la') renderListeningLA();
       if (screen === 'stats') renderStats();
       if (screen === 'weekly') renderWeekly();
@@ -2168,7 +2173,12 @@ const VERBS = [
       if (tenseKey === 'participio') return `过去分词规则：-ar → -ado，-er/-ir → -ido；本词：${v.participio}`;
       if (tenseKey === 'perfecto') return '复合过去时 = haber 现在时 + 过去分词。';
       if (tenseKey === 'pluscuamperfecto') return '过去完成时 = haber 未完成过去时（había…）+ 过去分词。';
+      if (tenseKey === 'futuro_perfecto') return '将来完成时 = haber 将来时（habré…）+ 过去分词。';
+      if (tenseKey === 'condicional_perfecto') return '条件式完成时 = habría… + 过去分词。';
+      if (tenseKey === 'subj_perfecto') return '虚拟式现在完成时 = haya… + 过去分词。';
       if (tenseKey === 'subj_imp') return '虚拟式未完成过去时：indefinido 第三人称复数去 -ron + ra/ras/ra/ramos/rais/ran。';
+      if (tenseKey === 'subj_imp_se') return '虚拟式未完成过去时 -se 形：fuese / hablase；与 -ra 形意义相同，较常见于正式书面语。';
+      if (tenseKey === 'subj_pluscuamperfecto') return '虚拟式愈过去时 = hubiera… + 过去分词；用于与过去事实相反的假设。';
       if (tenseKey === 'imp_neg') return '命令式否定 = no + 虚拟式现在时。';
       if (v.group === 'irregular') return '不规则动词，这个形式需单独记忆。';
       if (v.stemChange && (tenseKey === 'presente' || tenseKey === 'imp_af')) return `词干变化 ${v.stemChange.replace('_', '→')}：yo/tú/él/ellos 变，nosotros/vosotros 不变。`;
@@ -2556,6 +2566,88 @@ const VERBS = [
       }).catch(() => setHtml('shadow-result', '无法取得麦克风权限。'));
     }
     function stopShadowing() { if (shadowRecorder && shadowRecorder.state !== 'inactive') shadowRecorder.stop(); }
+    // Speaking is a self-check surface: the browser can measure time and find
+    // explicit prompts, but it does not judge grammar, fluency, or naturalness.
+    let speakingTaskId = null, speakingPhase = 'list', speakingRemaining = 0, speakingElapsed = 0;
+    let speakingTimer = null, speakingRecognition = null, speakingRecorder = null, speakingChunks = [], speakingTranscript = '';
+    function speakingTask() { return SPEAKING_TASKS.find(t => t.id === speakingTaskId) || null; }
+    function speakingKeywords(task) { return task.type === 'roleplay' ? task.requiredElements : task.usefulPhrases; }
+    function clearSpeakingTimer() { if (speakingTimer) clearInterval(speakingTimer); speakingTimer = null; }
+    function speakingClock(seconds) { const m = Math.floor(seconds / 60), s = seconds % 60; return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); }
+    function renderSpeaking() {
+      const task = speakingTask();
+      if (!task) {
+        const roles = SPEAKING_TASKS.filter(t => t.type === 'roleplay');
+        const monos = SPEAKING_TASKS.filter(t => t.type === 'monologue');
+        const cards = (title, items) => `<h3 class="mt-12">${title}</h3>${items.map(t => `<div class="tool-card" role="button" tabindex="0" onclick="openSpeaking('${t.id}')" onkeydown="activateOnKey(event)"><h3>${t.type === 'roleplay' ? t.scenario : t.topic}</h3><p class="muted">${t.type === 'roleplay' ? t.level + ' · 角色扮演' : t.level + ' · 准备 ' + t.prepTime + ' 秒，陈述 ' + t.targetDuration + ' 秒'}</p></div>`).join('')}`;
+        setHtml('speaking-area', `<div class="card"><h3>真实口语练习</h3><p class="muted">完成后只显示录音/识别文本、时长、要求要点和重复词提示。它不是语法或地道度评分。</p></div>${cards('角色扮演', roles)}${cards('即兴陈述', monos)}`);
+        return;
+      }
+      const isRole = task.type === 'roleplay';
+      const keywords = speakingKeywords(task);
+      const prompt = isRole ? task.scenario : `${task.topic}<br><span class="muted">${task.topic_zh}</span>`;
+      const phaseLabel = speakingPhase === 'prep' ? `准备：${speakingClock(speakingRemaining)}` : speakingPhase === 'speaking' ? `陈述：${speakingClock(speakingElapsed)}` : speakingPhase === 'done' ? '已结束' : '准备开始';
+      const target = isRole ? 60 : task.targetDuration;
+      const controls = speakingPhase === 'ready'
+        ? `<button class="btn w-full" onclick="startSpeakingPrep()">${isRole ? '开始录音任务' : '开始 60 秒准备'}</button>`
+        : speakingPhase === 'prep' ? `<button class="btn btn-secondary w-full" onclick="skipSpeakingPrep()">跳过准备，开始陈述</button>`
+        : speakingPhase === 'speaking' ? `<button class="btn btn-danger w-full" onclick="stopSpeaking()">停止并自查</button>`
+        : `<button class="btn w-full" onclick="resetSpeaking()">再做一次</button>`;
+      const support = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      const result = speakingPhase === 'done' ? speakingSelfCheck(task, target) : '';
+      setHtml('speaking-area', `<div class="card"><button class="btn btn-sm btn-secondary" onclick="closeSpeaking()">返回任务</button><div class="muted mt-12">${task.level} · ${isRole ? '角色扮演' : '即兴陈述'}</div><h3 class="es" style="line-height:1.55">${prompt}</h3><div class="stat-hero" style="margin:16px 0">${phaseLabel}</div><p class="muted">${support ? '将使用 SpeechRecognition（es-ES 或 es-MX）；未支持或出错时可改用本地录音回放。' : '当前浏览器不支持 SpeechRecognition，将使用本地录音回放。'}</p>${controls}</div><div class="card"><h3>${isRole ? '必须包含的信息' : '建议使用的结构提示语'}</h3><p class="es">${keywords.join(' · ')}</p></div>${result}`);
+    }
+    function openSpeaking(id) { clearSpeakingTimer(); speakingTaskId = id; speakingPhase = 'ready'; speakingRemaining = 0; speakingElapsed = 0; speakingTranscript = ''; renderSpeaking(); }
+    function closeSpeaking() { clearSpeakingTimer(); if (speakingRecognition) speakingRecognition.abort(); speakingTaskId = null; speakingPhase = 'list'; renderSpeaking(); }
+    function resetSpeaking() { clearSpeakingTimer(); speakingPhase = 'ready'; speakingRemaining = 0; speakingElapsed = 0; speakingTranscript = ''; renderSpeaking(); }
+    function startSpeakingPrep() {
+      const task = speakingTask(); if (!task) return;
+      if (task.type === 'roleplay') { startSpeakingCapture(); return; }
+      speakingPhase = 'prep'; speakingRemaining = task.prepTime;
+      speakingTimer = setInterval(() => { speakingRemaining--; if (speakingRemaining <= 0) { clearSpeakingTimer(); startSpeakingCapture(); } else renderSpeaking(); }, 1000);
+      renderSpeaking();
+    }
+    function skipSpeakingPrep() { clearSpeakingTimer(); startSpeakingCapture(); }
+    function startSpeakingCapture() {
+      clearSpeakingTimer(); speakingPhase = 'speaking'; speakingElapsed = 0; speakingTranscript = '';
+      const task = speakingTask(), lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
+      speakingTimer = setInterval(() => { speakingElapsed++; if (speakingElapsed === (task.type === 'roleplay' ? 60 : task.targetDuration)) toast('已达到目标时长；你可以继续说，完成后手动停止。'); renderSpeaking(); }, 1000);
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (Rec) {
+        speakingRecognition = new Rec(); speakingRecognition.lang = lang; speakingRecognition.interimResults = true; speakingRecognition.continuous = true;
+        speakingRecognition.onresult = e => { let text = ''; for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript + ' '; speakingTranscript = text.trim(); };
+        speakingRecognition.onerror = () => { if (speakingPhase === 'speaking') startSpeakingRecorder(); };
+        speakingRecognition.start(); renderSpeaking(); return;
+      }
+      startSpeakingRecorder(); renderSpeaking();
+    }
+    function startSpeakingRecorder() {
+      if (speakingRecorder || !navigator.mediaDevices || !window.MediaRecorder) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        speakingChunks = []; speakingRecorder = new MediaRecorder(stream);
+        speakingRecorder.ondataavailable = e => speakingChunks.push(e.data);
+        speakingRecorder.onstop = () => { stream.getTracks().forEach(t => t.stop()); speakingRecorder = null; if (speakingPhase === 'done') renderSpeaking(); };
+        speakingRecorder.start();
+      }).catch(() => toast('无法取得麦克风权限；可参考样例进行自查。'));
+    }
+    function stopSpeaking() {
+      clearSpeakingTimer(); if (speakingRecognition) { speakingRecognition.onend = null; speakingRecognition.stop(); speakingRecognition = null; }
+      speakingPhase = 'done';
+      if (speakingRecorder && speakingRecorder.state !== 'inactive') speakingRecorder.stop();
+      renderSpeaking();
+    }
+    function speakingSelfCheck(task, target) {
+      const transcript = speakingTranscript || '浏览器没有返回可用识别文本；请播放你的录音，按要求逐项自查。';
+      const normalized = speakingTranscript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const keywords = speakingKeywords(task);
+      const hits = keywords.map(k => ({ k, hit: normalized.includes(k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) }));
+      const words = normalized.match(/[a-zñ]+/g) || [];
+      const stop = new Set(['que','de','la','el','y','en','a','un','una','es','no','me','se','con','por','para','mi','lo','al','del','los','las']);
+      const counts = {}; words.filter(w => w.length > 3 && !stop.has(w)).forEach(w => counts[w] = (counts[w] || 0) + 1);
+      const repeated = Object.entries(counts).filter(([, n]) => n > 4).map(([w, n]) => `${w} x${n}`);
+      const audio = speakingChunks.length ? `<audio controls src="${URL.createObjectURL(new Blob(speakingChunks, {type:'audio/webm'}))}"></audio>` : '';
+      return `<div class="card"><h3>客观自查</h3><p>${speakingElapsed >= target ? '时长已达到目标。' : `时长 ${speakingClock(speakingElapsed)}，目标至少 ${speakingClock(target)}。`}</p><p>${hits.map(x => `<span class="badge ${x.hit ? 'badge-masc' : 'badge-fem'}">${x.hit ? '已提及' : '未识别'}：${x.k}</span>`).join(' ')}</p>${repeated.length ? `<p class="muted">重复内容词超过四次：${repeated.join('，')}。</p>` : '<p class="muted">未发现重复超过四次的内容词。</p>'}${audio}</div><div class="card" style="display:flex;gap:16px;flex-wrap:wrap"><div style="flex:1 1 280px"><h3>你说的内容</h3><p class="es">${transcript}</p></div><div style="flex:1 1 280px"><h3>参考表达</h3><p class="es">${task.sampleAnswer}</p><p class="muted">${task.sampleAnswer_zh}</p></div></div><p class="muted" style="font-size:12px">本页不对语法、发音、自然度或论证质量自动打分；请用你的录音、识别文本和参考表达自行比较。</p>`;
+    }
     let laListeningId = null, laListeningRevealed = false, laListeningAnswers = [];
     function renderListeningLA() {
       const active = LISTENING_LA.find(x => x.id === laListeningId);
@@ -2700,7 +2792,7 @@ const VERBS = [
     }
 
     // ====================== 动词变位 ======================
-    // 14 个时态语式分四组展示；gerundio/participio 为单形式（无人称表）
+    // B2 的完成时体系和虚拟式补齐；gerundio/participio 为单形式（无人称表）。
     const TENSES = [
       { key: 'presente', label: '现在时', group: 'simple' },
       { key: 'indefinido', label: '简单过去时', group: 'simple' },
@@ -2709,8 +2801,13 @@ const VERBS = [
       { key: 'condicional', label: '条件式', group: 'simple' },
       { key: 'perfecto', label: '复合过去时', group: 'comp' },
       { key: 'pluscuamperfecto', label: '过去完成时', group: 'comp' },
+      { key: 'futuro_perfecto', label: '将来完成时', group: 'comp' },
+      { key: 'condicional_perfecto', label: '条件式完成时', group: 'comp' },
       { key: 'subj_pres', label: '虚拟式现在时', group: 'subj' },
+      { key: 'subj_perfecto', label: '虚拟式现在完成时', group: 'subj' },
       { key: 'subj_imp', label: '虚拟式未完成过去时', group: 'subj' },
+      { key: 'subj_imp_se', label: '虚拟式未完成过去时（-se）', group: 'subj' },
+      { key: 'subj_pluscuamperfecto', label: '虚拟式愈过去时', group: 'subj' },
       { key: 'imp_af', label: '命令式·肯定', group: 'imp' },
       { key: 'imp_neg', label: '命令式·否定', group: 'imp' },
       { key: 'gerundio', label: '动名词', group: 'imp', single: true },

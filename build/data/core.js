@@ -6,7 +6,9 @@ const STAGES = {
   P3: { title: 'P3 A2.1 进阶西语', next: 'P3B' },
   P3B: { title: 'P3B A2.2 独立表达', next: 'P4' },
   P4: { title: 'P4 B1.1 独立表达', next: 'P5' },
-  P5: { title: 'P5 B1.2 论述与互动', next: null }
+  P5: { title: 'P5 B1.2 论述与互动', next: 'P6' },
+  P6: { title: 'P6 B2.1 复杂论证', next: 'P7' },
+  P7: { title: 'P7 B2.2 语体与批判表达', next: null }
 };
 
 const ALPHABET = [

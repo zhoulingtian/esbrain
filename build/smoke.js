@@ -105,6 +105,7 @@ const api = `
   get GRAMMARS() { return GRAMMARS; },
   get LISTENING_ALL() { return LISTENING_ALL; },
   get LISTENING_LA() { return LISTENING_LA; },
+  get SPEAKING_TASKS() { return SPEAKING_TASKS; },
   get drill() { return drill; },
 };`;
 (0, eval)(main + api);
@@ -142,29 +143,42 @@ t('拉美变体在字母表显示 c/z 的地区 IPA', () => {
 });
 
 // 2. 19 屏 go() 不报错
-for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'learn', 'cloze', 'subjunctive', 'shadowing', 'listening-la']) {
+for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'learn', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la']) {
   t('go(' + s + ')', () => { go(s); return true; });
 }
+t('口语模块提供两类真实任务与明确的自查边界', () => {
+  const roles = A.SPEAKING_TASKS.filter(x => x.type === 'roleplay');
+  const monos = A.SPEAKING_TASKS.filter(x => x.type === 'monologue');
+  if (roles.length < 20 || monos.length < 20) throw new Error('任务类型数量不足');
+  if (!roles.some(x => x.id === 'sp-rp-001' && x.requiredElements.length >= 4)) throw new Error('代表角色扮演缺失');
+  if (!monos.some(x => x.id === 'sp-mono-001' && x.prepTime === 60 && x.targetDuration === 120)) throw new Error('代表陈述缺失');
+  go('speaking');
+  const list = A.html('speaking-area');
+  openSpeaking('sp-mono-001');
+  const detail = A.html('speaking-area');
+  return list.includes('角色扮演') && list.includes('即兴陈述') && list.includes('不是语法或地道度评分') && detail.includes('SpeechRecognition') && detail.includes('teletrabajo');
+});
 
-// 3. lessons：72 课、A2.2 过渡层、P0 条目
-t('lessons 含 72 课与 A2.2/B1 分段', () => {
+// 3. lessons：96 课、A2.2 过渡层、B1 与 B2 条目
+t('lessons 含 96 课与 A2.2/B1/B2 分段', () => {
   renderLessons();
   const h = A.html('lesson-groups');
   const items = (h.match(/lesson-item/g) || []).length;
-  if (items < 73) throw new Error('课程条目仅 ' + items);
+  if (items < 97) throw new Error('课程条目仅 ' + items);
   const a21 = h.indexOf('A2.1-L12');
   const a22 = h.indexOf('A2.2-L01');
   const b11 = h.indexOf('B1.1-L01');
+  const b21 = h.indexOf('B2.1-L01');
   return h.includes('发音入门') && h.includes('问候与自我介绍') && h.includes('A2.2 独立表达')
-    && h.includes('A2.2-L12') && h.includes('B1.2-L12') && a21 < a22 && a22 < b11;
+    && h.includes('A2.2-L12') && h.includes('B1.2-L12') && h.includes('B2.2-L12') && a21 < a22 && a22 < b11 && b11 < b21;
 });
 
 // 3b. A2.1/A2.2 与 B1 课程挂载、词库总量、语法条数
-t('词库总数 ≥2800 且 A2.2/B1 课程齐全', () => {
-  if (A.WORDS.length < 2800) throw new Error('词库仅 ' + A.WORDS.length);
+t('词库总数 ≥3800 且 A2.2/B1/B2 课程齐全', () => {
+  if (A.WORDS.length < 3800) throw new Error('词库仅 ' + A.WORDS.length);
   const a21 = A.LESSONS.filter(l => l.stage === 'P3');
   if (a21.length !== 12) throw new Error('A2.1 课数 ' + a21.length);
-  if (A.GRAMMARS.length !== 73) throw new Error('语法条数 ' + A.GRAMMARS.length);
+  if (A.GRAMMARS.length !== 97) throw new Error('语法条数 ' + A.GRAMMARS.length);
   for (const l of a21) {
     if (!l.grammar_id) throw new Error(l.id + ' 缺语法点');
     if (l.words.length + l.extra_words.length < 30) throw new Error(l.id + ' 词数不足 30');
@@ -722,15 +736,24 @@ t(`变位基准表（${BENCH_CELLS} 格手工核对）`, () => {
   }
   return true;
 });
-t('动词库 60 词且 14 时态齐全', () => {
+t('动词库 60 词且 B2 时态齐全', () => {
   if (A.VERBS.length !== 60) throw new Error('动词数 ' + A.VERBS.length);
-  const tables = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'subj_pres', 'subj_imp', 'imp_af', 'imp_neg'];
+  const tables = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'futuro_perfecto', 'condicional_perfecto', 'subj_pres', 'subj_perfecto', 'subj_imp', 'subj_imp_se', 'subj_pluscuamperfecto', 'imp_af', 'imp_neg'];
   for (const v of A.VERBS) {
     if (!v.zh) throw new Error(v.inf + ' 缺中文释义');
     for (const te of tables) for (const p of VP) if (!v[te][p]) throw new Error(`${v.inf} 缺 ${te}.${p}`);
     if (!v.gerundio || !v.participio) throw new Error(v.inf + ' 缺非人称形式');
   }
   return true;
+});
+t('B2 完成时与 -se 虚拟式变位正确', () => {
+  const hablar = A.VERBS.find(v => v.inf === 'hablar');
+  const ser = A.VERBS.find(v => v.inf === 'ser');
+  return hablar.futuro_perfecto.yo === 'habré hablado'
+    && hablar.condicional_perfecto.nosotros === 'habríamos hablado'
+    && hablar.subj_perfecto.tú === 'hayas hablado'
+    && hablar.subj_imp_se.nosotros === 'hablásemos'
+    && ser.subj_pluscuamperfecto.yo === 'hubiera sido';
 });
 t('变位填空 conj 全流程（软键盘判分）', () => {
   startQuiz('conj');
@@ -897,7 +920,7 @@ t('补签一生一次且需断签 1 天', () => {
 // 14. 课程访问（全部课程开放）
 t('全新账号全部课程可进入', () => {
   A.state = normalizeState(null);
-  return ['A1.1-L01', 'A1.2-L01', 'A2.1-L01', 'A2.2-L01', 'B1.1-L01', 'B1.2-L12']
+  return ['A1.1-L01', 'A1.2-L01', 'A2.1-L01', 'A2.2-L01', 'B1.1-L01', 'B1.2-L12', 'B2.1-L01', 'B2.2-L12']
     .every(id => isLessonUnlocked(getLesson(id)));
 });
 
@@ -938,6 +961,24 @@ t('SW 静态资源失败不回退首页 HTML', () => {
   if (!sw.includes("event.request.mode === 'navigate'")) throw new Error('缺少导航分支');
   if (!sw.includes('catch(() => Response.error())')) throw new Error('静态资源失败未返回网络错误');
   return true;
+});
+
+t('B2 curriculum has stable lesson, grammar, dialogue, and listening coverage', () => {
+  const b2 = A.LESSONS.filter(l => l.stage === 'P6' || l.stage === 'P7');
+  if (b2.length !== 24) throw new Error('B2 course count ' + b2.length);
+  for (const [index, lesson] of b2.entries()) {
+    const expected = index < 12 ? 'B2.1-L' + String(index + 1).padStart(2, '0') : 'B2.2-L' + String(index - 11).padStart(2, '0');
+    const grammarId = 'g' + String(74 + index).padStart(3, '0');
+    if (lesson.id !== expected || lesson.grammar_id !== grammarId) throw new Error('B2 ordering or grammar mismatch: ' + lesson.id);
+    if (lesson.words.length !== 13 || lesson.extra_words.length !== 26 || lesson.dialog.length !== 8) throw new Error('B2 lesson shape: ' + lesson.id);
+    if (!lesson.listening || lesson.listening.questions.length < 2) throw new Error('B2 listening missing: ' + lesson.id);
+  }
+  openLesson('B2.1-L03');
+  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  const grammarView = A.html('learn-container');
+  A.setLearn({ learnStep: 3 }); renderLearn(); revealLessonListening();
+  const listeningView = A.html('learn-container');
+  return grammarView.includes('hubieran') && listeningView.includes('Noroeste') && A.GRAMMARS.find(g => g.id === 'g097').content.includes('B2');
 });
 
 console.log(`\nSMOKE: ${pass} passed, ${fail} failed`);
