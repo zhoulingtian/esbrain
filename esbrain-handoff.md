@@ -97,5 +97,5 @@ ESbrain 是离线单文件 PWA 西语自学工具，课程从 A1 覆盖至 B2。
 ## 5. Git 与后续工作
 
 - 已提交：`eaa4319 Complete round 7 B2 curriculum and speaking`、`0707524 Complete round 8 learning plans and safe Gist sync`、`2f0bfaf Finalize round 8 plan and listening audit`。
-- 当前需要提交的是第九轮：文化阅读、法语对照开关、构建校验、生成的 `index.html`、缓存版本与文档。
+- 第九轮已提交为 `ae17cd2 Complete optional culture and French learning aids`；后续改动应从新的需求开始并保持独立提交。
 - 工作区有用户已有的无关改动和未跟踪文件；提交时只能显式暂存本轮文件，禁止 `git add .`。
