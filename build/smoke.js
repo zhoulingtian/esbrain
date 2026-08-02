@@ -216,6 +216,15 @@ t('B1 课程把听力接入学习流程并提供理解题', () => {
   A.setLearn({ learnStep: 4 }); renderLearn();
   return A.quiz && A.quiz.questions.length === 5;
 });
+t('课程听力错答会归档为听力错题', () => {
+  A.state = normalizeState(null);
+  openLesson('B1.1-L01');
+  A.setLearn({ learnStep: 3, learnMode: 'core' }); renderLearn(); revealLessonListening();
+  const question = A.lesson.listening.questions[0];
+  answerLessonListening(0, (question.answer + 1) % question.options.length);
+  return A.state.skillMistakes.some(m => m.key === 'listening' && m.quizType === 'listen' && m.count === 1)
+    && A.state.skillMistakeLog.some(e => e.key === 'listening');
+});
 t('lesson 筛选渲染含 A2.1 分组与课程', () => {
   renderLessons();
   const h = A.html('lesson-groups');
@@ -898,6 +907,25 @@ t('学习计划、分级错题日志与 Gist 元数据可安全迁移', () => {
   if (s.learningPlan.level !== 'B2' || s.learningPlan.minutes !== 60 || s.learningPlan.focus !== 'grammar') throw new Error('学习计划迁移失败');
   if (s.cloudBackup.gistId !== 'abc123' || s.skillMistakeLog.length !== 1) throw new Error('备份或错题日志迁移失败');
   A.state = s; const plan = dailyPlan(); return plan.p.minutes === 60 && plan.focusTitle.includes('语法');
+});
+t('学习计划按完成率调节负荷并渲染五项可跳过任务', () => {
+  const now = new Date();
+  const completedWeek = weekRange(now.getDay() === 0 ? 0 : -1, now);
+  const basePlan = { level: 'A1', minutes: 30, focus: 'balanced', configuredAt: fmtDate() };
+  A.state = normalizeState({ learningPlan: basePlan });
+  const reduced = dailyPlan();
+  if (reduced.completionRate !== 0 || reduced.minutes !== 25 || !reduced.adjustment.includes('自动减量')) throw new Error('低完成率未减量');
+  const start = new Date(completedWeek.start + 'T12:00:00');
+  const checkins = Object.fromEntries(Array.from({ length: 7 }, (_, i) => [fmtDate(addDays(start, i)), 30]));
+  A.state = normalizeState({ learningPlan: basePlan, checkins });
+  const increased = dailyPlan();
+  if (increased.completionRate !== 100 || increased.minutes <= 30 || !increased.adjustment.includes('加量')) throw new Error('高完成率未加量');
+  renderHome();
+  const home = A.html('home-container');
+  const missing = ['学习 ', '复习到期词', '语法专项练习', '听力理解', '重音训练'].filter(text => !home.includes(text));
+  const taskRows = (home.match(/task-row/g) || []).length;
+  if (missing.length || taskRows < 8) throw new Error('计划任务未渲染：' + missing.join('、'));
+  return true;
 });
 t('normalizeState 抗残缺', () => {
   const n1 = normalizeState({ settings: { theme: 'dark' } });
