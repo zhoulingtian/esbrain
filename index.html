@@ -294,6 +294,14 @@ p { margin: 0 0 10px; }
   animation: speakRipple 1.6s var(--easing) infinite;
 }
 @keyframes speakRipple { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
+.grammar-speak {
+  padding: 0; border: 0; border-bottom: 1px dashed currentColor;
+  background: transparent; color: inherit; cursor: pointer;
+  font: inherit; line-height: inherit;
+  text-decoration: none;
+}
+.grammar-speak:hover, .grammar-speak:focus-visible { border-bottom-style: solid; outline: none; }
+.grammar-speak:focus-visible { box-shadow: 0 0 0 2px var(--accent-soft); }
 
 /* ===== 表单 ===== */
 .input {
@@ -73369,11 +73377,12 @@ const CULTURE_ARTICLES = [
           } else {
             stageLessons.forEach((l, idx) => {
               const completed = state.progress.completed.includes(l.id);
-              const learnedCount = l.words.filter(id => state.reviews.some(r => r.wordId === id)).length;
+              const lessonWordIds = getLessonWordIds(l);
+              const learnedCount = lessonWordIds.filter(id => state.reviews.some(r => r.wordId === id)).length;
               const recommended = !getNextLesson() || getNextLesson().id === l.id;
               const status = completed ? '<span class="badge badge-masc">✓ 已完成</span>' : (recommended ? '<span class="badge badge-accent">推荐下一课</span>' : '<span class="badge badge-accent">可学习</span>');
               const clickAttrs = `role="button" tabindex="0" onclick="openLesson('${l.id}')" onkeydown="activateOnKey(event)"`;
-              html += `<div class="lesson-item${completed ? ' completed' : ''}" ${clickAttrs}><div style="flex:1;min-width:0;"><div class="lesson-id">${l.id}</div><div class="lesson-title">${l.title}</div><div class="lesson-meta">${l.words.length} 核心词 · 已学 ${learnedCount}/${l.words.length}</div></div><div style="flex-shrink:0;margin-left:12px;">${status}</div></div>`;
+              html += `<div class="lesson-item${completed ? ' completed' : ''}" ${clickAttrs}><div style="flex:1;min-width:0;"><div class="lesson-id">${l.id}</div><div class="lesson-title">${l.title}</div><div class="lesson-meta">${lessonWordIds.length} 个词汇 · 已学 ${learnedCount}/${lessonWordIds.length}</div></div><div style="flex-shrink:0;margin-left:12px;">${status}</div></div>`;
             });
           }
         }
@@ -73386,8 +73395,6 @@ const CULTURE_ARTICLES = [
       if (!currentLesson) return;
       learnStep = 0;
       learnWordIndex = 0;
-      extraWordIndex = 0;
-      learnMode = 'core';
       lessonListeningRevealed = false;
       lessonListeningAnswers = [];
       go('learn');
@@ -73396,38 +73403,115 @@ const CULTURE_ARTICLES = [
 
     // ====================== 学习流程（词卡 → 语法 → 对话 → 听力 → 小测） ======================
     let currentLesson = null;
-    let learnStep = 0; // 0=核心词 1=语法 2=对话 3=听力 4=小测
+    let learnStep = 0; // 0=词汇 1=语法 2=对话 3=听力 4=小测
     let learnWordIndex = 0;
-    let extraWordIndex = 0;
-    let learnMode = 'core'; // core | choice | extra
     let lessonListeningRevealed = false;
     let lessonListeningAnswers = [];
-    function wordCardHtml(w, label, nextFn, extraBtn) {
+    function getLessonWordIds(lesson) {
+      return [...new Set([...(lesson && lesson.words || []), ...(lesson && lesson.extra_words || [])])];
+    }
+    function wordCardHtml(w, label, canGoBack) {
       const disp = displayWord(w);
-      return `<div class="card"><div class="muted">${label}</div><div style="text-align:center;padding:30px 0;"><div class="word-display ${genderClass(w)}" style="font-size:32px;">${disp}</div><div class="ipa">${w.ipa || ''}</div><button class="speak" aria-label="朗读" style="width:48px;height:48px;font-size:20px;margin-top:12px;" onclick="speakText('${escAttr(disp)}')">${speakIcon(18)}</button><div class="zh" style="font-size:20px;font-weight:600;margin-top:16px;">${w.zh}</div><div class="muted mt-12 es">${w.example || ''}</div><div class="muted">${w.example_zh || ''}</div></div><button class="btn w-full" onclick="${nextFn}">下一个</button>${extraBtn || ''}</div>`;
+      const example = w.example ? `<div class="muted mt-12 es" style="display:flex;align-items:center;justify-content:center;gap:4px;"><span>${w.example}</span><button class="speak" aria-label="朗读例句" title="朗读例句" onclick="speakText('${escAttr(w.example)}')">${speakIcon()}</button></div>` : '';
+      const isLast = learnWordIndex === getLessonWordIds(currentLesson).length - 1;
+      return `<div class="card"><div class="muted">${label}</div><div style="text-align:center;padding:30px 0;"><div class="word-display ${genderClass(w)}" style="font-size:32px;">${disp}</div><div class="ipa">${w.ipa || ''}</div><button class="speak" aria-label="朗读单词" title="朗读单词" style="width:48px;height:48px;font-size:20px;margin-top:12px;" onclick="speakText('${escAttr(disp)}')">${speakIcon(18)}</button><div class="zh" style="font-size:20px;font-weight:600;margin-top:16px;">${w.zh}</div>${example}<div class="muted">${w.example_zh || ''}</div></div><div class="flex gap-8"><button class="btn btn-secondary" style="flex:1;" ${canGoBack ? 'onclick="previousLearnWord()"' : 'disabled'}>上一个</button><button class="btn" style="flex:1;" onclick="nextLearnWord()">${isLast ? '进入语法' : '下一个'}</button></div></div>`;
+    }
+    let grammarVocabularyMatcher = null;
+    let grammarVocabularyLookup = null;
+    function buildGrammarVocabularyMatcher() {
+      if (grammarVocabularyLookup) return;
+      const vocabulary = new Map();
+      const spanishChars = 'A-Za-zÁÉÍÓÚÜÑáéíóúüñ';
+      const spanishToken = `[${spanishChars}]+`;
+      const spanishWord = new RegExp(`^${spanishToken}(?: ${spanishToken})*$`);
+      const addPhrase = value => {
+        const phrase = String(value || '').replace(/[¿?¡!.,;:]/g, '').trim().replace(/\s+/g, ' ');
+        if (spanishWord.test(phrase)) vocabulary.set(phrase.toLowerCase(), phrase);
+      };
+      const addVerbForm = value => {
+        addPhrase(value);
+        String(value || '').trim().split(/\s+/).forEach(addPhrase);
+      };
+      WORDS.forEach(w => {
+        const phrase = String(w.word || '').replace(/[¿?¡!.,;:]/g, '').trim().replace(/\s+/g, ' ');
+        addPhrase(phrase);
+        if (!['n', 'adj'].includes(w.pos) || !/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+$/.test(phrase)) return;
+        if (/z$/i.test(phrase)) addPhrase(phrase.slice(0, -1) + 'ces');
+        else if (/[aeiouáéíóú]$/i.test(phrase)) addPhrase(phrase + 's');
+        else addPhrase(phrase + 'es');
+      });
+      const verbTables = ['presente', 'indefinido', 'imperfecto', 'futuro', 'condicional', 'perfecto', 'pluscuamperfecto', 'futuro_perfecto', 'condicional_perfecto', 'subj_pres', 'subj_perfecto', 'subj_imp', 'subj_imp_se', 'subj_pluscuamperfecto', 'imp_af', 'imp_neg'];
+      VERBS.forEach(v => {
+        addPhrase(v.inf);
+        addVerbForm(v.gerundio);
+        addVerbForm(v.participio);
+        verbTables.forEach(table => Object.values(v[table] || {}).forEach(addVerbForm));
+      });
+      'yo tú él ella usted nosotros nosotras vosotros vosotras ellos ellas ustedes me te se nos os mi tu su de del al en a con por para sin sobre entre un una unos unas el la los las'.split(' ').forEach(addPhrase);
+      const entries = [...vocabulary.entries()].sort((a, b) => b[0].length - a[0].length);
+      const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const terms = entries.map(([key]) => escapeRegex(key).replace(/\\ /g, '\\s+')).join('|');
+      grammarVocabularyLookup = vocabulary;
+      grammarVocabularyMatcher = new RegExp(`(^|[^${spanishChars}0-9])(${terms}|${spanishToken})(?=$|[^${spanishChars}0-9])`, 'gi');
+    }
+    function grammarCanSpeak(phrase) {
+      buildGrammarVocabularyMatcher();
+      const normalized = String(phrase || '').trim().replace(/\s+/g, ' ');
+      return grammarVocabularyLookup.has(normalized.toLowerCase()) || /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?: [A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/.test(normalized);
+    }
+    function grammarContentHtml(content) {
+      buildGrammarVocabularyMatcher();
+      if (!document.createTreeWalker || !document.createDocumentFragment || !window.NodeFilter) return content;
+      if (!grammarVocabularyMatcher) return content;
+      const template = document.createElement('template');
+      template.innerHTML = String(content);
+      const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = node.parentElement;
+          return parent && !parent.closest('button, script, style') && /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+      });
+      const textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+      textNodes.forEach(node => {
+        grammarVocabularyMatcher.lastIndex = 0;
+        if (!grammarVocabularyMatcher.test(node.nodeValue)) return;
+        grammarVocabularyMatcher.lastIndex = 0;
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        node.nodeValue.replace(grammarVocabularyMatcher, (match, before, matched, offset) => {
+          const matchStart = offset + before.length;
+          fragment.append(document.createTextNode(node.nodeValue.slice(cursor, matchStart)));
+          const phrase = grammarVocabularyLookup.get(matched.replace(/\s+/g, ' ').toLowerCase()) || matched;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'grammar-speak es';
+          button.setAttribute('aria-label', `朗读 ${phrase}`);
+          button.setAttribute('title', `朗读 ${phrase}`);
+          button.setAttribute('onclick', `speakText('${escAttr(phrase)}')`);
+          button.textContent = matched;
+          fragment.append(button);
+          cursor = offset + match.length;
+          return match;
+        });
+        fragment.append(document.createTextNode(node.nodeValue.slice(cursor)));
+        node.parentNode.replaceChild(fragment, node);
+      });
+      return template.innerHTML;
     }
     function renderLearn() {
       const c = $('learn-container');
       if (!currentLesson) return;
-      if (learnMode === 'choice') {
-        const extraCount = (currentLesson.extra_words || []).length;
-        c.innerHTML = `<div class="card text-center"><h3>核心词已学完</h3><p class="muted">你可以进入语法，或按自己的节奏继续学习扩展词。</p><button class="btn w-full" onclick="learnStep=1;learnMode='core';renderLearn()">进入语法</button>${extraCount ? `<button class="btn btn-secondary w-full mt-12" onclick="learnMode='extra';extraWordIndex=0;renderLearn()">学习扩展词（${extraCount}）</button>` : ''}</div>`;
-      } else if (learnMode === 'extra') {
-        const ids = currentLesson.extra_words || [];
-        if (extraWordIndex >= ids.length) { learnMode = 'choice'; renderLearn(); return; }
-        const w = getWord(ids[extraWordIndex]);
-        if (!w) { extraWordIndex++; renderLearn(); return; }
-        c.innerHTML = wordCardHtml(w, `扩展词 ${extraWordIndex + 1}/${ids.length}`, 'nextExtraWord()', `<button class="btn btn-secondary w-full mt-12" onclick="learnStep=1;learnMode='core';renderLearn()">结束扩展词并进入语法</button>`);
-      } else if (learnStep === 0) {
-        const ids = currentLesson.words;
-        if (learnWordIndex >= ids.length) { learnMode = 'choice'; renderLearn(); return; }
+      if (learnStep === 0) {
+        const ids = getLessonWordIds(currentLesson);
+        if (learnWordIndex >= ids.length) { learnStep = 1; renderLearn(); return; }
         const w = getWord(ids[learnWordIndex]);
         if (!w) { learnWordIndex++; renderLearn(); return; }
-        c.innerHTML = wordCardHtml(w, `词卡 ${learnWordIndex + 1}/${ids.length}`, 'nextLearnWord()', '');
+        c.innerHTML = wordCardHtml(w, `词汇 ${learnWordIndex + 1}/${ids.length}`, learnWordIndex > 0);
       } else if (learnStep === 1) {
         const gs = GRAMMARS.filter(g => g.lesson === currentLesson.id);
         const body = gs.length
-          ? gs.map(g => `<h3 style="margin-top:14px;">${g.title}</h3><div style="line-height:1.8;">${g.content}</div>`).join('')
+          ? gs.map(g => `<h3 style="margin-top:14px;">${g.title}</h3><div style="line-height:1.8;">${grammarContentHtml(g.content)}</div>`).join('')
           : '<p class="muted">本课无新增语法点。</p>';
         c.innerHTML = `<div class="card"><div class="muted">语法点</div>${body}<button class="btn w-full mt-12" onclick="learnStep=2;renderLearn()">进入对话</button></div>`;
       } else if (learnStep === 2) {
@@ -73475,15 +73559,13 @@ const CULTURE_ARTICLES = [
       renderLessonListening();
     }
     function nextLearnWord() {
-      const w = getWord(currentLesson.words[learnWordIndex]);
+      const w = getWord(getLessonWordIds(currentLesson)[learnWordIndex]);
       if (w) addToReview(w.id);
       learnWordIndex++;
       renderLearn();
     }
-    function nextExtraWord() {
-      const w = getWord((currentLesson.extra_words || [])[extraWordIndex]);
-      if (w) addToReview(w.id);
-      extraWordIndex++;
+    function previousLearnWord() {
+      if (learnWordIndex > 0) learnWordIndex--;
       renderLearn();
     }
     function addToReview(wordId) {
@@ -73494,9 +73576,9 @@ const CULTURE_ARTICLES = [
       }
     }
 
-    // ====================== 课程小测（本课核心词随机 5 题，≥60% 通过） ======================
+    // ====================== 课程小测（本课词汇随机 5 题，≥60% 通过） ======================
     function startLessonQuiz() {
-      const ids = currentLesson.words;
+      const ids = getLessonWordIds(currentLesson);
       const qs = shuffle(ids).slice(0, Math.min(5, ids.length)).map(id => makeEs2zh(id));
       go('quiz');
       currentQuiz = { type: 'lesson', questions: qs, index: 0, score: 0, wrong: [], onEnd: finishLessonQuiz };
@@ -73507,12 +73589,12 @@ const CULTURE_ARTICLES = [
       show('screen-learn');
       const c = $('learn-container');
       const pass = currentQuiz.score / currentQuiz.questions.length >= 0.6;
-      c.innerHTML = `<div class="card text-center"><h3>${pass ? '恭喜通过！' : '再试一次'}</h3><p class="muted">得分：${currentQuiz.score}/${currentQuiz.questions.length}</p>${pass ? '<button class="btn w-full" onclick="completeLesson()">完成本课</button>' : '<button class="btn w-full" onclick="startLessonQuiz()">重新测验</button><button class="btn btn-secondary w-full mt-12" onclick="learnStep=0;learnWordIndex=0;learnMode=\'core\';renderLearn()">重新学习</button>'}</div>`;
+      c.innerHTML = `<div class="card text-center"><h3>${pass ? '恭喜通过！' : '再试一次'}</h3><p class="muted">得分：${currentQuiz.score}/${currentQuiz.questions.length}</p>${pass ? '<button class="btn w-full" onclick="completeLesson()">完成本课</button>' : '<button class="btn w-full" onclick="startLessonQuiz()">重新测验</button><button class="btn btn-secondary w-full mt-12" onclick="learnStep=0;learnWordIndex=0;renderLearn()">重新学习</button>'}</div>`;
     }
     function completeLesson() {
       if (!state.progress.completed.includes(currentLesson.id)) state.progress.completed.push(currentLesson.id);
       saveState();
-      learnStep = 0; learnWordIndex = 0; extraWordIndex = 0; learnMode = 'core';
+      learnStep = 0; learnWordIndex = 0;
       toast('本课完成！');
       go('lessons');
     }

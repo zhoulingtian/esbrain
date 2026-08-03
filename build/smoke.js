@@ -86,8 +86,9 @@ const api = `
   get quiz() { return currentQuiz; },
   get lesson() { return currentLesson; },
   get voice() { return cachedVoice; },
-  get learnCtx() { return { learnStep, learnWordIndex, learnMode, extraWordIndex }; },
-  setLearn(o) { if ('learnStep' in o) learnStep = o.learnStep; if ('learnMode' in o) learnMode = o.learnMode; if ('learnWordIndex' in o) learnWordIndex = o.learnWordIndex; if ('extraWordIndex' in o) extraWordIndex = o.extraWordIndex; },
+  get learnCtx() { return { learnStep, learnWordIndex }; },
+  setLearn(o) { if ('learnStep' in o) learnStep = o.learnStep; if ('learnWordIndex' in o) learnWordIndex = o.learnWordIndex; },
+  lessonWordIds(lesson) { return getLessonWordIds(lesson); },
   html(id) { return document.getElementById(id).innerHTML; },
   get stress() { return stressSession; },
   get STRESS_QUIZ() { return STRESS_QUIZ; },
@@ -106,6 +107,7 @@ const api = `
   get LISTENING_ALL() { return LISTENING_ALL; },
   get LISTENING_LA() { return LISTENING_LA; },
   get SPEAKING_TASKS() { return SPEAKING_TASKS; },
+  grammarCanSpeak(phrase) { return grammarCanSpeak(phrase); },
   get CULTURE_ARTICLES() { return CULTURE_ARTICLES; },
   get drill() { return drill; },
 };`;
@@ -226,7 +228,7 @@ t('B1 课程、听力字段与虚拟式专项可用', () => {
 });
 t('B1 课程把听力接入学习流程并提供理解题', () => {
   openLesson('B1.1-L01');
-  A.setLearn({ learnStep: 3, learnMode: 'core' }); renderLearn();
+  A.setLearn({ learnStep: 3 }); renderLearn();
   if (!A.html('learn-container').includes('先听后看') || A.html('learn-container').includes('<div class="lab">原文</div>')) throw new Error('听力未默认隐藏原文');
   revealLessonListening();
   if (!A.html('learn-container').includes(A.lesson.listening.text) || !A.html('learn-container').includes(A.lesson.listening.questions[0].q)) throw new Error('听力原文或理解题未渲染');
@@ -237,7 +239,7 @@ t('B1 课程把听力接入学习流程并提供理解题', () => {
 t('课程听力错答会归档为听力错题', () => {
   A.state = normalizeState(null);
   openLesson('B1.1-L01');
-  A.setLearn({ learnStep: 3, learnMode: 'core' }); renderLearn(); revealLessonListening();
+  A.setLearn({ learnStep: 3 }); renderLearn(); revealLessonListening();
   const question = A.lesson.listening.questions[0];
   answerLessonListening(0, (question.answer + 1) % question.options.length);
   return A.state.skillMistakes.some(m => m.key === 'listening' && m.quizType === 'listen' && m.count === 1)
@@ -250,7 +252,7 @@ t('lesson 筛选渲染含 A2.1 分组与课程', () => {
 });
 t('A2.2 学习流可渲染语法、对话与具体听力', () => {
   openLesson('A2.2-L08');
-  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  A.setLearn({ learnStep: 1 }); renderLearn();
   if (!A.html('learn-container').includes('Se me olvidó')) throw new Error('A2.2 g069 未渲染');
   A.setLearn({ learnStep: 2 }); renderLearn();
   if (!A.html('learn-container').includes('Se me ha perdido la maleta')) throw new Error('A2.2 对话未渲染');
@@ -302,10 +304,11 @@ t('拉美听力三种口音与 voseo', () => {
 });
 t('A2.1 新课学习流可渲染（词卡→语法→对话→小测）', () => {
   openLesson('A2.1-L01');
+  const totalWords = A.lessonWordIds(A.lesson).length;
   let guard = 0;
-  while (A.learnCtx.learnMode === 'core' && A.learnCtx.learnStep === 0 && guard++ < 50) nextLearnWord();
-  if (A.learnCtx.learnMode !== 'choice') throw new Error('核心词流程未走完');
-  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  while (A.learnCtx.learnStep === 0 && guard++ < totalWords + 2) nextLearnWord();
+  if (A.learnCtx.learnStep !== 1) throw new Error('课程词汇流程未走完');
+  renderLearn();
   const hg = A.html('learn-container');
   if (!hg.includes('语法点') || !hg.includes('hablaba')) throw new Error('g026 imperfecto 内容未渲染');
   A.setLearn({ learnStep: 2 }); renderLearn();
@@ -319,17 +322,22 @@ t('A2.1 新课学习流可渲染（词卡→语法→对话→小测）', () => 
 
 // 4. 学习流 L01 端到端
 t('learn L01 全流程', () => {
+  A.state = normalizeState(null);
   openLesson('A1.1-L01');
+  const totalWords = A.lessonWordIds(A.lesson).length;
+  const coreWords = A.lesson.words.length;
+  const firstCard = A.html('learn-container');
+  if (!firstCard.includes('aria-label="朗读例句"') || !firstCard.includes('disabled>上一个')) throw new Error('例句朗读或首卡返回状态缺失');
+  nextLearnWord();
+  if (!A.html('learn-container').includes('onclick="previousLearnWord()"')) throw new Error('第二张词卡无法返回');
+  previousLearnWord();
+  if (A.learnCtx.learnWordIndex !== 0) throw new Error('上一张词卡未返回');
   let guard = 0;
-  while (A.learnCtx.learnMode === 'core' && A.learnCtx.learnStep === 0 && guard++ < 50) nextLearnWord();
-  if (A.learnCtx.learnMode !== 'choice') return false;
+  while (A.learnCtx.learnStep === 0 && guard++ < totalWords + 2) nextLearnWord();
+  if (A.learnCtx.learnStep !== 1) return false;
   const learned = A.state.reviews.length;
-  if (learned < 10) throw new Error('入队词数异常: ' + learned);
-  // 扩展词走一遍
-  A.setLearn({ learnMode: 'extra', extraWordIndex: 0 }); renderLearn();
-  guard = 0;
-  while (A.learnCtx.learnMode === 'extra' && guard++ < 60) nextExtraWord();
-  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  if (learned !== totalWords || totalWords <= coreWords) throw new Error('统一词汇未完整进入复习: ' + learned + '/' + totalWords);
+  renderLearn();
   if (!A.html('learn-container').includes('语法点')) throw new Error('语法步未渲染');
   if (!A.html('learn-container').includes('ser')) throw new Error('g001 内容缺失');
   A.setLearn({ learnStep: 2 }); renderLearn();
@@ -351,6 +359,20 @@ t('learn L01 全流程', () => {
   if (!A.html('learn-container').includes('恭喜通过')) throw new Error('未进入通过页: score=' + (A.quiz && A.quiz.score));
   completeLesson();
   return A.state.progress.completed.includes('A1.1-L01');
+});
+
+t('course word cards and grammar speech hooks', () => {
+  const expectedForms = ['yo', 'soy', 'eres', 'somos', 'pilotos', 'llamo', 'vosotros', 'ustedes', 'inteligente', 'optimista', 'controlador', 'aéreo'];
+  const missingForms = expectedForms.filter(form => !A.grammarCanSpeak(form));
+  if (missingForms.length) throw new Error('grammar pronunciation forms are incomplete: ' + missingForms.join(', '));
+  return html.includes('getLessonWordIds')
+    && html.includes('aria-label="朗读例句"')
+    && html.includes('previousLearnWord')
+    && html.includes('document.createTreeWalker')
+    && html.includes('verbTables')
+    && html.includes('color: inherit')
+    && html.includes("className = 'grammar-speak es'")
+    && !html.includes("learnMode = 'choice'");
 });
 
 // 5. 无语法课与三语法课
@@ -1027,7 +1049,7 @@ t('B2 curriculum has stable lesson, grammar, dialogue, and listening coverage', 
     if (!lesson.listening || lesson.listening.questions.length < 2) throw new Error('B2 listening missing: ' + lesson.id);
   }
   openLesson('B2.1-L03');
-  A.setLearn({ learnStep: 1, learnMode: 'core' }); renderLearn();
+  A.setLearn({ learnStep: 1 }); renderLearn();
   const grammarView = A.html('learn-container');
   A.setLearn({ learnStep: 3 }); renderLearn(); revealLessonListening();
   const listeningView = A.html('learn-container');
