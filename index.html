@@ -73243,7 +73243,7 @@ const CULTURE_ARTICLES = [
 
       $('home-container').innerHTML = `
         <div class="hero">
-          <button class="settings-btn" aria-label="设置" title="设置" onclick="go('settings')"><svg aria-hidden="true"><use href="#icon-settings"/></svg></button>
+          <button class="settings-btn" aria-label="设置" title="设置" onclick="go('settings')"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-settings"/></svg></button>
           ${state.streak.current > 0 ? `<div class="hero-streak">连续 ${state.streak.current} 天</div>` : ''}
           <h2 class="hero-greeting">${greetingHtml()}</h2>
           <p class="muted" style="font-weight:700;color:var(--text-dim);">ESbrain · 西语学习</p>
