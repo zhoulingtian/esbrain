@@ -35,7 +35,7 @@ const ALPHABET = [
   { letter: 'T', name: 'te', ipa: '/te/' },
   { letter: 'U', name: 'u', ipa: '/u/' },
   { letter: 'V', name: 'uve', ipa: '/ˈube/' },
-  { letter: 'W', name: 'uve doble', ipa: '/ˈube ˈdoble/' },
+  { letter: 'W', name: 'doble uve', ipa: '/ˈdoble ˈube/' },
   { letter: 'X', name: 'equis', ipa: '/ˈekis/' },
   { letter: 'Y', name: 'ye', ipa: '/ʝe/' },
   { letter: 'Z', name: 'zeta', ipa: '/ˈθeta/', ipa_la: '/ˈseta/' }
