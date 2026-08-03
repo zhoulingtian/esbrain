@@ -106,7 +106,7 @@
 
 | 轮次 | 状态 | 完成日期 | 备注 |
 |------|------|---------|------|
-| 一 地基 | 已完成 | 2026-07-29 | SRS 改 SM-2 简化版(ease/suspended);IndexedDB 每周快照(8 份);地区变体 es-ES/es-LA;sw.js 缓存 bump v2。注:build/smoke.js 两条旧断言(SRS 阶梯、localStorage 单 key)与新设计不符,待后续更新 |
+| 一 地基 | 已完成 | 2026-07-29 | SRS 改 SM-2 简化版(ease/suspended);IndexedDB 每周快照(8 份);地区变体 es-ES/es-LA;sw.js 缓存 bump v2。后续 smoke 已迁移到新版 SM-2 与 `esbrain_v1` 单 key 设计，并纳入当前 90 项检查。 |
 | 二 专属模块(一) | 已完成 | 2026-07-29 | 重音训练 76 词(新 screen-stress,音节人工标注);ser/estar 66 题、por/para 59 题、假朋友小测走测验中心数据驱动类型(serestar/porpara/ff,带解析);冠词测验改例外专项 40 词(含通性题);发音规则收敛 8 核心+7 细节折叠;假朋友 31 词条新 screen;sw.js 缓存 bump v3 |
 | 三 动词系统 | 已完成 | 2026-07-29 | 变位引擎（data/verbs.js，词尾规则表+例外覆盖）60 词 × 14 时态；旧 20 词经 build/verbs-legacy-fixture.js 逐格回归（600 格 0 差异）；动词实验室时态四组标签页；es-LA 隐藏 vosotros 并带快捷切换；测验中心新增变位填空 conj（软键盘严格判重音、词尾规律提示）；工具箱新增不规则过去时（14 组）与词干变化三组练习（变化格 85% 权重）；smoke 基准断言 594 格 + 功能测试共 61 条全过；sw.js 缓存 bump v4 |
 | 四 A1-A2 | 已完成 | 2026-07-29 | 词库 706→1328(去重后);A2.1 十二课(g026-g037);时态选择段落填空 16 段/122 空(新 screen-cloze,indefinido/imperfecto 二选一,答过锁定,逐空 tip);sw.js 缓存 bump v6;assemble + smoke 69 条全过;去重移除 31 条完全重复词条(原有重复,无功能影响);listening 字段本轮暂缓 |
