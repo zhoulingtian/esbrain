@@ -430,15 +430,10 @@ p { margin: 0 0 10px; }
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.hero-ring-wrap { position: absolute; right: 20px; bottom: 18px; width: 72px; height: 72px; }
-.hero-ring-label {
-  position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; font-size: 9px; color: var(--muted); line-height: 1.15;
+.hero .settings-btn svg {
+  width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.8px;
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
 }
-.home-ring { width: 72px; height: 72px; }
-.home-ring circle { fill: none; stroke-width: 6; }
-.home-ring .bg { stroke: var(--border); }
-.home-ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .4s var(--easing); filter: drop-shadow(0 0 6px var(--accent)); }
 
 .home-cta {
   width: 100%; height: 64px; border-radius: var(--radius-pill); border: none;
@@ -73216,12 +73211,9 @@ const CULTURE_ARTICLES = [
     function renderHome() {
       const today = fmtDate();
       const due = state.reviews.filter(r => r.due <= today).length;
-      const newWordsToday = new Set((state.reviewLog || []).filter(e => e && e.date === today && e.level === 'new').map(e => e.wordId)).size;
       const checked = (state.checkins[today] || 0) > 0;
       const nextLesson = getNextLesson();
       const goal = state.settings.dailyGoal;
-      const pct = Math.min(1, newWordsToday / Math.max(1, goal));
-      const circ = 2 * Math.PI * 27;
       const undone = (due > 0 ? 1 : 0) + (nextLesson ? 1 : 0) + (!checked ? 1 : 0);
       const stageInfo = nextLesson ? STAGES[nextLesson.stage] : null;
       const plan = dailyPlan();
@@ -73251,18 +73243,11 @@ const CULTURE_ARTICLES = [
 
       $('home-container').innerHTML = `
         <div class="hero">
-          <button class="settings-btn" aria-label="设置" onclick="go('settings')"><svg width="20" height="20" style="vertical-align:middle"><use href="#icon-settings"/></svg></button>
+          <button class="settings-btn" aria-label="设置" title="设置" onclick="go('settings')"><svg aria-hidden="true"><use href="#icon-settings"/></svg></button>
           ${state.streak.current > 0 ? `<div class="hero-streak">连续 ${state.streak.current} 天</div>` : ''}
           <h2 class="hero-greeting">${greetingHtml()}</h2>
           <p class="muted" style="font-weight:700;color:var(--text-dim);">ESbrain · 西语学习</p>
           <p>${companion}</p>
-          <div class="hero-ring-wrap">
-            <svg class="home-ring" viewBox="0 0 62 62" style="transform:rotate(-90deg);">
-              <circle class="bg" cx="31" cy="31" r="27"></circle>
-              <circle class="fg" id="home-ring" cx="31" cy="31" r="27" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - pct)}"></circle>
-            </svg>
-            <div class="hero-ring-label"><span>今日</span><span style="font-size:14px;font-weight:700;color:var(--text);">${newWordsToday}</span><span>/${goal}</span></div>
-          </div>
         </div>
         <button class="home-cta" onclick="${ctaAction}"><span class="cta-text">${ctaText}</span><span class="cta-arrow">→</span></button>
         <div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;"><h3>今日计划</h3><button class="btn btn-sm btn-secondary" onclick="go('settings')">调整</button></div><p class="muted">${plan.p.level} 目标 · 约 ${plan.minutes} 分钟 · ${planLabel(plan.p.focus)}。${plan.adjustment} 建议可随时跳过，不会锁定课程。</p><div class="task-list">${taskRow('plan-lesson', plan.next ? `学习 ${plan.next.id}` : '课程巩固', plan.next ? plan.next.title + `（约 ${Math.max(5, Math.floor(plan.minutes * .3))} 分钟）` : '任选课程或进行复习', !plan.next, plan.next ? `openLesson('${plan.next.id}')` : "go('lessons')")}${taskRow('plan-review', '复习到期词', plan.due ? `${plan.review} / ${plan.due} 个（约 ${Math.max(3, Math.floor(plan.minutes * .25))} 分钟）` : '暂无到期词', plan.due === 0, "go('review')")}${taskRow('plan-grammar', '语法专项练习', `按本周薄弱点巩固（约 ${Math.max(3, Math.floor(plan.minutes * .16))} 分钟）`, false, "go('subjunctive')")}${taskRow('plan-listening', '听力理解', `听一段具体材料（约 ${Math.max(3, Math.floor(plan.minutes * .15))} 分钟）`, false, "go('quiz');startQuiz('listen')")}${taskRow('plan-stress', '重音训练', `完成一轮重音辨识（约 ${Math.max(2, Math.floor(plan.minutes * .1))} 分钟）`, false, "go('stress')")}</div></div>

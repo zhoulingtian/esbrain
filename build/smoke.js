@@ -121,6 +121,16 @@ const t = (name, fn) => {
 };
 const eq = (a, b) => a === b;
 
+t('home settings icon and progress display', () => {
+  renderHome();
+  const home = A.html('home-container');
+  return home.includes('class="settings-btn"')
+    && home.includes('aria-hidden="true"')
+    && !home.includes('hero-ring-wrap')
+    && !html.includes('.hero-ring-wrap')
+    && html.includes('.hero .settings-btn svg');
+});
+
 // 1. 顶层执行 + init 已完成
 t('脚本执行+init 无异常', () => !!A.state && !!A.state.settings);
 
