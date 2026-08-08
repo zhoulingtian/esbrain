@@ -474,14 +474,14 @@ const WORDS_A1_EXTRA = [
 { id: "w1234", word: "morado", pos: "adj", gender: null, article: null, ipa: "/moˈɾaðo/", zh: "紫色的", example: "Quiero la camisa morada.", example_zh: "我想要那件紫色衬衫。", lesson: "A1.1-L05", extra: true, stress: 2 },
 { id: "w1235", word: "marrón", pos: "adj", gender: null, article: null, ipa: "/maˈron/", zh: "棕色的", example: "Los zapatos marrones son bonitos.", example_zh: "棕色的鞋很好看。", lesson: "A1.1-L05", extra: true, stress: 1 },
 { id: "w1236", word: "gafas de sol", pos: "n", gender: "f", article: "las", ipa: "/ˈɣafas ðe ˈsol/", zh: "太阳镜", example: "Estas gafas de sol cuestan veinte euros.", example_zh: "这副太阳镜二十欧元。", lesson: "A1.1-L05", extra: true },
-// ===== A1.1-L06 数字日期星期月份(补) =====
-{ id: "w1237", word: "tercero", pos: "num", gender: null, article: null, ipa: "/teɾˈθeɾo/", zh: "第三", example: "Vivo en el tercer piso.", example_zh: "我住在三楼。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1238", word: "cuarto", pos: "num", gender: null, article: null, ipa: "/ˈkwaɾto/", zh: "第四;四分之一", example: "Es el cuarto de la lista.", example_zh: "他是名单上的第四个。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1239", word: "quinto", pos: "num", gender: null, article: null, ipa: "/ˈkinto/", zh: "第五", example: "Mi oficina está en el quinto piso.", example_zh: "我的办公室在五楼。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1240", word: "treinta", pos: "num", gender: null, article: null, ipa: "/ˈtɾejnta/", zh: "三十", example: "El libro cuesta treinta euros.", example_zh: "这本书三十欧元。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1241", word: "cuarenta", pos: "num", gender: null, article: null, ipa: "/kwaˈɾenta/", zh: "四十", example: "Hay cuarenta estudiantes.", example_zh: "有四十个学生。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1242", word: "cincuenta", pos: "num", gender: null, article: null, ipa: "/θinˈkwenta/", zh: "五十", example: "El abrigo cuesta cincuenta euros.", example_zh: "大衣五十欧元。", lesson: "A1.1-L06", extra: true, stress: 2 },
-{ id: "w1243", word: "mil", pos: "num", gender: null, article: null, ipa: "/ˈmil/", zh: "一千", example: "El billete cuesta mil euros.", example_zh: "机票一千欧元。", lesson: "A1.1-L06", extra: true },
+// ===== A1.1-L06 日期、星期与月份(补) =====
+{ id: "w1237", word: "anteayer", pos: "adv", gender: null, article: null, ipa: "/anteaˈʝeɾ/", zh: "前天", example: "Anteayer fue lunes.", example_zh: "前天是星期一。", lesson: "A1.1-L06", extra: true, stress: 3 },
+{ id: "w1238", word: "pasado mañana", pos: "adv", gender: null, article: null, ipa: "/paˈsaðo maˈɲana/", zh: "后天", example: "Pasado mañana es viernes.", example_zh: "后天是星期五。", lesson: "A1.1-L06", extra: true, stress: 2 },
+{ id: "w1239", word: "víspera", pos: "n", gender: "f", article: "la", ipa: "/ˈbispeɾa/", zh: "前夕；前一天", example: "La víspera de Navidad es especial.", example_zh: "圣诞前夕很特别。", lesson: "A1.1-L06", extra: true, stress: 1 },
+{ id: "w1240", word: "aniversario", pos: "n", gender: "m", article: "el", ipa: "/aniβeɾˈsaɾjo/", zh: "周年纪念日", example: "Hoy es nuestro aniversario.", example_zh: "今天是我们的纪念日。", lesson: "A1.1-L06", extra: true, stress: 4 },
+{ id: "w1241", word: "trimestre", pos: "n", gender: "m", article: "el", ipa: "/tɾiˈmestɾe/", zh: "季度；学期", example: "El trimestre termina en diciembre.", example_zh: "这个学期在十二月结束。", lesson: "A1.1-L06", extra: true, stress: 2 },
+{ id: "w1242", word: "bimestre", pos: "n", gender: "m", article: "el", ipa: "/biˈmestɾe/", zh: "双月期", example: "El curso se organiza por bimestres.", example_zh: "课程按双月期安排。", lesson: "A1.1-L06", extra: true, stress: 2 },
+{ id: "w1243", word: "semanal", pos: "adj", gender: null, article: null, ipa: "/semaˈnal/", zh: "每周的；周度的", example: "Tengo una reunión semanal.", example_zh: "我每周有一次会议。", lesson: "A1.1-L06", extra: true, stress: 3 },
 { id: "w1244", word: "siglo", pos: "n", gender: "m", article: "el", ipa: "/ˈsiɣlo/", zh: "世纪", example: "La iglesia es del siglo doce.", example_zh: "这座教堂是十二世纪的。", lesson: "A1.1-L06", extra: true, stress: 2 },
 { id: "w1245", word: "quincena", pos: "n", gender: "f", article: "la", ipa: "/kinˈθena/", zh: "十五天;半个月", example: "Estoy en España una quincena.", example_zh: "我在西班牙待半个月。", lesson: "A1.1-L06", extra: true, stress: 2 },
 // ===== A1.1-L07 天气与季节(补) =====

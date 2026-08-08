@@ -107,6 +107,7 @@ const api = `
   get LISTENING_ALL() { return LISTENING_ALL; },
   get LISTENING_LA() { return LISTENING_LA; },
   get SPEAKING_TASKS() { return SPEAKING_TASKS; },
+  get INPUT_STARTER() { return INPUT_STARTER; },
   grammarCanSpeak(phrase) { return grammarCanSpeak(phrase); },
   get CULTURE_ARTICLES() { return CULTURE_ARTICLES; },
   get drill() { return drill; },
@@ -156,9 +157,23 @@ t('拉美变体在字母表显示 c/z 的地区 IPA', () => {
 });
 
 // 2. 19 屏 go() 不报错
-for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'learn', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la']) {
+for (const s of ['home', 'phonetics', 'lessons', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'learn', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'input', 'listening-la']) {
   t('go(' + s + ')', () => { go(s); return true; });
 }
+t('A1 起步可理解输入两章可播放、核对并记录', () => {
+  A.state = normalizeState(null);
+  go('input');
+  const list = A.html('input-area');
+  if (A.INPUT_STARTER.length !== 2 || !list.includes('第 1 章：听见问候') || !list.includes('第 2 章：在自我介绍里抓词')) throw new Error('输入起步章目录异常');
+  openInputStarter('input-a1-01');
+  speakInputStarter();
+  if (!lastUtterance || lastUtterance.text !== A.INPUT_STARTER[0].text || lastUtterance.rate > 0.82) throw new Error('起步章未按慢速朗读');
+  revealInputStarter();
+  if (!A.html('input-area').includes('原文') || !A.html('input-area').includes('hola')) throw new Error('起步章原文未按需显示');
+  completeInputStarter();
+  completeInputStarter();
+  return A.state.inputLog.length === 1 && A.state.inputLog[0].chapterId === 'input-a1-01';
+});
 t('口语模块提供两类真实任务与明确的自查边界', () => {
   const roles = A.SPEAKING_TASKS.filter(x => x.type === 'roleplay');
   const monos = A.SPEAKING_TASKS.filter(x => x.type === 'monologue');
@@ -916,13 +931,30 @@ t('SRS rate 三档调度', () => {
 });
 
 // 9. 数字
-const NUM = { 0: 'cero', 1: 'uno', 5: 'cinco', 11: 'once', 16: 'dieciséis', 17: 'diecisiete', 21: 'veintiuno', 22: 'veintidós', 30: 'treinta', 31: 'treinta y uno', 50: 'cincuenta', 99: 'noventa y nueve', 100: 'cien' };
+const NUM = { 0: 'cero', 1: 'uno', 5: 'cinco', 11: 'once', 16: 'dieciséis', 17: 'diecisiete', 21: 'veintiuno', 22: 'veintidós', 30: 'treinta', 31: 'treinta y uno', 50: 'cincuenta', 99: 'noventa y nueve', 100: 'cien', 101: 'ciento uno', 125: 'ciento veinticinco', 200: 'doscientos', 500: 'quinientos', 999: 'novecientos noventa y nueve', 1000: 'mil', 1001: 'mil uno', 2000: 'dos mil', 1000000: 'un millón' };
 t('numberToSpanish', () => {
   for (const [n, s] of Object.entries(NUM)) {
     const got = numberToSpanish(Number(n));
     if (got !== s) throw new Error(`${n}: ${got} ≠ ${s}`);
   }
   return true;
+});
+t('数字专项先学后练：学习页覆盖百万级并可点读', () => {
+  go('numbers');
+  setNumberMode('learn');
+  const lesson = A.html('number-learning-list');
+  if (!lesson.includes('0–15：先记住基础数字') || !lesson.includes('第 2 课') || !lesson.includes('第 3 课') || !lesson.includes('mil') || !lesson.includes('veintidós') || !lesson.includes('noventa')) throw new Error('数字学习内容不完整');
+  if (!lesson.includes("speakText('cero')") || !lesson.includes("speakText('cien')")) throw new Error('数字点读入口缺失');
+  setNumberMode('dict');
+  if (elCache.get('number-area').classList.contains('hidden')) throw new Error('未能切换到听写');
+  return true;
+});
+t('日期课不重复收录数字，保留日期表达词汇', () => {
+  const dateLesson = A.LESSONS.find(l => l.id === 'A1.1-L06');
+  if (!dateLesson || dateLesson.title !== '日期、星期与月份') throw new Error('日期课标题异常');
+  const terms = [...dateLesson.words, ...dateLesson.extra_words].map(id => A.WORDS.find(w => w.id === id)).filter(Boolean);
+  if (terms.some(w => w.pos === 'num')) throw new Error('日期课仍包含数字词条');
+  return ['fecha', 'lunes', 'enero', 'calendario', 'fecha de nacimiento'].every(word => terms.some(w => w.word === word));
 });
 
 // 10. 语音选择

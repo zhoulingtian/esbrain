@@ -714,6 +714,18 @@ p { margin: 0 0 10px; }
   background-clip: text;
 }
 #speed-answer { font-family: var(--serif); color: var(--accent); }
+.number-learning-group { margin-bottom: 16px; }
+.number-learning-group:last-child { margin-bottom: 0; }
+.number-learning-group h3 { margin-bottom: 8px; font-size: 16px; }
+.number-learning-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(172px, 1fr)); gap: 8px; }
+.number-learning-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  background: var(--glass); min-height: 48px; min-width: 0;
+}
+.number-learning-item > div { min-width: 0; }
+.number-learning-item .number-value { font-family: var(--mono); color: var(--muted); font-size: 12px; }
+.number-learning-item .number-word { font-family: var(--serif); font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
 
 /* ===== 错题 / 词库 ===== */
 .words-list, .mistakes-list { display: flex; flex-direction: column; gap: 10px; }
@@ -1056,8 +1068,13 @@ p { margin: 0 0 10px; }
       <h2 class="mb-12">数字专项</h2>
       <div class="card">
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn btn-sm btn-masc" id="mode-dict" onclick="setNumberMode('dict')">听写</button>
+          <button class="btn btn-sm btn-masc" id="mode-learn" onclick="setNumberMode('learn')">先学数字</button>
+          <button class="btn btn-sm btn-secondary" id="mode-dict" onclick="setNumberMode('dict')">听写</button>
           <button class="btn btn-sm btn-secondary" id="mode-speed" onclick="setNumberMode('speed')">快速反应</button>
+        </div>
+        <div id="number-learning">
+        <p class="muted" style="margin-bottom:16px;">先学基础数字，再按组合规律扩展到百万；每个示例都可以点读。</p>
+          <div id="number-learning-list"></div>
         </div>
         <div id="number-area">
           <div class="text-center" style="padding:30px 0;">
@@ -1085,7 +1102,7 @@ p { margin: 0 0 10px; }
         <h3>数字小贴士</h3>
         <div class="rule-card"><h4>16–19 连写</h4><div class="muted es" style="margin-bottom:6px;">dieciséis, diecisiete</div><div style="font-size:13px;">diez y seis 合写成一个词：dieciséis（16）、diecisiete（17）、dieciocho（18）、diecinueve（19）。</div></div>
         <div class="rule-card"><h4>21–29 连写</h4><div class="muted es" style="margin-bottom:6px;">veintiuno, veintidós</div><div style="font-size:13px;">二十几连写：veintiuno（21）、veintidós（22）……veintinueve（29）。uno 单独用在阳性名词前时变 veintiún（带重音），如 veintiún libros。</div></div>
-        <div class="rule-card"><h4>cien 与 ciento</h4><div class="muted es" style="margin-bottom:6px;">cien / ciento uno</div><div style="font-size:13px;">100 单独是 cien；101 及以上用 ciento。注意不规则：500 quinientos、700 setecientos、900 novecientos。</div></div>
+        <div class="rule-card"><h4>cien 与 ciento</h4><div class="muted es" style="margin-bottom:6px;">cien / ciento uno</div><div style="font-size:13px;">100 单独说 cien；101–199 以 ciento 开头。整百有独立词：200 doscientos、500 quinientos、700 setecientos、900 novecientos。</div></div>
         <div class="rule-card"><h4>uno 的性变化</h4><div class="muted es" style="margin-bottom:6px;">un libro / una mesa</div><div style="font-size:13px;">uno 在阳性名词前变 un、阴性名词前变 una：un libro、una mesa、veintiún libros。</div></div>
       </div>
     </div>
@@ -1121,7 +1138,7 @@ p { margin: 0 0 10px; }
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('numbers')" onkeydown="activateOnKey(event)">
         <h3>数字专项 <span class="badge badge-masc">A0 起</span></h3>
-        <p class="muted">0–100 听写与快速反应。</p>
+        <p class="muted">先学 0–100，再做听写与快速反应。</p>
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('mistakes')" onkeydown="activateOnKey(event)">
         <h3>错题本</h3>
@@ -1148,6 +1165,9 @@ p { margin: 0 0 10px; }
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('shadowing')" onkeydown="activateOnKey(event)">
         <h3>发音跟读 <span class="badge badge-masc">A0 起</span></h3><p class="muted">40 句难点跟读；识别不可用时录音回放。</p>
+      </div>
+      <div class="tool-card" role="button" tabindex="0" onclick="go('input')" onkeydown="activateOnKey(event)">
+        <h3>可理解输入 <span class="badge badge-masc">A1 起 · 试行</span></h3><p class="muted">从第一课后的短朗读开始：先听，再主动核对原文；不做理解率评分。</p>
       </div>
       <div class="tool-card" role="button" tabindex="0" onclick="go('speaking')" onkeydown="activateOnKey(event)">
         <h3>口语任务 <span class="badge badge-accent">A2 - B2</span></h3><p class="muted">情境角色扮演与限时陈述；只做时长、要点和重复自查。</p>
@@ -1213,6 +1233,7 @@ p { margin: 0 0 10px; }
     <div id="screen-subjunctive" class="screen hidden"><h2 class="mb-12">虚拟式现在时 · WEIRDO</h2><div id="subjunctive-area"></div></div>
     <div id="screen-shadowing" class="screen hidden"><h2 class="mb-12">发音跟读</h2><div id="shadowing-area"></div></div>
     <div id="screen-speaking" class="screen hidden"><h2 class="mb-12">口语任务</h2><div id="speaking-area"></div></div>
+    <div id="screen-input" class="screen hidden"><h2 class="mb-12">可理解输入</h2><div id="input-area"></div></div>
     <div id="screen-listening-la" class="screen hidden"><h2 class="mb-12">拉美朗读对照</h2><div id="listening-la-area"></div></div>
     <div id="screen-culture" class="screen hidden"><h2 class="mb-12">文化阅读</h2><div id="culture-area"></div></div>
 
@@ -1464,6 +1485,7 @@ const VERBS = [
         progress: { completed: [], p0Passed: false },
         reviews: [],      // { wordId, due, interval, reps, lastReview, ease, suspended }
         reviewLog: [],    // { date, wordId, level: 'new'|'hard'|'mid'|'easy' }，只保留 90 天且最多 2000 条
+        inputLog: [],     // { chapterId, date, minutes }，可理解输入的完成记录
         mistakes: [],     // { wordId, count, lastAt }
         skillMistakes: [], // { key, label, screen, quizType, count, lastAt }
         skillMistakeLog: [], // { date, key }，语法专项与听力周报的真实错题事件
@@ -1514,6 +1536,9 @@ const VERBS = [
       if (Array.isArray(input.reviewLog)) out.reviewLog = input.reviewLog
         .filter(e => e && isValidDate(e.date) && typeof e.wordId === 'string' && WORD_ID_RE.test(e.wordId) && REVIEW_LEVELS.includes(e.level))
         .map(e => ({ date: e.date, wordId: e.wordId, level: e.level }));
+      if (Array.isArray(input.inputLog)) out.inputLog = input.inputLog
+        .filter(e => e && isValidDate(e.date) && INPUT_STARTER.some(item => item.id === e.chapterId) && Number.isFinite(e.minutes) && e.minutes > 0)
+        .map(e => ({ chapterId: e.chapterId, date: e.date, minutes: Math.min(60, Math.floor(e.minutes)) }));
       if (Array.isArray(input.mistakes)) out.mistakes = input.mistakes
         .filter(m => m && typeof m.wordId === 'string' && WORD_ID_RE.test(m.wordId))
         .map(m => ({
@@ -1684,17 +1709,17 @@ const VERBS = [
     function speakIcon(size) { return `<svg width="${size || 16}" height="${size || 16}" style="vertical-align:middle"><use href="#icon-volume"/></svg>`; }
 
     // ====================== 路由 ======================
-    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'listening-la', 'culture'];
+    const SCREENS = ['home', 'phonetics', 'lessons', 'learn', 'review', 'quiz', 'numbers', 'mistakes', 'tools', 'stress', 'falsefriends', 'verbs', 'preterite', 'stemchange', 'words', 'stats', 'weekly', 'settings', 'cloze', 'subjunctive', 'shadowing', 'speaking', 'input', 'listening-la', 'culture'];
     const NAV_MAP = {
       home: 'home', stats: 'home', weekly: 'home', settings: 'home',
       phonetics: 'phonetics', lessons: 'lessons', learn: 'lessons',
       review: 'review', tools: 'tools', quiz: 'tools', numbers: 'tools',
-      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', 'listening-la': 'tools', culture: 'tools'
+      mistakes: 'tools', verbs: 'tools', preterite: 'tools', stemchange: 'tools', words: 'tools', stress: 'tools', falsefriends: 'tools', cloze: 'tools', subjunctive: 'tools', shadowing: 'tools', speaking: 'tools', input: 'tools', 'listening-la': 'tools', culture: 'tools'
     };
     const SCREEN_TITLES = {
       phonetics: '发音入门', lessons: '课程', learn: '学习', review: '复习',
       quiz: '测验中心', numbers: '数字专项', mistakes: '错题本', tools: '工具箱',
-      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', 'listening-la': '拉美朗读对照', culture: '文化阅读',
+      stress: '重音训练', falsefriends: '假朋友', cloze: '时态选择', subjunctive: '虚拟式现在时', shadowing: '发音跟读', speaking: '口语任务', input: '可理解输入', 'listening-la': '拉美朗读对照', culture: '文化阅读',
       verbs: '动词变位', preterite: '不规则过去时', stemchange: '词干变化动词', words: '词库', stats: '统计', weekly: '本周复盘', settings: '设置'
     };
     function go(screen) {
@@ -1725,6 +1750,7 @@ const VERBS = [
       if (screen === 'subjunctive') renderSubjunctive();
       if (screen === 'shadowing') renderShadowing();
       if (screen === 'speaking') renderSpeaking();
+      if (screen === 'input') renderInputStarter();
       if (screen === 'listening-la') renderListeningLA();
       if (screen === 'culture') renderCulture();
       if (screen === 'stats') renderStats();
@@ -2648,6 +2674,47 @@ const VERBS = [
     }
     function clozeBack() { clozeSession = null; renderClozeList(); }
 
+    // ====================== 可理解输入起步章 ======================
+    let inputStarterId = null;
+    let inputStarterRevealed = false;
+    function activeInputStarter() { return INPUT_STARTER.find(item => item.id === inputStarterId) || null; }
+    function inputStarterCompletedToday(id) {
+      return (state.inputLog || []).some(entry => entry.chapterId === id && entry.date === fmtDate());
+    }
+    function renderInputStarter() {
+      const area = $('input-area');
+      const active = activeInputStarter();
+      if (!active) {
+        const completedCount = new Set((state.inputLog || []).map(entry => entry.chapterId)).size;
+        area.innerHTML = `<div class="card"><h3>从听见开始</h3><p class="muted">这不是听力考试。第一课后就可以开始：先不看文本听两遍，只要抓到一个认识的词就完成了。</p><p class="muted" style="font-size:12px;margin-bottom:0;">已完成 ${completedCount}/${INPUT_STARTER.length} 章。后续会在这里补入经过人工筛选的外部材料；当前两章完全离线可用。</p></div>${INPUT_STARTER.map(item => `<div class="tool-card" role="button" tabindex="0" onclick="openInputStarter('${item.id}')" onkeydown="activateOnKey(event)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;"><h3>${item.title}</h3>${inputStarterCompletedToday(item.id) ? '<span class="badge badge-masc">今日已完成</span>' : `<span class="badge badge-accent">${item.minutes} 分钟</span>`}</div><p class="muted">${item.level} · ${item.mode} · ${item.lesson}</p><p class="muted" style="margin-bottom:0;">${item.intro}</p></div>`).join('')}`;
+        return;
+      }
+      const transcript = inputStarterRevealed ? `<div class="word-section example-section mt-12"><div class="lab">原文</div><div class="tx es" style="line-height:1.8;">${active.text}</div><div class="muted mt-12">${active.zh}</div><div class="muted mt-12" style="font-size:12px;">本章目标词：${active.targets.map(word => `<span class="es">${word}</span>`).join(' · ')}</div></div>` : '';
+      area.innerHTML = `<div class="card"><button class="btn btn-sm btn-secondary" onclick="closeInputStarter()">← 选择章节</button><div class="muted mt-12">${active.level} · ${active.mode} · 约 ${active.minutes} 分钟</div><h3 style="margin-top:8px;">${active.title}</h3><p class="muted">${active.intro}</p><div class="card-flat" style="margin:16px 0;"><b>本次任务</b><p class="muted" style="margin:6px 0 0;">${active.task}</p></div><button class="btn w-full" onclick="speakInputStarter()">播放短朗读</button><button class="btn btn-secondary w-full mt-12" onclick="revealInputStarter()">${inputStarterRevealed ? '隐藏原文' : '播放后查看原文'}</button>${transcript}<button class="btn w-full mt-12" onclick="completeInputStarter()">${inputStarterCompletedToday(active.id) ? '今天已完成' : '完成本次输入'}</button></div>`;
+    }
+    function openInputStarter(id) { inputStarterId = id; inputStarterRevealed = false; renderInputStarter(); }
+    function closeInputStarter() { inputStarterId = null; inputStarterRevealed = false; renderInputStarter(); }
+    function revealInputStarter() { inputStarterRevealed = !inputStarterRevealed; renderInputStarter(); }
+    function speakInputStarter() {
+      const active = activeInputStarter();
+      if (!active || !window.speechSynthesis) { toast('您的浏览器不支持语音朗读'); return; }
+      const utterance = new SpeechSynthesisUtterance(active.text);
+      if (cachedVoice) { utterance.voice = cachedVoice; utterance.lang = cachedVoice.lang; }
+      else utterance.lang = state.settings.variant === 'es-LA' ? 'es-MX' : 'es-ES';
+      utterance.rate = Math.min(state.settings.voiceRate, 0.82);
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
+    function completeInputStarter() {
+      const active = activeInputStarter();
+      if (!active) return;
+      const today = fmtDate();
+      state.inputLog = (state.inputLog || []).filter(entry => !(entry.chapterId === active.id && entry.date === today));
+      state.inputLog.push({ chapterId: active.id, date: today, minutes: active.minutes });
+      if (state.inputLog.length > 1000) state.inputLog = state.inputLog.slice(-1000);
+      saveState(); renderInputStarter(); toast('已记录本次输入');
+    }
+
     // ====================== 第五轮：虚拟式、跟读与拉美听力 ======================
     function renderSubjunctive() {
       setHtml('subjunctive-area', `<div class="card"><h3>WEIRDO 触发器</h3><p class="muted"><b>W</b>ish 愿望、<b>E</b>motion 情感、<b>I</b>mpersonal 非人称评价、<b>R</b>ecommendation 建议命令、<b>D</b>oubt 怀疑否定、<b>O</b>jalá。共同信号通常是 <span class="es">que + 另一主语</span>。</p><p class="es">Espero que llegues. / No creo que sea verdad. / Es importante que practiques.</p><button class="btn w-full mt-12" onclick="go('quiz');startQuiz('subjunctive')">开始 90 题练习</button></div><div class="card"><h3>未来时间与连词</h3><p class="muted">指向尚未发生的未来时，<span class="es">cuando, hasta que, en cuanto, antes de que</span> 后用虚拟式；<span class="es">para que</span> 表目的，<span class="es">aunque</span> 表未确定让步。</p></div>`);
@@ -2829,7 +2896,7 @@ const VERBS = [
     }
 
     // ====================== 数字专项（0–100） ======================
-    let numberMode = 'dict';
+    let numberMode = 'learn';
     let currentNumber = 0;
     let numScore = { right: 0, total: 0 };
     function setNumberMode(m) { numberMode = m; renderNumbers(); }
@@ -2838,19 +2905,56 @@ const VERBS = [
       const teens = ['dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
       const twenties = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
       const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
-      if (n < 0 || n > 100) return String(n);
+      const hundreds = ['', '', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+      if (!Number.isInteger(n) || n < 0 || n > 1000000) return String(n);
       if (n < 16) return units[n];
       if (n < 20) return teens[n - 16];
       if (n < 30) return twenties[n - 20];
       if (n === 100) return 'cien';
-      const t = Math.floor(n / 10), u = n % 10;
-      return u === 0 ? tens[t] : tens[t] + ' y ' + units[u];
+      if (n < 100) {
+        const t = Math.floor(n / 10), u = n % 10;
+        return u === 0 ? tens[t] : tens[t] + ' y ' + units[u];
+      }
+      if (n < 1000) {
+        const h = Math.floor(n / 100), rest = n % 100;
+        const prefix = h === 1 ? 'ciento' : hundreds[h];
+        return rest ? prefix + ' ' + numberToSpanish(rest) : prefix;
+      }
+      if (n === 1000) return 'mil';
+      if (n < 1000000) {
+        const thousands = Math.floor(n / 1000), rest = n % 1000;
+        const prefix = thousands === 1 ? 'mil' : numberToSpanish(thousands) + ' mil';
+        return rest ? prefix + ' ' + numberToSpanish(rest) : prefix;
+      }
+      return 'un millón';
+    }
+    const NUMBER_LESSON_GROUPS = [
+      { title: '第 1 课 · 0–15：先记住基础数字', values: Array.from({ length: 16 }, (_, n) => n) },
+      { title: '16–19：diez 的连写', note: 'dieciséis 到 diecinueve 合写。', values: [16, 17, 18, 19] },
+      { title: '20–29：veinte 的连写', note: 'veintiuno 到 veintinueve 合写；22、23、26 有重音。', values: Array.from({ length: 10 }, (_, n) => n + 20) },
+      { title: '30–90：整十先学，再用 y 连接', note: '例如 31：treinta y uno。', values: [30, 40, 50, 60, 70, 80, 90] },
+      { title: '100', note: '100 单独说 cien。', values: [100] },
+      { title: '第 2 课 · 101–999：百位 + 后面的数字', note: '101–199 用 ciento；200、300 等整百使用各自的词。', values: [101, 110, 125, 199, 200, 300, 500, 700, 999] },
+      { title: '第 3 课 · 1,000 以上：mil 与 millón', note: '1,000 是 mil，不说 un mil；1,000,000 是 un millón。', values: [1000, 1001, 1100, 2000, 10000, 100000, 1000000] },
+    ];
+    function renderNumberLesson() {
+      $('number-learning-list').innerHTML = NUMBER_LESSON_GROUPS.map(group => `
+        <section class="number-learning-group">
+          <h3>${group.title}</h3>
+          ${group.note ? `<p class="muted" style="font-size:13px;margin-bottom:8px;">${group.note}</p>` : ''}
+          <div class="number-learning-grid">${group.values.map(n => {
+            const word = numberToSpanish(n);
+            return `<div class="number-learning-item"><div><div class="number-value">${n}</div><div class="number-word es">${word}</div></div><button class="speak" aria-label="朗读 ${n}，${word}" onclick="speakText('${word}')">${speakIcon()}</button></div>`;
+          }).join('')}</div>
+        </section>`).join('');
     }
     function renderNumbers() {
+      $('mode-learn').className = numberMode === 'learn' ? 'btn btn-sm btn-masc' : 'btn btn-sm btn-secondary';
       $('mode-dict').className = numberMode === 'dict' ? 'btn btn-sm btn-masc' : 'btn btn-sm btn-secondary';
       $('mode-speed').className = numberMode === 'speed' ? 'btn btn-sm btn-masc' : 'btn btn-sm btn-secondary';
-      if (numberMode === 'dict') { show('number-area'); hide('number-speed'); nextDict(); }
-      else { hide('number-area'); show('number-speed'); nextSpeed(); }
+      if (numberMode === 'learn') { show('number-learning'); hide('number-area'); hide('number-speed'); renderNumberLesson(); }
+      else if (numberMode === 'dict') { hide('number-learning'); show('number-area'); hide('number-speed'); nextDict(); }
+      else { hide('number-learning'); hide('number-area'); show('number-speed'); nextSpeed(); }
       setText('number-score', `得分：${numScore.right} / ${numScore.total}`);
     }
     function nextDict() { currentNumber = Math.floor(Math.random() * 101); $('number-input').value = ''; }

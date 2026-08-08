@@ -10,7 +10,7 @@ const ROOT = path.resolve(BUILD, '..');
 const read = p => fs.readFileSync(p, 'utf8');
 
 // ---------- 1. 加载数据文件（在同一 eval 作用域内合并 const） ----------
-const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'words-p7.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'b2-grammar.js', 'verbs.js', 'quiz-extra.js', 'speaking.js', 'culture.js']
+const dataSrc = ['core.js', 'words-p1a.js', 'words-p1b.js', 'words-p2a.js', 'words-p2b.js', 'words-p3.js', 'words-p4.js', 'words-p6.js', 'words-p7.js', 'b1-authentic.js', 'grammar.js', 'a22-grammar.js', 'b2-grammar.js', 'verbs.js', 'quiz-extra.js', 'speaking.js', 'input-starter.js', 'culture.js']
   .map(f => read(path.join(DATA, f))).join('\n');
 
 const sandbox = {};
@@ -34,11 +34,12 @@ new Function('sandbox', dataSrc + `
   sandbox.SUBJUNCTIVE_QUIZ = SUBJUNCTIVE_QUIZ; sandbox.SHADOWING_SENTENCES = SHADOWING_SENTENCES;
   sandbox.LISTENING_LA = LISTENING_LA;
   sandbox.SPEAKING_TASKS = SPEAKING_TASKS;
+  sandbox.INPUT_STARTER = INPUT_STARTER;
   sandbox.CULTURE_ARTICLES = CULTURE_ARTICLES;
   sandbox.FRENCH_COGNATES = FRENCH_COGNATES;
 `)(sandbox);
 
-const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, SPEAKING_TASKS, CULTURE_ARTICLES, FRENCH_COGNATES, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS, B2_RAW_WORDS } = sandbox;
+const { STAGES, ALPHABET, DIGRAPHS, PHONEMES, RULES, UNLOCK_QUIZ, GRAMMARS, VERBS, WORDS_ALL, NEW_WORDS, DIALOGS_ALL, LISTENING_ALL, STRESS_QUIZ, SER_ESTAR_QUIZ, POR_PARA_QUIZ, ARTICLE_EXCEPTIONS, FALSE_FRIENDS, TENSE_CLOZE, SUBJUNCTIVE_QUIZ, SHADOWING_SENTENCES, LISTENING_LA, SPEAKING_TASKS, INPUT_STARTER, CULTURE_ARTICLES, FRENCH_COGNATES, BASE_WORDS, B1_RAW_WORDS, B1_EXISTING_WORDS, B1_FILLER_WORDS, A22_RAW_WORDS, B2_RAW_WORDS } = sandbox;
 
 // ---------- 2. 词库：排序 + 去重（同词同词性同释义保留最早一条）+ 重编号 w0001... ----------
 WORDS_ALL.sort((a, b) => a.id.localeCompare(b.id));
@@ -112,7 +113,7 @@ byId = Object.fromEntries(WORDS.map(w => [w.id, w]));
 const LESSON_TABLE = [
   ['A1.1-L01', 'P1', '问候与自我介绍'], ['A1.1-L02', 'P1', '家庭与描述'],
   ['A1.1-L03', 'P1', '在咖啡馆'],       ['A1.1-L04', 'P1', '时间与日常'],
-  ['A1.1-L05', 'P1', '购物与询价'],     ['A1.1-L06', 'P1', '数字日期星期月份'],
+  ['A1.1-L05', 'P1', '购物与询价'],     ['A1.1-L06', 'P1', '日期、星期与月份'],
   ['A1.1-L07', 'P1', '天气与季节'],     ['A1.1-L08', 'P1', '爱好与运动'],
   ['A1.1-L09', 'P1', '身体与健康'],     ['A1.1-L10', 'P1', '交通出行'],
   ['A1.1-L11', 'P1', '城市与地点方位'], ['A1.1-L12', 'P1', '学校与工作'],
@@ -193,6 +194,7 @@ const dataSection = '//__DATA_BEGIN__\n'
   + 'const SHADOWING_SENTENCES = ' + J(SHADOWING_SENTENCES) + ';\n'
   + 'const LISTENING_LA = ' + J(LISTENING_LA) + ';\n'
   + 'const SPEAKING_TASKS = ' + J(SPEAKING_TASKS) + ';\n'
+  + 'const INPUT_STARTER = ' + J(INPUT_STARTER) + ';\n'
   + 'const CULTURE_ARTICLES = ' + J(CULTURE_ARTICLES) + ';\n'
   + '//__DATA_END__';
 
